@@ -545,6 +545,7 @@ function InfoTab({
   onRequestPayout: () => void;
 }) {
   const [copied, setCopied] = useState(false);
+  const [activityTab, setActivityTab] = useState<"offers" | "conv">("offers");
   const refLink = "kvant.io/p/user772/ref";
   const copy = async () => {
     try {
@@ -558,73 +559,84 @@ function InfoTab({
 
   return (
     <>
+      {/* ============ HERO: баланс + вывод ============ */}
       <section className="animate-in-up">
-        <div className="mb-3 flex items-baseline justify-between">
-          <h2 className="text-[11px] font-bold uppercase tracking-[0.1em] text-muted-foreground">
-            Общий баланс
-          </h2>
-          <span className="font-mono text-[11px] text-[color:var(--success)]">+12,4% • 7дн</span>
-        </div>
-        <div className="flex items-baseline gap-2">
-          <span className="text-4xl font-bold tracking-tighter tabular-nums">{fmt(balance)}</span>
-          <span className="text-xl font-medium text-muted-foreground">₽</span>
-        </div>
-        <div className="mt-4 grid grid-cols-2 gap-px overflow-hidden rounded-lg border border-border bg-border">
-          {kpis.slice(0, 2).map((k) => (
-            <KpiCell key={k.label} k={k} />
-          ))}
-        </div>
-        <div className="mt-px grid grid-cols-2 gap-px overflow-hidden rounded-lg border border-border bg-border">
-          {kpis.slice(2).map((k) => (
-            <KpiCell key={k.label} k={k} />
-          ))}
-        </div>
-      </section>
-
-      <section className="animate-in-up" style={{ animationDelay: "60ms" }}>
-        <div className="rounded-xl bg-primary p-4 text-primary-foreground shadow-lg shadow-primary/20">
-          <div className="mb-2 flex items-center justify-between">
-            <p className="text-xs font-medium opacity-80">Ваша партнёрская ссылка</p>
-            <span className="rounded-full bg-white/15 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider">
-              5% от рефералов
-            </span>
-          </div>
-          <div className="flex gap-2">
-            <div className="flex-1 select-all truncate rounded bg-white/10 px-3 py-2 font-mono text-xs">
-              {refLink}
+        <div className="relative overflow-hidden rounded-2xl bg-foreground p-5 text-background shadow-lg shadow-foreground/10">
+          <div className="pointer-events-none absolute -right-8 -top-8 size-40 rounded-full bg-primary/20 blur-2xl" />
+          <div className="relative">
+            <div className="flex items-center justify-between">
+              <span className="text-[10px] font-bold uppercase tracking-[0.14em] opacity-60">
+                Общий баланс
+              </span>
+              <span className="rounded-full bg-white/10 px-2 py-0.5 font-mono text-[10px] font-medium text-[color:var(--success)]">
+                +12,4% • 7дн
+              </span>
             </div>
-            <button
-              onClick={copy}
-              className="flex items-center gap-1 rounded bg-white px-3 py-2 text-xs font-bold text-primary transition-transform active:scale-95"
-            >
-              {copied ? <Check className="size-3.5" /> : <Copy className="size-3.5" />}
-              {copied ? "OK" : "КОПИ"}
-            </button>
+            <div className="mt-2 flex items-baseline gap-1.5">
+              <span className="text-[40px] font-bold leading-none tracking-tighter tabular-nums">
+                {fmt(balance)}
+              </span>
+              <span className="text-xl font-medium opacity-70">₽</span>
+            </div>
+
+            <div className="mt-5 flex items-center justify-between gap-3 rounded-xl bg-white/10 p-3 backdrop-blur">
+              <div className="min-w-0">
+                <p className="text-[9px] font-bold uppercase tracking-widest opacity-70">
+                  Доступно к выводу
+                </p>
+                <p className="mt-0.5 font-mono text-base font-bold tabular-nums">
+                  {fmt(available)} ₽
+                </p>
+              </div>
+              <button
+                onClick={onRequestPayout}
+                className="shrink-0 rounded-lg bg-primary px-4 py-2.5 text-[11px] font-bold uppercase tracking-wider text-primary-foreground transition-transform active:scale-95"
+              >
+                {bank ? "Вывести" : "Реквизиты"}
+              </button>
+            </div>
           </div>
         </div>
       </section>
 
+      {/* ============ KPI ============ */}
+      <section className="animate-in-up" style={{ animationDelay: "60ms" }}>
+        <h3 className="mb-2 text-[10px] font-bold uppercase tracking-[0.14em] text-muted-foreground">
+          Показатели дня
+        </h3>
+        <div className="grid grid-cols-2 gap-px overflow-hidden rounded-xl border border-border bg-border">
+          {kpis.map((k) => (
+            <KpiCell key={k.label} k={k} />
+          ))}
+        </div>
+      </section>
+
+      {/* ============ Chart ============ */}
       <section className="animate-in-up" style={{ animationDelay: "120ms" }}>
-        <div className="flex h-40 w-full flex-col justify-between rounded-lg border border-border bg-card p-4">
-          <div className="flex items-center justify-between">
-            <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
-              Доход за неделю
-            </span>
-            <span className="flex items-center gap-1 font-mono text-[10px]">
-              <TrendingUp className="size-3 text-[color:var(--success)]" />
-              Σ 54 200 ₽
+        <div className="rounded-xl border border-border bg-card p-4">
+          <div className="mb-4 flex items-center justify-between">
+            <div>
+              <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-muted-foreground">
+                Доход за неделю
+              </p>
+              <p className="mt-0.5 font-mono text-sm font-bold tabular-nums">54 200 ₽</p>
+            </div>
+            <span className="flex items-center gap-1 rounded-full bg-[color:var(--success)]/10 px-2 py-1 font-mono text-[10px] font-medium text-[color:var(--success)]">
+              <TrendingUp className="size-3" /> +18%
             </span>
           </div>
           <div className="flex h-20 items-end gap-1.5">
             {chartBars.map((h, i) => (
               <div
                 key={i}
-                className={`flex-1 rounded-t-sm ${i === 5 ? "bg-primary" : "bg-secondary"}`}
+                className={`flex-1 rounded-t-sm transition-colors ${
+                  i === 5 ? "bg-primary" : "bg-secondary"
+                }`}
                 style={{ height: `${h}%` }}
               />
             ))}
           </div>
-          <div className="flex gap-1.5">
+          <div className="mt-2 flex gap-1.5">
             {weekLabels.map((l, i) => (
               <span
                 key={l}
@@ -639,94 +651,132 @@ function InfoTab({
         </div>
       </section>
 
+      {/* ============ Активность: табы ============ */}
       <section className="animate-in-up" style={{ animationDelay: "180ms" }}>
         <div className="mb-3 flex items-center justify-between">
-          <h3 className="text-[11px] font-bold uppercase tracking-[0.1em] text-muted-foreground">
-            Топ предложения
+          <h3 className="text-[10px] font-bold uppercase tracking-[0.14em] text-muted-foreground">
+            Активность
           </h3>
-          <button onClick={onGoOffers} className="text-[10px] font-bold text-primary">
-            КАТАЛОГ →
+          <button
+            onClick={activityTab === "offers" ? onGoOffers : onGoConversions}
+            className="text-[10px] font-bold text-primary"
+          >
+            ВСЕ →
           </button>
         </div>
-        <div className="space-y-2">
-          {topOffers.map((o) => (
+
+        <div className="mb-2 inline-flex rounded-lg border border-border bg-card p-0.5">
+          {(
+            [
+              { id: "offers", label: "Топ офферы" },
+              { id: "conv", label: "Конверсии" },
+            ] as const
+          ).map((t) => (
             <button
-              key={o.id}
-              onClick={onGoOffers}
-              className="group flex w-full items-center gap-3 rounded-lg border border-border bg-card p-3 text-left transition-colors hover:border-foreground/20"
+              key={t.id}
+              onClick={() => setActivityTab(t.id)}
+              className={`rounded-md px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider transition-colors ${
+                activityTab === t.id
+                  ? "bg-foreground text-background"
+                  : "text-muted-foreground hover:text-foreground"
+              }`}
             >
-              <OfferTag tag={o.tag} />
-              <div className="min-w-0 flex-1">
-                <h4 className="truncate text-xs font-bold leading-none">{o.name}</h4>
-                <p className="mt-1 text-[10px] text-muted-foreground">{o.category}</p>
-              </div>
-              <div className="shrink-0 text-right">
-                <p className="font-mono text-xs font-bold">{o.payout}</p>
-                <p className="font-mono text-[9px] uppercase text-muted-foreground">
-                  EPC {fmt(o.epc)} ₽
-                </p>
-              </div>
-              <ArrowUpRight className="size-3.5 shrink-0 text-muted-foreground transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5 group-hover:text-foreground" />
+              {t.label}
             </button>
           ))}
         </div>
+
+        {activityTab === "offers" ? (
+          <div className="divide-y divide-border overflow-hidden rounded-xl border border-border bg-card">
+            {topOffers.map((o) => (
+              <button
+                key={o.id}
+                onClick={onGoOffers}
+                className="group flex w-full items-center gap-3 p-3 text-left transition-colors hover:bg-secondary/40"
+              >
+                <OfferTag tag={o.tag} />
+                <div className="min-w-0 flex-1">
+                  <h4 className="truncate text-xs font-bold leading-none">{o.name}</h4>
+                  <p className="mt-1 text-[10px] text-muted-foreground">{o.category}</p>
+                </div>
+                <div className="shrink-0 text-right">
+                  <p className="font-mono text-xs font-bold">{o.payout}</p>
+                  <p className="font-mono text-[9px] uppercase text-muted-foreground">
+                    EPC {fmt(o.epc)} ₽
+                  </p>
+                </div>
+                <ArrowUpRight className="size-3.5 shrink-0 text-muted-foreground transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5 group-hover:text-foreground" />
+              </button>
+            ))}
+          </div>
+        ) : (
+          <div className="divide-y divide-border overflow-hidden rounded-xl border border-border bg-card">
+            {conversions.map((c) => (
+              <div key={c.id} className="flex items-center justify-between p-3">
+                <div className="min-w-0">
+                  <p className="truncate text-[11px] font-bold">
+                    {c.time} • {c.offerName}
+                  </p>
+                  <p className="font-mono text-[10px] text-muted-foreground">ID: {c.id}</p>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span
+                    className={`font-mono text-xs font-medium tabular-nums ${
+                      c.status === "rejected" ? "text-muted-foreground line-through" : ""
+                    }`}
+                  >
+                    {fmt(c.amount)} ₽
+                  </span>
+                  <div
+                    className={`size-1.5 rounded-full ${
+                      c.status === "ok"
+                        ? "bg-[color:var(--success)]"
+                        : c.status === "pending"
+                          ? "bg-[color:var(--warning)]"
+                          : "bg-destructive"
+                    }`}
+                  />
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
       </section>
 
-      <section className="animate-in-up" style={{ animationDelay: "240ms" }}>
-        <div className="mb-3 flex items-center justify-between">
-          <h3 className="text-[11px] font-bold uppercase tracking-[0.1em] text-muted-foreground">
-            Последние конверсии
-          </h3>
-          <button onClick={onGoConversions} className="text-[10px] font-bold text-primary">
-            ВСЕ
-          </button>
-        </div>
-        <div className="divide-y divide-border overflow-hidden rounded-lg border border-border bg-card">
-          {conversions.map((c) => (
-            <div key={c.id} className="flex items-center justify-between p-3">
-              <div className="min-w-0">
-                <p className="truncate text-[11px] font-bold">
-                  {c.time} • {c.offerName}
-                </p>
-                <p className="font-mono text-[10px] text-muted-foreground">ID: {c.id}</p>
-              </div>
-              <div className="flex items-center gap-2">
-                <span
-                  className={`font-mono text-xs font-medium tabular-nums ${
-                    c.status === "rejected" ? "text-muted-foreground line-through" : ""
-                  }`}
-                >
-                  {fmt(c.amount)} ₽
-                </span>
-                <div
-                  className={`size-1.5 rounded-full ${
-                    c.status === "ok"
-                      ? "bg-[color:var(--success)]"
-                      : c.status === "pending"
-                        ? "bg-[color:var(--warning)]"
-                        : "bg-destructive"
-                  }`}
-                />
-              </div>
+      {/* ============ Инструменты: ссылка + реквизиты ============ */}
+      <section className="animate-in-up space-y-2" style={{ animationDelay: "240ms" }}>
+        <h3 className="mb-1 text-[10px] font-bold uppercase tracking-[0.14em] text-muted-foreground">
+          Инструменты
+        </h3>
+
+        <div className="rounded-xl bg-primary p-4 text-primary-foreground shadow-sm shadow-primary/20">
+          <div className="mb-2 flex items-center justify-between">
+            <p className="text-[10px] font-bold uppercase tracking-widest opacity-80">
+              Партнёрская ссылка
+            </p>
+            <span className="rounded-full bg-white/15 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider">
+              5% рефералы
+            </span>
+          </div>
+          <div className="flex gap-2">
+            <div className="flex-1 select-all truncate rounded-md bg-white/10 px-3 py-2 font-mono text-xs">
+              {refLink}
             </div>
-          ))}
+            <button
+              onClick={copy}
+              className="flex items-center gap-1 rounded-md bg-white px-3 py-2 text-xs font-bold text-primary transition-transform active:scale-95"
+            >
+              {copied ? <Check className="size-3.5" /> : <Copy className="size-3.5" />}
+              {copied ? "OK" : "КОПИ"}
+            </button>
+          </div>
         </div>
-      </section>
 
-      <section className="animate-in-up" style={{ animationDelay: "280ms" }}>
-        <div className="mb-3 flex items-center justify-between">
-          <h3 className="text-[11px] font-bold uppercase tracking-[0.1em] text-muted-foreground">
-            Реквизиты для выплат
-          </h3>
-          <button onClick={onOpenBank} className="flex items-center gap-1 text-[10px] font-bold text-primary">
-            {bank ? (<><Pencil className="size-3" /> ИЗМЕНИТЬ</>) : (<>+ ДОБАВИТЬ</>)}
-          </button>
-        </div>
         <button
           onClick={onOpenBank}
-          className="flex w-full items-center gap-3 rounded-lg border border-border bg-card p-3 text-left transition-colors hover:border-foreground/20"
+          className="flex w-full items-center gap-3 rounded-xl border border-border bg-card p-3 text-left transition-colors hover:border-foreground/20"
         >
-          <div className="grid size-10 shrink-0 place-items-center rounded border border-black/5 bg-secondary text-muted-foreground">
+          <div className="grid size-10 shrink-0 place-items-center rounded-lg border border-black/5 bg-secondary text-muted-foreground">
             <Landmark className="size-4" />
           </div>
           <div className="min-w-0 flex-1">
@@ -741,7 +791,7 @@ function InfoTab({
               <>
                 <p className="text-xs font-bold leading-none">Реквизиты не заданы</p>
                 <p className="mt-1 text-[10px] text-muted-foreground">
-                  Добавьте карту, счёт или СБП для вывода средств
+                  Карта, счёт или СБП для вывода средств
                 </p>
               </>
             )}
@@ -757,23 +807,6 @@ function InfoTab({
             {bank ? "OK" : "НЕТ"}
           </span>
         </button>
-      </section>
-
-      <section className="animate-in-up" style={{ animationDelay: "300ms" }}>
-        <div className="flex items-center justify-between rounded-lg border border-border bg-card p-4">
-          <div>
-            <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
-              Доступно к выводу
-            </p>
-            <p className="mt-1 font-mono text-lg font-bold tabular-nums">{fmt(available)} ₽</p>
-          </div>
-          <button
-            onClick={onRequestPayout}
-            className="rounded-md bg-foreground px-4 py-2.5 text-xs font-bold uppercase tracking-wider text-background transition-transform active:scale-95"
-          >
-            {bank ? "Вывести" : "Реквизиты"}
-          </button>
-        </div>
       </section>
     </>
   );
