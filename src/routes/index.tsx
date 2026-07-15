@@ -35,6 +35,17 @@ import {
   Lock,
   Percent,
   Gift,
+  FileText,
+  ShieldCheck,
+  Ban,
+  Globe,
+  Timer,
+  Target,
+  Building2,
+  ClipboardList,
+  Inbox,
+  ThumbsUp,
+  ThumbsDown,
   type LucideIcon,
 } from "lucide-react";
 
