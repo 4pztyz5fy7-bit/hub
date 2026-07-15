@@ -583,6 +583,7 @@ function DashboardPage() {
             onGoOffers={() => setActive("offers")}
             onGoConversions={() => setActive("stats")}
             onRequestPayout={() => (bank ? setPayoutOpen(true) : openBank())}
+            onOpenLevels={() => setLevelsOpen(true)}
           />
         )}
         {active === "offers" && (
