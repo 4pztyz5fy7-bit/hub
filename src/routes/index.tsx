@@ -1464,26 +1464,34 @@ function OffersTab({
                   <Stat label="EPC" value={`${fmt(o.epc)} ₽`} />
                   <Stat label="CR" value={`${o.cr.toFixed(1)}%`} />
                 </div>
-                <button
-                  onClick={() => onCopyLink(o)}
-                  className={`flex items-center gap-1 rounded-md px-3 py-2 text-[11px] font-bold uppercase tracking-wider transition-colors active:scale-95 ${
-                    isCopied
-                      ? "bg-[color:var(--success)]/15 text-[color:var(--success)]"
-                      : isLinked
-                        ? "border border-border bg-card text-foreground hover:bg-accent"
-                        : "bg-foreground text-background"
-                  }`}
-                >
-                  {isCopied ? (
-                    <>
-                      <Check className="size-3" /> Скопировано
-                    </>
-                  ) : (
-                    <>
-                      <Link2 className="size-3" /> {isLinked ? "Ссылка" : "Получить"}
-                    </>
-                  )}
-                </button>
+                <div className="flex items-center gap-1.5">
+                  <button
+                    onClick={() => onOpenDetail(o)}
+                    className="flex items-center gap-1 rounded-md border border-border bg-card px-2.5 py-2 text-[11px] font-bold uppercase tracking-wider text-muted-foreground hover:text-foreground active:scale-95"
+                  >
+                    <FileText className="size-3" />
+                  </button>
+                  <button
+                    onClick={() => onCopyLink(o)}
+                    className={`flex items-center gap-1 rounded-md px-3 py-2 text-[11px] font-bold uppercase tracking-wider transition-colors active:scale-95 ${
+                      isCopied
+                        ? "bg-[color:var(--success)]/15 text-[color:var(--success)]"
+                        : isLinked
+                          ? "border border-border bg-card text-foreground hover:bg-accent"
+                          : "bg-foreground text-background"
+                    }`}
+                  >
+                    {isCopied ? (
+                      <>
+                        <Check className="size-3" /> Скопировано
+                      </>
+                    ) : (
+                      <>
+                        <Link2 className="size-3" /> {isLinked ? "Ссылка" : "Получить"}
+                      </>
+                    )}
+                  </button>
+                </div>
               </div>
             </div>
           );
