@@ -1540,6 +1540,8 @@ function OffersTab({
         {filtered.map((o) => {
           const isLinked = linked.has(o.id);
           const isCopied = copiedOffer === o.id;
+          const boosted = applyLevelBoost(o, level.bonusPct);
+          const hasBoost = level.bonusPct > 0 && boosted.boostedPayout !== o.payout;
           return (
             <div
               key={o.id}
