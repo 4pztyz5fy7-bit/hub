@@ -66,6 +66,75 @@ function last4(s: string) {
   return d.slice(-4);
 }
 
+type NotifKind = "accrual" | "payout" | "offer";
+type Notification = {
+  id: string;
+  kind: NotifKind;
+  title: string;
+  body: string;
+  time: string;
+  amount?: string;
+  status?: "ok" | "pending" | "rejected";
+  read: boolean;
+};
+
+const initialNotifs: Notification[] = [
+  {
+    id: "n1",
+    kind: "accrual",
+    title: "Начисление",
+    body: "Газпромбанк Gold • ID 8824041",
+    time: "14:20",
+    amount: "+4 500 ₽",
+    read: false,
+  },
+  {
+    id: "n2",
+    kind: "payout",
+    title: "Заявка на вывод",
+    body: "50 000 ₽ отправлены в банк",
+    time: "13:05",
+    status: "pending",
+    read: false,
+  },
+  {
+    id: "n3",
+    kind: "offer",
+    title: "Новый оффер",
+    body: "Т-Инвестиции: брокерский счёт • EPC 142 ₽",
+    time: "12:10",
+    read: false,
+  },
+  {
+    id: "n4",
+    kind: "payout",
+    title: "Выплата зачислена",
+    body: "24 800 ₽ • Т-Банк •••• 4417",
+    time: "Вчера",
+    status: "ok",
+    read: true,
+  },
+  {
+    id: "n5",
+    kind: "offer",
+    title: "Новый оффер",
+    body: "Согласие: ОСАГО онлайн • 850 ₽ за заявку",
+    time: "Вчера",
+    read: true,
+  },
+  {
+    id: "n6",
+    kind: "payout",
+    title: "Заявка отклонена",
+    body: "Проверьте реквизиты и повторите",
+    time: "2 дня",
+    status: "rejected",
+    read: true,
+  },
+];
+
+
+
 const kpis = [
   { label: "Доход сегодня", value: "8 240 ₽", delta: "+12%", positive: true },
   { label: "Конверсии", value: "42", delta: "+6", positive: true },
