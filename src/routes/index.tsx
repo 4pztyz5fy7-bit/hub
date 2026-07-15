@@ -539,7 +539,9 @@ function DashboardPage() {
 
   // Shared state
   const [available, setAvailable] = useState(128400);
-  const balance = 142850;
+  const [balance, setBalance] = useState(142850);
+  const [levelToast, setLevelToast] = useState<Level | null>(null);
+  const prevLevelIdxRef = useRef<number>(getLevelIndex(142850));
   const [bank, setBank] = useState<BankDetails | null>(null);
   const [payouts, setPayouts] = useState<Payout[]>(initialPayouts);
   const [notifs, setNotifs] = useState<Notification[]>(initialNotifs);
