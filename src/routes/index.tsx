@@ -913,6 +913,7 @@ function DashboardPage() {
             onOpenDetail={(o) => setOfferDetail(o)}
             requestsCount={requests.length}
             onOpenAdmin={() => setAdminOpen(true)}
+            level={levelInfo.current}
           />
         )}
         {active === "stats" && (
