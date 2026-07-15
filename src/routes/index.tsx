@@ -10,12 +10,58 @@ import {
   Bell,
   ArrowUpRight,
   TrendingUp,
+  Landmark,
+  Pencil,
+  X,
+  CheckCircle2,
+  AlertCircle,
 } from "lucide-react";
 
 
 export const Route = createFileRoute("/")({
   component: DashboardPage,
 });
+
+type BankDetails = {
+  method: "card" | "account" | "sbp";
+  holder: string;
+  inn: string;
+  bank: string;
+  bik: string;
+  account: string;
+  card: string;
+  sbpPhone: string;
+};
+
+const emptyBank: BankDetails = {
+  method: "card",
+  holder: "",
+  inn: "",
+  bank: "",
+  bik: "",
+  account: "",
+  card: "",
+  sbpPhone: "",
+};
+
+function maskCard(v: string) {
+  const d = v.replace(/\D/g, "").slice(0, 16);
+  return d.replace(/(.{4})/g, "$1 ").trim();
+}
+function maskDigits(v: string, len: number) {
+  return v.replace(/\D/g, "").slice(0, len);
+}
+function maskPhone(v: string) {
+  const d = v.replace(/\D/g, "").slice(0, 11);
+  if (!d) return "";
+  const p = d.startsWith("8") ? "7" + d.slice(1) : d;
+  const [, a, b, c, e] = p.match(/^(\d{0,1})(\d{0,3})(\d{0,3})(\d{0,4})/) || [];
+  return `+${a}${b ? " " + b : ""}${c ? " " + c : ""}${e ? "-" + e : ""}`.trim();
+}
+function last4(s: string) {
+  const d = s.replace(/\D/g, "");
+  return d.slice(-4);
+}
 
 const kpis = [
   { label: "Доход сегодня", value: "8 240 ₽", delta: "+12%", positive: true },
