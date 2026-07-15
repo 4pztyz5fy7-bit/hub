@@ -123,7 +123,24 @@ const weekLabels = ["Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Вс"];
 function DashboardPage() {
   const [copied, setCopied] = useState(false);
   const [active, setActive] = useState<"info" | "offers" | "stats" | "payouts">("info");
+  const [bank, setBank] = useState<BankDetails | null>(null);
+  const [bankOpen, setBankOpen] = useState(false);
+  const [draft, setDraft] = useState<BankDetails>(emptyBank);
   const refLink = "kvant.io/p/user772/ref";
+
+  const openBank = () => {
+    setDraft(bank ?? emptyBank);
+    setBankOpen(true);
+  };
+
+  const errors = validateBank(draft);
+  const canSave = Object.keys(errors).length === 0;
+
+  const saveBank = () => {
+    if (!canSave) return;
+    setBank(draft);
+    setBankOpen(false);
+  };
 
   const copy = async () => {
     try {
@@ -132,6 +149,8 @@ function DashboardPage() {
       setTimeout(() => setCopied(false), 1600);
     } catch {}
   };
+
+
 
 
   return (
