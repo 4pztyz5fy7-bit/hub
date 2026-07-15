@@ -500,6 +500,25 @@ function getLevel(earned: number) {
   return { idx, current, next, progress, remaining };
 }
 
+/** Applies the current level's `bonusPct` to an offer's numeric fields and payout string. */
+function applyLevelBoost(offer: Offer, bonusPct: number) {
+  if (!bonusPct) return { ...offer, boostedPayout: offer.payout, boostedEpc: offer.epc };
+  const m = 1 + bonusPct / 100;
+  const boostedEpc = Math.round(offer.epc * m);
+  const s = offer.payout.trim();
+  let boostedPayout = offer.payout;
+  const rubMatch = s.match(/^([\d\s]+)\s*₽$/);
+  const pctMatch = s.match(/^([\d.,]+)\s*%$/);
+  if (rubMatch) {
+    const n = Math.round(Number(rubMatch[1].replace(/\s/g, "")) * m);
+    boostedPayout = `${fmt(n)} ₽`;
+  } else if (pctMatch) {
+    const n = Number(pctMatch[1].replace(",", ".")) * m;
+    boostedPayout = `${n.toFixed(1).replace(".", ",")}%`;
+  }
+  return { ...offer, boostedPayout, boostedEpc };
+}
+
 
 
 /* ============================ Validators =============================== */
