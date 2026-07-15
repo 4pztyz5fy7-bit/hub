@@ -500,6 +500,37 @@ function getLevel(earned: number) {
   return { idx, current, next, progress, remaining };
 }
 
+/* ============================ Level history ============================ */
+
+type LevelHistoryEntry = {
+  levelId: Level["id"];
+  /** Human-readable date shown in the UI */
+  date: string;
+  /** ISO for sort */
+  iso: string;
+  /** Earned amount at unlock moment */
+  earnedAt: number;
+};
+
+/** Seed reached levels with plausible unlock dates before the demo bumps balance. */
+function seedLevelHistory(earned: number): LevelHistoryEntry[] {
+  const reached = getLevelIndex(earned);
+  const now = Date.now();
+  const daysAgo = [128, 41]; // Start, Silver — только для достигнутых
+  const out: LevelHistoryEntry[] = [];
+  for (let i = 0; i <= reached; i++) {
+    const lv = LEVELS[i];
+    const d = new Date(now - (daysAgo[i] ?? 7 * (reached - i + 1)) * 86_400_000);
+    out.push({
+      levelId: lv.id,
+      iso: d.toISOString(),
+      date: d.toLocaleDateString("ru-RU", { day: "2-digit", month: "long", year: "numeric" }),
+      earnedAt: Math.max(lv.minEarned, i === 0 ? 0 : lv.minEarned),
+    });
+  }
+  return out;
+}
+
 /** Applies the current level's `bonusPct` to an offer's numeric fields and payout string. */
 function applyLevelBoost(offer: Offer, bonusPct: number) {
   if (!bonusPct) return { ...offer, boostedPayout: offer.payout, boostedEpc: offer.epc };
