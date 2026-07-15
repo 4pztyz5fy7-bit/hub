@@ -697,6 +697,7 @@ function InfoTab({
   onGoOffers,
   onGoConversions,
   onRequestPayout,
+  onOpenLevels,
 }: {
   balance: number;
   available: number;
@@ -707,9 +708,11 @@ function InfoTab({
   onGoOffers: () => void;
   onGoConversions: () => void;
   onRequestPayout: () => void;
+  onOpenLevels: () => void;
 }) {
   const [copied, setCopied] = useState(false);
   const [activityTab, setActivityTab] = useState<"offers" | "conv">("offers");
+  const level = useMemo(() => getLevel(balance), [balance]);
   const refLink = "kvant.io/p/user772/ref";
   const copy = async () => {
     try {
