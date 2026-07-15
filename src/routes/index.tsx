@@ -369,6 +369,8 @@ type Level = {
   minEarned: number; // ₽, накопленный доход за всё время
   bonusPct: number; // прибавка к ставкам
   payoutHours: number; // скорость выплаты
+  minPayout: number; // минимальная сумма заявки, ₽
+  feePct: number; // комиссия платформы, %
   Icon: LucideIcon;
   color: string; // tailwind text-color class
   bg: string; // tailwind bg-color class
