@@ -517,6 +517,7 @@ function validateBank(b: BankDetails): Partial<Record<keyof BankDetails, string>
 function notifMeta(n: Notification) {
   if (n.kind === "accrual") return { Icon: Coins, iconBg: "bg-[color:var(--success)]/10", iconColor: "text-[color:var(--success)]" };
   if (n.kind === "offer") return { Icon: Sparkles, iconBg: "bg-primary/10", iconColor: "text-primary" };
+  if (n.kind === "levelup") return { Icon: Trophy, iconBg: "bg-amber-500/10", iconColor: "text-amber-500" };
   if (n.status === "paid") return { Icon: CheckCircle2, iconBg: "bg-[color:var(--success)]/10", iconColor: "text-[color:var(--success)]" };
   if (n.status === "rejected") return { Icon: AlertCircle, iconBg: "bg-destructive/10", iconColor: "text-destructive" };
   return { Icon: Wallet, iconBg: "bg-[color:var(--warning)]/10", iconColor: "text-[color:var(--warning)]" };
