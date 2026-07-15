@@ -822,6 +822,34 @@ function DashboardPage() {
         </div>
       </header>
 
+      {/* Level-up floating toast */}
+      {levelToast && (
+        <div className="pointer-events-none fixed inset-x-0 top-14 z-40 flex justify-center px-4">
+          <button
+            onClick={() => {
+              setLevelToast(null);
+              setLevelsOpen(true);
+            }}
+            className={`pointer-events-auto animate-in-up mt-2 flex w-full max-w-[420px] items-center gap-3 rounded-xl border ${levelToast.ring} ${levelToast.bg} px-3 py-2.5 text-left shadow-lg backdrop-blur active:scale-[0.99]`}
+          >
+            <div className={`grid size-9 shrink-0 place-items-center rounded-lg bg-background/70 ${levelToast.color}`}>
+              <levelToast.Icon className="size-4" />
+            </div>
+            <div className="min-w-0 flex-1">
+              <p className={`text-[10px] font-bold uppercase tracking-widest ${levelToast.color}`}>
+                Новый уровень
+              </p>
+              <p className="truncate text-sm font-bold">{levelToast.name}</p>
+              <p className="mt-0.5 truncate text-[10.5px] text-foreground/80">
+                Разблокировано {levelToast.perks.length} преимуществ
+              </p>
+            </div>
+            <ChevronRight className={`size-4 shrink-0 ${levelToast.color}`} />
+          </button>
+        </div>
+      )}
+
+
       <main key={active} className="mx-auto max-w-[420px] space-y-6 p-4 pb-28">
         {active === "info" && (
           <InfoTab
