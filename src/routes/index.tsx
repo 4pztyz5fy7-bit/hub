@@ -247,10 +247,15 @@ function DashboardPage() {
         <div className="flex items-center gap-3">
           <button
             aria-label="Уведомления"
-            className="relative flex size-8 items-center justify-center rounded-full text-muted-foreground hover:bg-accent"
+            onClick={() => setNotifOpen(true)}
+            className="relative flex size-8 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
           >
             <Bell className="size-4" />
-            <span className="absolute right-1.5 top-1.5 size-1.5 rounded-full bg-primary" />
+            {unreadCount > 0 && (
+              <span className="absolute -right-0.5 -top-0.5 grid min-w-[16px] place-items-center rounded-full bg-primary px-1 font-mono text-[9px] font-bold leading-none text-primary-foreground">
+                {unreadCount}
+              </span>
+            )}
           </button>
           <div className="flex flex-col items-end leading-none">
             <span className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
