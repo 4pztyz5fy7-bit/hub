@@ -15,6 +15,9 @@ import {
   X,
   CheckCircle2,
   AlertCircle,
+  Coins,
+  Sparkles,
+  Clock,
 } from "lucide-react";
 
 
@@ -62,6 +65,75 @@ function last4(s: string) {
   const d = s.replace(/\D/g, "");
   return d.slice(-4);
 }
+
+type NotifKind = "accrual" | "payout" | "offer";
+type Notification = {
+  id: string;
+  kind: NotifKind;
+  title: string;
+  body: string;
+  time: string;
+  amount?: string;
+  status?: "ok" | "pending" | "rejected";
+  read: boolean;
+};
+
+const initialNotifs: Notification[] = [
+  {
+    id: "n1",
+    kind: "accrual",
+    title: "Начисление",
+    body: "Газпромбанк Gold • ID 8824041",
+    time: "14:20",
+    amount: "+4 500 ₽",
+    read: false,
+  },
+  {
+    id: "n2",
+    kind: "payout",
+    title: "Заявка на вывод",
+    body: "50 000 ₽ отправлены в банк",
+    time: "13:05",
+    status: "pending",
+    read: false,
+  },
+  {
+    id: "n3",
+    kind: "offer",
+    title: "Новый оффер",
+    body: "Т-Инвестиции: брокерский счёт • EPC 142 ₽",
+    time: "12:10",
+    read: false,
+  },
+  {
+    id: "n4",
+    kind: "payout",
+    title: "Выплата зачислена",
+    body: "24 800 ₽ • Т-Банк •••• 4417",
+    time: "Вчера",
+    status: "ok",
+    read: true,
+  },
+  {
+    id: "n5",
+    kind: "offer",
+    title: "Новый оффер",
+    body: "Согласие: ОСАГО онлайн • 850 ₽ за заявку",
+    time: "Вчера",
+    read: true,
+  },
+  {
+    id: "n6",
+    kind: "payout",
+    title: "Заявка отклонена",
+    body: "Проверьте реквизиты и повторите",
+    time: "2 дня",
+    status: "rejected",
+    read: true,
+  },
+];
+
+
 
 const kpis = [
   { label: "Доход сегодня", value: "8 240 ₽", delta: "+12%", positive: true },
@@ -126,6 +198,15 @@ function DashboardPage() {
   const [bank, setBank] = useState<BankDetails | null>(null);
   const [bankOpen, setBankOpen] = useState(false);
   const [draft, setDraft] = useState<BankDetails>(emptyBank);
+  const [notifs, setNotifs] = useState<Notification[]>(initialNotifs);
+  const [notifOpen, setNotifOpen] = useState(false);
+  const [notifFilter, setNotifFilter] = useState<"all" | NotifKind>("all");
+  const unreadCount = notifs.filter((n) => !n.read).length;
+  const filteredNotifs =
+    notifFilter === "all" ? notifs : notifs.filter((n) => n.kind === notifFilter);
+  const markAllRead = () => setNotifs((ns) => ns.map((n) => ({ ...n, read: true })));
+  const toggleRead = (id: string) =>
+    setNotifs((ns) => ns.map((n) => (n.id === id ? { ...n, read: true } : n)));
   const refLink = "kvant.io/p/user772/ref";
 
   const openBank = () => {
@@ -166,10 +247,15 @@ function DashboardPage() {
         <div className="flex items-center gap-3">
           <button
             aria-label="Уведомления"
-            className="relative flex size-8 items-center justify-center rounded-full text-muted-foreground hover:bg-accent"
+            onClick={() => setNotifOpen(true)}
+            className="relative flex size-8 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
           >
             <Bell className="size-4" />
-            <span className="absolute right-1.5 top-1.5 size-1.5 rounded-full bg-primary" />
+            {unreadCount > 0 && (
+              <span className="absolute -right-0.5 -top-0.5 grid min-w-[16px] place-items-center rounded-full bg-primary px-1 font-mono text-[9px] font-bold leading-none text-primary-foreground">
+                {unreadCount}
+              </span>
+            )}
           </button>
           <div className="flex flex-col items-end leading-none">
             <span className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
@@ -606,6 +692,132 @@ function DashboardPage() {
 
 
 
+      {/* Notifications sheet */}
+      {notifOpen && (
+        <div className="fixed inset-0 z-50 flex items-end justify-center bg-foreground/40 backdrop-blur-sm sm:items-center">
+          <div className="animate-in-up flex max-h-[92vh] w-full max-w-[440px] flex-col overflow-hidden rounded-t-2xl border border-border bg-background sm:rounded-2xl">
+            <div className="flex items-center justify-between border-b border-border px-4 py-3">
+              <div>
+                <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+                  Центр уведомлений
+                </p>
+                <h3 className="text-sm font-bold">
+                  Уведомления{" "}
+                  {unreadCount > 0 && (
+                    <span className="ml-1 font-mono text-xs text-primary">
+                      • {unreadCount} новых
+                    </span>
+                  )}
+                </h3>
+              </div>
+              <button
+                onClick={() => setNotifOpen(false)}
+                aria-label="Закрыть"
+                className="grid size-8 place-items-center rounded-full text-muted-foreground hover:bg-accent"
+              >
+                <X className="size-4" />
+              </button>
+            </div>
+
+            <div className="flex items-center justify-between gap-2 border-b border-border px-4 py-2">
+              <div className="flex gap-1 overflow-x-auto">
+                {(
+                  [
+                    { id: "all", label: "Все" },
+                    { id: "accrual", label: "Начисления" },
+                    { id: "payout", label: "Выплаты" },
+                    { id: "offer", label: "Офферы" },
+                  ] as const
+                ).map((t) => (
+                  <button
+                    key={t.id}
+                    onClick={() => setNotifFilter(t.id)}
+                    className={`rounded-full px-3 py-1 text-[10px] font-bold uppercase tracking-wider transition-colors ${
+                      notifFilter === t.id
+                        ? "bg-foreground text-background"
+                        : "bg-secondary text-muted-foreground hover:text-foreground"
+                    }`}
+                  >
+                    {t.label}
+                  </button>
+                ))}
+              </div>
+              <button
+                onClick={markAllRead}
+                disabled={unreadCount === 0}
+                className="shrink-0 text-[10px] font-bold uppercase tracking-wider text-primary disabled:text-muted-foreground/50"
+              >
+                Прочитано
+              </button>
+            </div>
+
+            <div className="flex-1 divide-y divide-border overflow-y-auto">
+              {filteredNotifs.length === 0 && (
+                <div className="p-8 text-center text-xs text-muted-foreground">
+                  Пока пусто
+                </div>
+              )}
+              {filteredNotifs.map((n) => {
+                const meta = notifMeta(n);
+                return (
+                  <button
+                    key={n.id}
+                    onClick={() => toggleRead(n.id)}
+                    className={`flex w-full items-start gap-3 p-4 text-left transition-colors hover:bg-accent/50 ${
+                      n.read ? "opacity-70" : ""
+                    }`}
+                  >
+                    <div
+                      className={`grid size-9 shrink-0 place-items-center rounded-lg ${meta.iconBg}`}
+                    >
+                      <meta.Icon className={`size-4 ${meta.iconColor}`} />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center gap-2">
+                        <p className="truncate text-xs font-bold">{n.title}</p>
+                        {!n.read && (
+                          <span className="size-1.5 shrink-0 rounded-full bg-primary" />
+                        )}
+                      </div>
+                      <p className="mt-0.5 truncate text-[11px] text-muted-foreground">
+                        {n.body}
+                      </p>
+                      <p className="mt-1 flex items-center gap-1 font-mono text-[9px] uppercase text-muted-foreground">
+                        <Clock className="size-2.5" /> {n.time}
+                      </p>
+                    </div>
+                    <div className="shrink-0 text-right">
+                      {n.amount && (
+                        <p className="font-mono text-xs font-bold text-[color:var(--success)]">
+                          {n.amount}
+                        </p>
+                      )}
+                      {n.status && (
+                        <span
+                          className={`inline-block rounded-full px-2 py-0.5 font-mono text-[9px] font-bold uppercase ${
+                            n.status === "ok"
+                              ? "bg-[color:var(--success)]/10 text-[color:var(--success)]"
+                              : n.status === "pending"
+                                ? "bg-[color:var(--warning)]/10 text-[color:var(--warning)]"
+                                : "bg-destructive/10 text-destructive"
+                          }`}
+                        >
+                          {n.status === "ok"
+                            ? "Готово"
+                            : n.status === "pending"
+                              ? "В работе"
+                              : "Отказ"}
+                        </span>
+                      )}
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Bottom nav */}
       <nav className="fixed bottom-0 left-0 right-0 z-30 flex h-16 items-center justify-around border-t border-border bg-background/95 px-2 backdrop-blur-md">
         {(
@@ -691,3 +903,39 @@ function Field({
 }
 
 
+function notifMeta(n: Notification) {
+  if (n.kind === "accrual") {
+    return {
+      Icon: Coins,
+      iconBg: "bg-[color:var(--success)]/10",
+      iconColor: "text-[color:var(--success)]",
+    };
+  }
+  if (n.kind === "offer") {
+    return {
+      Icon: Sparkles,
+      iconBg: "bg-primary/10",
+      iconColor: "text-primary",
+    };
+  }
+  // payout
+  if (n.status === "ok") {
+    return {
+      Icon: CheckCircle2,
+      iconBg: "bg-[color:var(--success)]/10",
+      iconColor: "text-[color:var(--success)]",
+    };
+  }
+  if (n.status === "rejected") {
+    return {
+      Icon: AlertCircle,
+      iconBg: "bg-destructive/10",
+      iconColor: "text-destructive",
+    };
+  }
+  return {
+    Icon: Wallet,
+    iconBg: "bg-[color:var(--warning)]/10",
+    iconColor: "text-[color:var(--warning)]",
+  };
+}
