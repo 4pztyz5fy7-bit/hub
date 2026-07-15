@@ -135,7 +135,7 @@ type Payout = {
   note?: string;
 };
 
-type NotifKind = "accrual" | "payout" | "offer";
+type NotifKind = "accrual" | "payout" | "offer" | "levelup";
 type Notification = {
   id: string;
   kind: NotifKind;
