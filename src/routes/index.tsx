@@ -810,6 +810,9 @@ function DashboardPage() {
             linked={linkedOffers}
             copiedOffer={copiedOffer}
             onCopyLink={copyOfferLink}
+            onOpenDetail={(o) => setOfferDetail(o)}
+            requestsCount={requests.length}
+            onOpenAdmin={() => setAdminOpen(true)}
           />
         )}
         {active === "stats" && (
