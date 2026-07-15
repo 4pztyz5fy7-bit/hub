@@ -369,6 +369,8 @@ type Level = {
   minEarned: number; // ₽, накопленный доход за всё время
   bonusPct: number; // прибавка к ставкам
   payoutHours: number; // скорость выплаты
+  minPayout: number; // минимальная сумма заявки, ₽
+  feePct: number; // комиссия платформы, %
   Icon: LucideIcon;
   color: string; // tailwind text-color class
   bg: string; // tailwind bg-color class
@@ -384,6 +386,8 @@ const LEVELS: Level[] = [
     minEarned: 0,
     bonusPct: 0,
     payoutHours: 72,
+    minPayout: 1000,
+    feePct: 3,
     Icon: Rocket,
     color: "text-slate-500",
     bg: "bg-slate-500/10",
@@ -401,6 +405,8 @@ const LEVELS: Level[] = [
     minEarned: 50000,
     bonusPct: 2,
     payoutHours: 48,
+    minPayout: 700,
+    feePct: 2,
     Icon: Shield,
     color: "text-zinc-500",
     bg: "bg-zinc-400/15",
@@ -418,6 +424,8 @@ const LEVELS: Level[] = [
     minEarned: 150000,
     bonusPct: 5,
     payoutHours: 24,
+    minPayout: 500,
+    feePct: 1,
     Icon: Trophy,
     color: "text-primary",
     bg: "bg-primary/10",
@@ -436,6 +444,8 @@ const LEVELS: Level[] = [
     minEarned: 500000,
     bonusPct: 8,
     payoutHours: 12,
+    minPayout: 300,
+    feePct: 0.5,
     Icon: Crown,
     color: "text-violet-500",
     bg: "bg-violet-500/10",
@@ -454,6 +464,8 @@ const LEVELS: Level[] = [
     minEarned: 1500000,
     bonusPct: 12,
     payoutHours: 1,
+    minPayout: 100,
+    feePct: 0,
     Icon: Gem,
     color: "text-cyan-500",
     bg: "bg-cyan-500/10",
@@ -486,6 +498,25 @@ function getLevel(earned: number) {
   const progress = next ? Math.min(1, (earned - prevMin) / range) : 1;
   const remaining = next ? Math.max(0, nextMin - earned) : 0;
   return { idx, current, next, progress, remaining };
+}
+
+/** Applies the current level's `bonusPct` to an offer's numeric fields and payout string. */
+function applyLevelBoost(offer: Offer, bonusPct: number) {
+  if (!bonusPct) return { ...offer, boostedPayout: offer.payout, boostedEpc: offer.epc };
+  const m = 1 + bonusPct / 100;
+  const boostedEpc = Math.round(offer.epc * m);
+  const s = offer.payout.trim();
+  let boostedPayout = offer.payout;
+  const rubMatch = s.match(/^([\d\s]+)\s*₽$/);
+  const pctMatch = s.match(/^([\d.,]+)\s*%$/);
+  if (rubMatch) {
+    const n = Math.round(Number(rubMatch[1].replace(/\s/g, "")) * m);
+    boostedPayout = `${fmt(n)} ₽`;
+  } else if (pctMatch) {
+    const n = Number(pctMatch[1].replace(",", ".")) * m;
+    boostedPayout = `${n.toFixed(1).replace(".", ",")}%`;
+  }
+  return { ...offer, boostedPayout, boostedEpc };
 }
 
 
@@ -701,6 +732,11 @@ function DashboardPage() {
 
   const requestPayout = (amount: number) => {
     if (!bank || amount <= 0 || amount > available) return;
+    const lvl = levelInfo.current;
+    if (amount < lvl.minPayout) return;
+    const fee = Math.round((amount * lvl.feePct) / 100);
+    const net = amount - fee;
+    const speedFactor = Math.max(0.35, Math.min(1, lvl.payoutHours / 72));
     const id = `PO-${Math.floor(9000 + Math.random() * 900)}`;
     const p: Payout = {
       id,
@@ -710,6 +746,9 @@ function DashboardPage() {
       method: bankMethodLabel(bank),
       destination: bankDest(bank),
       status: "pending",
+      note: fee > 0
+        ? `Комиссия ${lvl.feePct}% (${fmt(fee)} ₽) • к зачислению ${fmt(net)} ₽ • ${lvl.name}`
+        : `Без комиссии • ${lvl.name}`,
     };
     setPayouts((prev) => [p, ...prev]);
     setAvailable((v) => v - amount);
@@ -717,7 +756,7 @@ function DashboardPage() {
     pushNotif({
       kind: "payout",
       title: "Заявка на вывод",
-      body: `${fmt(amount)} ₽ • ${p.method} ${p.destination}`,
+      body: `${fmt(net)} ₽ к зачислению • ${p.method} ${p.destination} • ${lvl.name}`,
       status: "pending",
     });
 
@@ -726,20 +765,20 @@ function DashboardPage() {
       pushNotif({
         kind: "payout",
         title: "Заявка в обработке",
-        body: `${id} • ${fmt(amount)} ₽`,
+        body: `${id} • ${fmt(net)} ₽ • ${lvl.payoutHours}ч по уровню ${lvl.name}`,
         status: "processing",
       });
-    }, 3500);
+    }, Math.round(3500 * speedFactor));
 
     const t2 = window.setTimeout(() => {
       setPayouts((prev) => prev.map((x) => (x.id === id ? { ...x, status: "paid" } : x)));
       pushNotif({
         kind: "payout",
         title: "Выплата зачислена",
-        body: `${fmt(amount)} ₽ • ${p.method} ${p.destination}`,
+        body: `${fmt(net)} ₽ • ${p.method} ${p.destination}`,
         status: "paid",
       });
-    }, 8000);
+    }, Math.round(8000 * speedFactor));
 
     timeouts.current.push(t1, t2);
   };
@@ -874,6 +913,7 @@ function DashboardPage() {
             onOpenDetail={(o) => setOfferDetail(o)}
             requestsCount={requests.length}
             onOpenAdmin={() => setAdminOpen(true)}
+            level={levelInfo.current}
           />
         )}
         {active === "stats" && (
@@ -906,6 +946,7 @@ function DashboardPage() {
         <PayoutSheet
           available={available}
           bank={bank}
+          level={levelInfo.current}
           onClose={() => setPayoutOpen(false)}
           onSubmit={requestPayout}
         />
@@ -940,6 +981,7 @@ function DashboardPage() {
           copiedOffer={copiedOffer}
           requests={requests.filter((r) => r.offerId === offerDetail.id)}
           onCopyLink={copyOfferLink}
+          level={levelInfo.current}
           onClose={() => setOfferDetail(null)}
         />
       )}
@@ -1374,6 +1416,7 @@ function OffersTab({
   onOpenDetail,
   requestsCount,
   onOpenAdmin,
+  level,
 }: {
   offers: Offer[];
   linked: Set<string>;
@@ -1382,6 +1425,7 @@ function OffersTab({
   onOpenDetail: (o: Offer) => void;
   requestsCount: number;
   onOpenAdmin: () => void;
+  level: Level;
 }) {
   const [q, setQ] = useState("");
   const [cat, setCat] = useState<string>("Все");
@@ -1411,6 +1455,14 @@ function OffersTab({
             {filtered.length} из {offers.length}
           </span>
         </div>
+        {level.bonusPct > 0 && (
+          <div className={`mb-3 flex items-center gap-2 rounded-md border ${level.ring} ${level.bg} px-3 py-2`}>
+            <level.Icon className={`size-3.5 shrink-0 ${level.color}`} />
+            <p className={`text-[10.5px] font-bold ${level.color}`}>
+              Бонус уровня «{level.name}»: +{level.bonusPct}% ко всем ставкам применяется автоматически
+            </p>
+          </div>
+        )}
         <button
           onClick={onOpenAdmin}
           className="mb-3 flex w-full items-center justify-between gap-3 rounded-md border border-border bg-secondary/40 px-3 py-2 text-left transition-colors hover:border-foreground/20"
@@ -1488,6 +1540,8 @@ function OffersTab({
         {filtered.map((o) => {
           const isLinked = linked.has(o.id);
           const isCopied = copiedOffer === o.id;
+          const boosted = applyLevelBoost(o, level.bonusPct);
+          const hasBoost = level.bonusPct > 0 && boosted.boostedPayout !== o.payout;
           return (
             <div
               key={o.id}
@@ -1516,13 +1570,20 @@ function OffersTab({
                   </p>
                 </div>
                 <div className="shrink-0 text-right">
-                  <p className="font-mono text-xs font-bold">{o.payout}</p>
-                  <p className="font-mono text-[9px] uppercase text-muted-foreground">за действие</p>
+                  <p className="font-mono text-xs font-bold">{boosted.boostedPayout}</p>
+                  {hasBoost ? (
+                    <p className="font-mono text-[9px] uppercase text-muted-foreground">
+                      <span className="line-through opacity-70">{o.payout}</span>{" "}
+                      <span className={level.color}>+{level.bonusPct}%</span>
+                    </p>
+                  ) : (
+                    <p className="font-mono text-[9px] uppercase text-muted-foreground">за действие</p>
+                  )}
                 </div>
               </button>
               <div className="mt-3 flex items-end justify-between gap-2">
                 <div className="grid grid-cols-2 gap-3">
-                  <Stat label="EPC" value={`${fmt(o.epc)} ₽`} />
+                  <Stat label="EPC" value={`${fmt(boosted.boostedEpc)} ₽`} />
                   <Stat label="CR" value={`${o.cr.toFixed(1)}%`} />
                 </div>
                 <div className="flex items-center gap-1.5">
@@ -2141,11 +2202,13 @@ function Field({
 function PayoutSheet({
   available,
   bank,
+  level,
   onClose,
   onSubmit,
 }: {
   available: number;
   bank: BankDetails;
+  level: Level;
   onClose: () => void;
   onSubmit: (amount: number) => void;
 }) {
@@ -2154,11 +2217,17 @@ function PayoutSheet({
   const err =
     amount <= 0
       ? "Введите сумму"
-      : amount < 500
-        ? "Минимум 500 ₽"
+      : amount < level.minPayout
+        ? `Минимум ${fmt(level.minPayout)} ₽ на уровне ${level.name}`
         : amount > available
           ? `Больше доступного (${fmt(available)} ₽)`
           : "";
+
+  const fee = Math.round((amount * level.feePct) / 100);
+  const net = Math.max(0, amount - fee);
+  const eta = level.payoutHours >= 24
+    ? `${Math.round(level.payoutHours / 24)} дн`
+    : `${level.payoutHours} ч`;
 
   const quick = [Math.floor(available * 0.25), Math.floor(available * 0.5), available];
 
@@ -2181,6 +2250,21 @@ function PayoutSheet({
           </button>
         </div>
         <div className="space-y-4 p-4">
+          {/* Level conditions banner */}
+          <div className={`flex items-center gap-3 rounded-lg border ${level.ring} ${level.bg} px-3 py-2.5`}>
+            <div className={`grid size-8 shrink-0 place-items-center rounded-md bg-background/60 ${level.color}`}>
+              <level.Icon className="size-4" />
+            </div>
+            <div className="min-w-0 flex-1">
+              <p className={`text-[10px] font-bold uppercase tracking-widest ${level.color}`}>
+                Условия уровня «{level.name}»
+              </p>
+              <p className="mt-0.5 truncate text-[10.5px] font-medium">
+                Мин. {fmt(level.minPayout)} ₽ • комиссия {level.feePct}% • ETA {eta}
+              </p>
+            </div>
+          </div>
+
           <div className="rounded-lg border border-border bg-card p-3">
             <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
               Куда
@@ -2226,11 +2310,21 @@ function PayoutSheet({
             </div>
           </div>
 
-          <div className="flex items-center justify-between rounded-md border border-border bg-secondary/40 px-3 py-2">
-            <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
-              Комиссия
-            </span>
-            <span className="font-mono text-[11px] font-bold text-[color:var(--success)]">0 ₽</span>
+          <div className="space-y-1.5 rounded-md border border-border bg-secondary/40 px-3 py-2.5">
+            <SummaryRow label="Сумма заявки" value={`${fmt(amount)} ₽`} />
+            <SummaryRow
+              label={`Комиссия ${level.feePct}%`}
+              value={fee > 0 ? `−${fmt(fee)} ₽` : "0 ₽"}
+              tone={fee > 0 ? "warn" : "success"}
+            />
+            <SummaryRow
+              label="ETA зачисления"
+              value={eta}
+              tone="primary"
+            />
+            <div className="mt-2 border-t border-border pt-2">
+              <SummaryRow label="К зачислению" value={`${fmt(net)} ₽`} strong />
+            </div>
           </div>
         </div>
         <div className="flex gap-2 border-t border-border p-3">
@@ -2249,6 +2343,37 @@ function PayoutSheet({
           </button>
         </div>
       </div>
+    </div>
+  );
+}
+
+function SummaryRow({
+  label,
+  value,
+  tone,
+  strong,
+}: {
+  label: string;
+  value: string;
+  tone?: "success" | "warn" | "primary";
+  strong?: boolean;
+}) {
+  const cls =
+    tone === "success"
+      ? "text-[color:var(--success)]"
+      : tone === "warn"
+        ? "text-[color:var(--warning)]"
+        : tone === "primary"
+          ? "text-primary"
+          : "text-foreground";
+  return (
+    <div className="flex items-center justify-between">
+      <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+        {label}
+      </span>
+      <span className={`font-mono tabular-nums ${strong ? "text-sm font-bold" : "text-[11px] font-bold"} ${cls}`}>
+        {value}
+      </span>
     </div>
   );
 }
@@ -2573,6 +2698,7 @@ function OfferDetailSheet({
   requests,
   onCopyLink,
   onClose,
+  level,
 }: {
   offer: Offer;
   linked: boolean;
@@ -2580,10 +2706,13 @@ function OfferDetailSheet({
   requests: LinkRequest[];
   onCopyLink: (o: Offer, source?: string) => void;
   onClose: () => void;
+  level: Level;
 }) {
   const [source, setSource] = useState("Прямая ссылка");
   const isCopied = copiedOffer === offer.id;
   const sources = ["Прямая ссылка", "Telegram", "YouTube", "Instagram", "SEO", "Email"];
+  const boosted = applyLevelBoost(offer, level.bonusPct);
+  const hasBoost = level.bonusPct > 0 && boosted.boostedPayout !== offer.payout;
 
   return (
     <div className="fixed inset-0 z-50 flex items-end justify-center bg-foreground/40 backdrop-blur-sm sm:items-center">
@@ -2615,12 +2744,24 @@ function OfferDetailSheet({
         <div className="flex-1 space-y-5 overflow-y-auto px-4 py-4">
           {/* Payout hero */}
           <div className="rounded-xl border border-border bg-gradient-to-br from-secondary/60 to-transparent p-4">
-            <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
-              Выплата за конверсию
-            </p>
-            <p className="mt-1 font-mono text-2xl font-bold tabular-nums">{offer.payout}</p>
+            <div className="flex items-baseline justify-between gap-2">
+              <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+                Выплата за конверсию
+              </p>
+              {hasBoost && (
+                <span className={`flex items-center gap-1 rounded-full border ${level.ring} ${level.bg} px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider ${level.color}`}>
+                  <level.Icon className="size-2.5" /> +{level.bonusPct}% • {level.name}
+                </span>
+              )}
+            </div>
+            <p className="mt-1 font-mono text-2xl font-bold tabular-nums">{boosted.boostedPayout}</p>
+            {hasBoost && (
+              <p className="mt-0.5 font-mono text-[10px] text-muted-foreground">
+                базово: <span className="line-through">{offer.payout}</span>
+              </p>
+            )}
             <div className="mt-3 grid grid-cols-3 gap-3">
-              <Stat label="EPC" value={`${fmt(offer.epc)} ₽`} />
+              <Stat label="EPC" value={`${fmt(boosted.boostedEpc)} ₽`} />
               <Stat label="CR" value={`${offer.cr.toFixed(1)}%`} />
               <Stat label="Холд" value={offer.hold} />
             </div>
