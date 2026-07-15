@@ -1570,13 +1570,20 @@ function OffersTab({
                   </p>
                 </div>
                 <div className="shrink-0 text-right">
-                  <p className="font-mono text-xs font-bold">{o.payout}</p>
-                  <p className="font-mono text-[9px] uppercase text-muted-foreground">за действие</p>
+                  <p className="font-mono text-xs font-bold">{boosted.boostedPayout}</p>
+                  {hasBoost ? (
+                    <p className="font-mono text-[9px] uppercase text-muted-foreground">
+                      <span className="line-through opacity-70">{o.payout}</span>{" "}
+                      <span className={level.color}>+{level.bonusPct}%</span>
+                    </p>
+                  ) : (
+                    <p className="font-mono text-[9px] uppercase text-muted-foreground">за действие</p>
+                  )}
                 </div>
               </button>
               <div className="mt-3 flex items-end justify-between gap-2">
                 <div className="grid grid-cols-2 gap-3">
-                  <Stat label="EPC" value={`${fmt(o.epc)} ₽`} />
+                  <Stat label="EPC" value={`${fmt(boosted.boostedEpc)} ₽`} />
                   <Stat label="CR" value={`${o.cr.toFixed(1)}%`} />
                 </div>
                 <div className="flex items-center gap-1.5">
