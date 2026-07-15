@@ -10,17 +10,11 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
-import { Route as PayoutsRouteImport } from './routes/payouts'
 import { Route as IndexRouteImport } from './routes/index'
 
 const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
   id: '/sitemap.xml',
   path: '/sitemap.xml',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const PayoutsRoute = PayoutsRouteImport.update({
-  id: '/payouts',
-  path: '/payouts',
   getParentRoute: () => rootRouteImport,
 } as any)
 const IndexRoute = IndexRouteImport.update({
@@ -31,31 +25,27 @@ const IndexRoute = IndexRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
-  '/payouts': typeof PayoutsRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
-  '/payouts': typeof PayoutsRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
-  '/payouts': typeof PayoutsRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/payouts' | '/sitemap.xml'
+  fullPaths: '/' | '/sitemap.xml'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/payouts' | '/sitemap.xml'
-  id: '__root__' | '/' | '/payouts' | '/sitemap.xml'
+  to: '/' | '/sitemap.xml'
+  id: '__root__' | '/' | '/sitemap.xml'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
-  PayoutsRoute: typeof PayoutsRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
 }
 
@@ -66,13 +56,6 @@ declare module '@tanstack/react-router' {
       path: '/sitemap.xml'
       fullPath: '/sitemap.xml'
       preLoaderRoute: typeof SitemapDotxmlRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/payouts': {
-      id: '/payouts'
-      path: '/payouts'
-      fullPath: '/payouts'
-      preLoaderRoute: typeof PayoutsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/': {
@@ -87,7 +70,6 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
-  PayoutsRoute: PayoutsRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
 }
 export const routeTree = rootRouteImport
