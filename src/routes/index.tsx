@@ -1416,6 +1416,7 @@ function OffersTab({
   onOpenDetail,
   requestsCount,
   onOpenAdmin,
+  level,
 }: {
   offers: Offer[];
   linked: Set<string>;
@@ -1424,6 +1425,7 @@ function OffersTab({
   onOpenDetail: (o: Offer) => void;
   requestsCount: number;
   onOpenAdmin: () => void;
+  level: Level;
 }) {
   const [q, setQ] = useState("");
   const [cat, setCat] = useState<string>("Все");
