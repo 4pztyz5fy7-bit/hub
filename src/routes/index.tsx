@@ -871,6 +871,29 @@ function DashboardPage() {
         />
       )}
 
+      {/* Offer detail sheet */}
+      {offerDetail && (
+        <OfferDetailSheet
+          offer={offerDetail}
+          linked={linkedOffers.has(offerDetail.id)}
+          copiedOffer={copiedOffer}
+          requests={requests.filter((r) => r.offerId === offerDetail.id)}
+          onCopyLink={copyOfferLink}
+          onClose={() => setOfferDetail(null)}
+        />
+      )}
+
+      {/* Admin (link requests) sheet */}
+      {adminOpen && (
+        <AdminRequestsSheet
+          requests={requests}
+          onDecide={decideRequest}
+          onClose={() => setAdminOpen(false)}
+        />
+      )}
+
+
+
 
 
       {/* Bottom nav */}
