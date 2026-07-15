@@ -10,7 +10,28 @@ import {
   Bell,
   ArrowUpRight,
   TrendingUp,
+  ShieldCheck,
+  ShieldAlert,
+  ShieldQuestion,
+  Clock,
+  X,
+  Mail,
+  Phone,
+  IdCard,
+  Camera,
+  Landmark,
+  ChevronRight,
 } from "lucide-react";
+
+type KycStatus = "not_started" | "in_review" | "verified" | "rejected";
+
+type KycStep = {
+  id: string;
+  label: string;
+  hint: string;
+  Icon: typeof Mail;
+  done: boolean;
+};
 
 export const Route = createFileRoute("/")({
   component: DashboardPage,
