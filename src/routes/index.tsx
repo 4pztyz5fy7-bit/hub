@@ -611,8 +611,9 @@ function DashboardPage() {
   /* --------------------------- Offer link ----------------------------- */
 
   const [copiedOffer, setCopiedOffer] = useState<string | null>(null);
-  const copyOfferLink = async (offer: Offer) => {
-    const link = `https://kvant.io/p/user772/${offer.id}`;
+  const copyOfferLink = async (offer: Offer, source = "Прямая ссылка") => {
+    const sub = `sub-${Math.random().toString(36).slice(2, 6)}`;
+    const link = `https://kvant.io/p/user772/${offer.id}?sub=${sub}`;
     try {
       await navigator.clipboard.writeText(link);
     } catch {}
@@ -620,12 +621,45 @@ function DashboardPage() {
     setTimeout(() => setCopiedOffer((c) => (c === offer.id ? null : c)), 1600);
     const wasLinked = linkedOffers.has(offer.id);
     setLinkedOffers((s) => new Set(s).add(offer.id));
+
+    const reqId = `REQ-${Math.floor(7500 + Math.random() * 500)}`;
+    const req: LinkRequest = {
+      id: reqId,
+      offerId: offer.id,
+      offerName: offer.name,
+      offerTag: offer.tag,
+      createdAt: `Сегодня, ${nowTime()}`,
+      source,
+      sub,
+      link,
+      status: "new",
+    };
+    setRequests((prev) => [req, ...prev]);
+
     pushNotif({
       kind: "offer",
-      title: wasLinked ? "Ссылка скопирована" : "Оффер подключён",
-      body: `${offer.name} • ${link.replace("https://", "")}`,
+      title: wasLinked ? "Новая ссылка создана" : "Оффер подключён",
+      body: `${offer.name} • заявка ${reqId} на модерации`,
+    });
+
+    // Auto-move to review
+    const t1 = window.setTimeout(() => {
+      setRequests((prev) => prev.map((r) => (r.id === reqId ? { ...r, status: "review" } : r)));
+    }, 3000);
+    timeouts.current.push(t1);
+  };
+
+  const decideRequest = (id: string, status: "approved" | "rejected", note?: string) => {
+    setRequests((prev) => prev.map((r) => (r.id === id ? { ...r, status, note } : r)));
+    const req = requests.find((r) => r.id === id);
+    if (!req) return;
+    pushNotif({
+      kind: "offer",
+      title: status === "approved" ? "Ссылка одобрена" : "Ссылка отклонена",
+      body: `${req.offerName} • ${id}${note ? ` — ${note}` : ""}`,
     });
   };
+
 
   /* --------------------------- Payout flow ---------------------------- */
 
