@@ -135,7 +135,7 @@ type Payout = {
   note?: string;
 };
 
-type NotifKind = "accrual" | "payout" | "offer";
+type NotifKind = "accrual" | "payout" | "offer" | "levelup";
 type Notification = {
   id: string;
   kind: NotifKind;
@@ -517,6 +517,7 @@ function validateBank(b: BankDetails): Partial<Record<keyof BankDetails, string>
 function notifMeta(n: Notification) {
   if (n.kind === "accrual") return { Icon: Coins, iconBg: "bg-[color:var(--success)]/10", iconColor: "text-[color:var(--success)]" };
   if (n.kind === "offer") return { Icon: Sparkles, iconBg: "bg-primary/10", iconColor: "text-primary" };
+  if (n.kind === "levelup") return { Icon: Trophy, iconBg: "bg-amber-500/10", iconColor: "text-amber-500" };
   if (n.status === "paid") return { Icon: CheckCircle2, iconBg: "bg-[color:var(--success)]/10", iconColor: "text-[color:var(--success)]" };
   if (n.status === "rejected") return { Icon: AlertCircle, iconBg: "bg-destructive/10", iconColor: "text-destructive" };
   return { Icon: Wallet, iconBg: "bg-[color:var(--warning)]/10", iconColor: "text-[color:var(--warning)]" };
@@ -538,7 +539,9 @@ function DashboardPage() {
 
   // Shared state
   const [available, setAvailable] = useState(128400);
-  const balance = 142850;
+  const [balance, setBalance] = useState(142850);
+  const [levelToast, setLevelToast] = useState<Level | null>(null);
+  const prevLevelIdxRef = useRef<number>(getLevelIndex(142850));
   const [bank, setBank] = useState<BankDetails | null>(null);
   const [payouts, setPayouts] = useState<Payout[]>(initialPayouts);
   const [notifs, setNotifs] = useState<Notification[]>(initialNotifs);
@@ -593,6 +596,36 @@ function DashboardPage() {
   const markAllRead = () => setNotifs((ns) => ns.map((n) => ({ ...n, read: true })));
   const toggleRead = (id: string) =>
     setNotifs((ns) => ns.map((n) => (n.id === id ? { ...n, read: true } : n)));
+
+  /* --------------------------- Level-up watcher ----------------------- */
+  useEffect(() => {
+    const idx = getLevelIndex(balance);
+    if (idx > prevLevelIdxRef.current) {
+      const lvl = LEVELS[idx];
+      prevLevelIdxRef.current = idx;
+      setLevelToast(lvl);
+      pushNotif({
+        kind: "levelup",
+        title: `Новый уровень: ${lvl.name}`,
+        body: `Вы разблокировали ${lvl.perks.length} преимуществ • накоплено ${fmt(balance)} ₽`,
+      });
+      const t = window.setTimeout(() => setLevelToast(null), 5200);
+      return () => clearTimeout(t);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [balance]);
+
+  // Demo: bump balance across a threshold after 18s so the level-up flow fires.
+  useEffect(() => {
+    const t = window.setTimeout(() => {
+      setBalance((b) => {
+        const nextThreshold = LEVELS.find((l) => l.minEarned > b)?.minEarned;
+        return nextThreshold ? nextThreshold + 500 : b;
+      });
+    }, 18000);
+    return () => clearTimeout(t);
+  }, []);
+
 
   /* ----------------------------- Bank --------------------------------- */
 
@@ -788,6 +821,34 @@ function DashboardPage() {
           </div>
         </div>
       </header>
+
+      {/* Level-up floating toast */}
+      {levelToast && (
+        <div className="pointer-events-none fixed inset-x-0 top-14 z-40 flex justify-center px-4">
+          <button
+            onClick={() => {
+              setLevelToast(null);
+              setLevelsOpen(true);
+            }}
+            className={`pointer-events-auto animate-in-up mt-2 flex w-full max-w-[420px] items-center gap-3 rounded-xl border ${levelToast.ring} ${levelToast.bg} px-3 py-2.5 text-left shadow-lg backdrop-blur active:scale-[0.99]`}
+          >
+            <div className={`grid size-9 shrink-0 place-items-center rounded-lg bg-background/70 ${levelToast.color}`}>
+              <levelToast.Icon className="size-4" />
+            </div>
+            <div className="min-w-0 flex-1">
+              <p className={`text-[10px] font-bold uppercase tracking-widest ${levelToast.color}`}>
+                Новый уровень
+              </p>
+              <p className="truncate text-sm font-bold">{levelToast.name}</p>
+              <p className="mt-0.5 truncate text-[10.5px] text-foreground/80">
+                Разблокировано {levelToast.perks.length} преимуществ
+              </p>
+            </div>
+            <ChevronRight className={`size-4 shrink-0 ${levelToast.color}`} />
+          </button>
+        </div>
+      )}
+
 
       <main key={active} className="mx-auto max-w-[420px] space-y-6 p-4 pb-28">
         {active === "info" && (
@@ -2244,6 +2305,7 @@ function NotificationsSheet({
                 { id: "accrual" as const, label: "Начисления" },
                 { id: "payout" as const, label: "Выплаты" },
                 { id: "offer" as const, label: "Офферы" },
+                { id: "levelup" as const, label: "Уровни" },
               ]
             ).map((t) => (
               <button
