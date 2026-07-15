@@ -25,6 +25,17 @@ import {
   Download,
   Plus,
   ChevronRight,
+  Crown,
+  Rocket,
+  Shield,
+  Trophy,
+  Gem,
+  Zap,
+  Headphones,
+  Lock,
+  Percent,
+  Gift,
+  type LucideIcon,
 } from "lucide-react";
 
 export const Route = createFileRoute("/")({
@@ -197,6 +208,142 @@ const statsPeriods = [
   { id: "90d" as const, label: "90 дней", mult: 11.2 },
 ];
 
+/* ============================= Levels =================================== */
+
+type LevelPerk = {
+  Icon: LucideIcon;
+  title: string;
+  desc: string;
+};
+
+type Level = {
+  id: "start" | "silver" | "gold" | "platinum" | "diamond";
+  name: string;
+  tagline: string;
+  minEarned: number; // ₽, накопленный доход за всё время
+  bonusPct: number; // прибавка к ставкам
+  payoutHours: number; // скорость выплаты
+  Icon: LucideIcon;
+  color: string; // tailwind text-color class
+  bg: string; // tailwind bg-color class
+  ring: string; // border/ring class
+  perks: LevelPerk[];
+};
+
+const LEVELS: Level[] = [
+  {
+    id: "start",
+    name: "Старт",
+    tagline: "Базовый доступ к партнёрке",
+    minEarned: 0,
+    bonusPct: 0,
+    payoutHours: 72,
+    Icon: Rocket,
+    color: "text-slate-500",
+    bg: "bg-slate-500/10",
+    ring: "border-slate-500/30",
+    perks: [
+      { Icon: Package, title: "Каталог из 40+ офферов", desc: "Все базовые направления" },
+      { Icon: Clock, title: "Выплаты за 3 дня", desc: "Стандартная скорость обработки" },
+      { Icon: Headphones, title: "Поддержка в чате", desc: "Ответ в течение суток" },
+    ],
+  },
+  {
+    id: "silver",
+    name: "Серебро",
+    tagline: "Первый апгрейд ставок",
+    minEarned: 50000,
+    bonusPct: 2,
+    payoutHours: 48,
+    Icon: Shield,
+    color: "text-zinc-500",
+    bg: "bg-zinc-400/15",
+    ring: "border-zinc-400/40",
+    perks: [
+      { Icon: Percent, title: "+2% к каждой конверсии", desc: "Автоматически поверх ставки оффера" },
+      { Icon: Clock, title: "Выплаты за 48 часов", desc: "Ускоренная обработка заявок" },
+      { Icon: Sparkles, title: "Ранний доступ к офферам", desc: "За сутки до общего запуска" },
+    ],
+  },
+  {
+    id: "gold",
+    name: "Золото",
+    tagline: "Приватные офферы и менеджер",
+    minEarned: 150000,
+    bonusPct: 5,
+    payoutHours: 24,
+    Icon: Trophy,
+    color: "text-primary",
+    bg: "bg-primary/10",
+    ring: "border-primary/40",
+    perks: [
+      { Icon: Percent, title: "+5% к ставкам всех офферов", desc: "Стабильный буст EPC" },
+      { Icon: Clock, title: "Выплаты за 24 часа", desc: "Заявки в приоритетной очереди" },
+      { Icon: Lock, title: "Приватные офферы", desc: "Скрытый каталог с повышенными ставками" },
+      { Icon: Headphones, title: "Персональный менеджер", desc: "Прямой контакт в Telegram" },
+    ],
+  },
+  {
+    id: "platinum",
+    name: "Платина",
+    tagline: "Эксклюзивные условия",
+    minEarned: 500000,
+    bonusPct: 8,
+    payoutHours: 12,
+    Icon: Crown,
+    color: "text-violet-500",
+    bg: "bg-violet-500/10",
+    ring: "border-violet-500/40",
+    perks: [
+      { Icon: Percent, title: "+8% к ставкам", desc: "Максимальный буст на все категории" },
+      { Icon: Zap, title: "Выплаты за 12 часов", desc: "VIP-очередь обработки" },
+      { Icon: Gift, title: "Эксклюзивные офферы", desc: "Индивидуальные условия от рекламодателей" },
+      { Icon: TrendingUp, title: "Аналитика Pro", desc: "Расширенные отчёты и когорты" },
+    ],
+  },
+  {
+    id: "diamond",
+    name: "Бриллиант",
+    tagline: "Всё лучшее без ограничений",
+    minEarned: 1500000,
+    bonusPct: 12,
+    payoutHours: 1,
+    Icon: Gem,
+    color: "text-cyan-500",
+    bg: "bg-cyan-500/10",
+    ring: "border-cyan-500/40",
+    perks: [
+      { Icon: Percent, title: "+12% к ставкам", desc: "Топовый бонус в системе" },
+      { Icon: Zap, title: "Мгновенные выплаты", desc: "Зачисление в течение часа, 24/7" },
+      { Icon: Coins, title: "Кэшбэк 1% с оборота", desc: "Ежемесячно на баланс" },
+      { Icon: Trophy, title: "Закрытые соревнования", desc: "Призовой фонд для топ-партнёров" },
+      { Icon: Crown, title: "Личный аккаунт-менеджер", desc: "Персональные условия по офферам" },
+    ],
+  },
+];
+
+function getLevelIndex(earned: number): number {
+  let idx = 0;
+  for (let i = 0; i < LEVELS.length; i++) {
+    if (earned >= LEVELS[i].minEarned) idx = i;
+  }
+  return idx;
+}
+
+function getLevel(earned: number) {
+  const idx = getLevelIndex(earned);
+  const current = LEVELS[idx];
+  const next = LEVELS[idx + 1] ?? null;
+  const prevMin = current.minEarned;
+  const nextMin = next?.minEarned ?? current.minEarned;
+  const range = Math.max(1, nextMin - prevMin);
+  const progress = next ? Math.min(1, (earned - prevMin) / range) : 1;
+  const remaining = next ? Math.max(0, nextMin - earned) : 0;
+  return { idx, current, next, progress, remaining };
+}
+
+
+
 /* ============================ Validators =============================== */
 
 function validateBank(b: BankDetails): Partial<Record<keyof BankDetails, string>> {
@@ -258,8 +405,10 @@ function DashboardPage() {
   const [notifOpen, setNotifOpen] = useState(false);
   const [notifFilter, setNotifFilter] = useState<"all" | NotifKind>("all");
   const [payoutOpen, setPayoutOpen] = useState(false);
+  const [levelsOpen, setLevelsOpen] = useState(false);
 
   const unreadCount = notifs.filter((n) => !n.read).length;
+  const levelInfo = useMemo(() => getLevel(balance), [balance]);
 
   /* --------------------------- Notif helpers -------------------------- */
 
@@ -406,12 +555,16 @@ function DashboardPage() {
               </span>
             )}
           </button>
-          <div className="flex flex-col items-end leading-none">
-            <span className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
-              Уровень
+          <button
+            onClick={() => setLevelsOpen(true)}
+            aria-label="Открыть уровни"
+            className={`flex items-center gap-1.5 rounded-full border ${levelInfo.current.ring} ${levelInfo.current.bg} px-2.5 py-1 transition-transform active:scale-95`}
+          >
+            <levelInfo.current.Icon className={`size-3.5 ${levelInfo.current.color}`} />
+            <span className={`text-[10px] font-bold uppercase tracking-wider ${levelInfo.current.color}`}>
+              {levelInfo.current.name}
             </span>
-            <span className="text-xs font-semibold text-primary">ЗОЛОТО</span>
-          </div>
+          </button>
           <div className="grid size-8 place-items-center rounded-full border border-border bg-secondary font-mono text-[10px] font-semibold">
             МК
           </div>
@@ -430,6 +583,7 @@ function DashboardPage() {
             onGoOffers={() => setActive("offers")}
             onGoConversions={() => setActive("stats")}
             onRequestPayout={() => (bank ? setPayoutOpen(true) : openBank())}
+            onOpenLevels={() => setLevelsOpen(true)}
           />
         )}
         {active === "offers" && (
@@ -488,6 +642,16 @@ function DashboardPage() {
         />
       )}
 
+      {/* Levels sheet */}
+      {levelsOpen && (
+        <LevelsSheet
+          earned={balance}
+          onClose={() => setLevelsOpen(false)}
+        />
+      )}
+
+
+
       {/* Bottom nav */}
       <nav className="fixed bottom-0 left-0 right-0 z-30 flex h-16 items-center justify-around border-t border-border bg-background/95 px-2 backdrop-blur-md">
         {(
@@ -533,6 +697,7 @@ function InfoTab({
   onGoOffers,
   onGoConversions,
   onRequestPayout,
+  onOpenLevels,
 }: {
   balance: number;
   available: number;
@@ -543,9 +708,11 @@ function InfoTab({
   onGoOffers: () => void;
   onGoConversions: () => void;
   onRequestPayout: () => void;
+  onOpenLevels: () => void;
 }) {
   const [copied, setCopied] = useState(false);
   const [activityTab, setActivityTab] = useState<"offers" | "conv">("offers");
+  const level = useMemo(() => getLevel(balance), [balance]);
   const refLink = "kvant.io/p/user772/ref";
   const copy = async () => {
     try {
@@ -599,7 +766,61 @@ function InfoTab({
         </div>
       </section>
 
+      {/* ============ Уровень: прогресс ============ */}
+      <section className="animate-in-up" style={{ animationDelay: "40ms" }}>
+        <button
+          onClick={onOpenLevels}
+          className={`group flex w-full flex-col gap-3 rounded-xl border ${level.current.ring} ${level.current.bg} p-4 text-left transition-colors hover:brightness-105`}
+        >
+          <div className="flex items-center gap-3">
+            <div className={`grid size-10 shrink-0 place-items-center rounded-lg bg-background ${level.current.color} border ${level.current.ring}`}>
+              <level.current.Icon className="size-5" />
+            </div>
+            <div className="min-w-0 flex-1">
+              <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-muted-foreground">
+                Ваш уровень
+              </p>
+              <p className={`text-sm font-bold ${level.current.color}`}>
+                {level.current.name}
+                {level.current.bonusPct > 0 && (
+                  <span className="ml-1.5 font-mono text-[10px] opacity-80">
+                    +{level.current.bonusPct}% к ставкам
+                  </span>
+                )}
+              </p>
+            </div>
+            <ChevronRight className="size-4 text-muted-foreground transition-transform group-hover:translate-x-0.5" />
+          </div>
+
+          {level.next ? (
+            <>
+              <div className="h-1.5 w-full overflow-hidden rounded-full bg-background/60">
+                <div
+                  className={`h-full rounded-full bg-gradient-to-r from-current to-current ${level.current.color}`}
+                  style={{ width: `${Math.round(level.progress * 100)}%` }}
+                />
+              </div>
+              <div className="flex items-center justify-between text-[10px]">
+                <span className="font-mono text-muted-foreground">
+                  {fmt(balance)} / {fmt(level.next.minEarned)} ₽
+                </span>
+                <span className={`flex items-center gap-1 font-bold ${level.next.color}`}>
+                  <level.next.Icon className="size-3" />
+                  до «{level.next.name}» {fmt(level.remaining)} ₽
+                </span>
+              </div>
+            </>
+          ) : (
+            <div className="flex items-center gap-1.5 rounded-md bg-background/60 px-3 py-2 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+              <Crown className={`size-3 ${level.current.color}`} />
+              Максимальный уровень достигнут
+            </div>
+          )}
+        </button>
+      </section>
+
       {/* ============ KPI ============ */}
+
       <section className="animate-in-up" style={{ animationDelay: "60ms" }}>
         <h3 className="mb-2 text-[10px] font-bold uppercase tracking-[0.14em] text-muted-foreground">
           Показатели дня
@@ -1806,6 +2027,179 @@ function NotificationsSheet({
               </button>
             );
           })}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ============================= LevelsSheet ============================== */
+
+function LevelsSheet({
+  earned,
+  onClose,
+}: {
+  earned: number;
+  onClose: () => void;
+}) {
+  const info = getLevel(earned);
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-end justify-center bg-foreground/40 backdrop-blur-sm sm:items-center">
+      <div className="animate-in-up flex max-h-[92vh] w-full max-w-[440px] flex-col overflow-hidden rounded-t-2xl border border-border bg-background sm:rounded-2xl">
+        {/* Header */}
+        <div className="flex items-center justify-between border-b border-border px-4 py-3">
+          <div>
+            <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+              Программа лояльности
+            </p>
+            <h3 className="text-sm font-bold">Уровни партнёра</h3>
+          </div>
+          <button
+            onClick={onClose}
+            aria-label="Закрыть"
+            className="grid size-8 place-items-center rounded-full text-muted-foreground hover:bg-accent"
+          >
+            <X className="size-4" />
+          </button>
+        </div>
+
+        {/* Current */}
+        <div className={`border-b border-border ${info.current.bg} px-4 py-4`}>
+          <div className="flex items-center gap-3">
+            <div className={`grid size-12 place-items-center rounded-xl bg-background border ${info.current.ring} ${info.current.color}`}>
+              <info.current.Icon className="size-6" />
+            </div>
+            <div className="min-w-0 flex-1">
+              <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+                Текущий уровень
+              </p>
+              <p className={`text-base font-bold ${info.current.color}`}>
+                {info.current.name}
+              </p>
+              <p className="text-[11px] text-muted-foreground">{info.current.tagline}</p>
+            </div>
+          </div>
+
+          {info.next ? (
+            <>
+              <div className="mt-4 h-1.5 w-full overflow-hidden rounded-full bg-background/60">
+                <div
+                  className={`h-full rounded-full ${info.current.color}`}
+                  style={{
+                    width: `${Math.round(info.progress * 100)}%`,
+                    backgroundColor: "currentColor",
+                  }}
+                />
+              </div>
+              <div className="mt-2 flex items-center justify-between text-[10px]">
+                <span className="font-mono text-muted-foreground">
+                  {fmt(earned)} ₽ заработано
+                </span>
+                <span className={`flex items-center gap-1 font-bold ${info.next.color}`}>
+                  <info.next.Icon className="size-3" />
+                  ещё {fmt(info.remaining)} ₽ до «{info.next.name}»
+                </span>
+              </div>
+            </>
+          ) : (
+            <div className="mt-4 rounded-lg border border-border bg-background/60 px-3 py-2 text-center text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
+              Вы на вершине программы 🎉
+            </div>
+          )}
+        </div>
+
+        {/* All levels */}
+        <div className="flex-1 overflow-y-auto p-4">
+          <div className="space-y-3">
+            {LEVELS.map((lv, i) => {
+              const isCurrent = i === info.idx;
+              const isReached = i <= info.idx;
+              const isLocked = i > info.idx;
+              return (
+                <div
+                  key={lv.id}
+                  className={`overflow-hidden rounded-xl border ${
+                    isCurrent ? `${lv.ring} shadow-sm` : "border-border"
+                  } ${isLocked ? "opacity-60" : ""} bg-card`}
+                >
+                  {/* Header row */}
+                  <div className={`flex items-center gap-3 border-b border-border ${isCurrent ? lv.bg : "bg-secondary/30"} px-4 py-3`}>
+                    <div className={`grid size-10 shrink-0 place-items-center rounded-lg bg-background border ${lv.ring} ${lv.color}`}>
+                      <lv.Icon className="size-5" />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center gap-2">
+                        <p className={`text-sm font-bold ${lv.color}`}>{lv.name}</p>
+                        {isCurrent && (
+                          <span className="rounded-full bg-foreground px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-background">
+                            текущий
+                          </span>
+                        )}
+                        {isReached && !isCurrent && (
+                          <CheckCircle2 className="size-3.5 text-[color:var(--success)]" />
+                        )}
+                        {isLocked && <Lock className="size-3 text-muted-foreground" />}
+                      </div>
+                      <p className="text-[10px] text-muted-foreground">{lv.tagline}</p>
+                    </div>
+                    <div className="shrink-0 text-right">
+                      <p className="font-mono text-[10px] uppercase text-muted-foreground">
+                        от
+                      </p>
+                      <p className="font-mono text-xs font-bold tabular-nums">
+                        {fmt(lv.minEarned)} ₽
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Quick stats */}
+                  <div className="grid grid-cols-2 gap-px bg-border">
+                    <div className="bg-card px-4 py-2">
+                      <p className="text-[9px] font-bold uppercase tracking-wider text-muted-foreground">
+                        Бонус к ставкам
+                      </p>
+                      <p className={`font-mono text-xs font-bold ${lv.bonusPct > 0 ? lv.color : ""}`}>
+                        {lv.bonusPct > 0 ? `+${lv.bonusPct}%` : "—"}
+                      </p>
+                    </div>
+                    <div className="bg-card px-4 py-2">
+                      <p className="text-[9px] font-bold uppercase tracking-wider text-muted-foreground">
+                        Скорость выплат
+                      </p>
+                      <p className="font-mono text-xs font-bold">
+                        {lv.payoutHours >= 24
+                          ? `${Math.round(lv.payoutHours / 24)} дн`
+                          : `${lv.payoutHours} ч`}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Perks */}
+                  <ul className="divide-y divide-border">
+                    {lv.perks.map((p, pi) => (
+                      <li key={pi} className="flex items-start gap-3 px-4 py-2.5">
+                        <div className={`mt-0.5 grid size-6 shrink-0 place-items-center rounded ${lv.bg} ${lv.color}`}>
+                          <p.Icon className="size-3" />
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <p className="text-[11px] font-bold leading-tight">{p.title}</p>
+                          <p className="text-[10px] leading-snug text-muted-foreground">
+                            {p.desc}
+                          </p>
+                        </div>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              );
+            })}
+          </div>
+
+          <p className="mt-4 rounded-lg border border-border bg-secondary/40 p-3 text-center text-[10px] leading-relaxed text-muted-foreground">
+            Уровень пересчитывается автоматически по общему заработку.
+            Бонусы применяются к новым конверсиям, ускоренные выплаты — к новым заявкам.
+          </p>
         </div>
       </div>
     </div>
