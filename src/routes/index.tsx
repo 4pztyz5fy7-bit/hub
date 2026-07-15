@@ -2698,6 +2698,7 @@ function OfferDetailSheet({
   requests,
   onCopyLink,
   onClose,
+  level,
 }: {
   offer: Offer;
   linked: boolean;
@@ -2705,10 +2706,13 @@ function OfferDetailSheet({
   requests: LinkRequest[];
   onCopyLink: (o: Offer, source?: string) => void;
   onClose: () => void;
+  level: Level;
 }) {
   const [source, setSource] = useState("Прямая ссылка");
   const isCopied = copiedOffer === offer.id;
   const sources = ["Прямая ссылка", "Telegram", "YouTube", "Instagram", "SEO", "Email"];
+  const boosted = applyLevelBoost(offer, level.bonusPct);
+  const hasBoost = level.bonusPct > 0 && boosted.boostedPayout !== offer.payout;
 
   return (
     <div className="fixed inset-0 z-50 flex items-end justify-center bg-foreground/40 backdrop-blur-sm sm:items-center">
