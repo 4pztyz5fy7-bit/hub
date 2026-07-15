@@ -2744,12 +2744,24 @@ function OfferDetailSheet({
         <div className="flex-1 space-y-5 overflow-y-auto px-4 py-4">
           {/* Payout hero */}
           <div className="rounded-xl border border-border bg-gradient-to-br from-secondary/60 to-transparent p-4">
-            <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
-              Выплата за конверсию
-            </p>
-            <p className="mt-1 font-mono text-2xl font-bold tabular-nums">{offer.payout}</p>
+            <div className="flex items-baseline justify-between gap-2">
+              <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+                Выплата за конверсию
+              </p>
+              {hasBoost && (
+                <span className={`flex items-center gap-1 rounded-full border ${level.ring} ${level.bg} px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider ${level.color}`}>
+                  <level.Icon className="size-2.5" /> +{level.bonusPct}% • {level.name}
+                </span>
+              )}
+            </div>
+            <p className="mt-1 font-mono text-2xl font-bold tabular-nums">{boosted.boostedPayout}</p>
+            {hasBoost && (
+              <p className="mt-0.5 font-mono text-[10px] text-muted-foreground">
+                базово: <span className="line-through">{offer.payout}</span>
+              </p>
+            )}
             <div className="mt-3 grid grid-cols-3 gap-3">
-              <Stat label="EPC" value={`${fmt(offer.epc)} ₽`} />
+              <Stat label="EPC" value={`${fmt(boosted.boostedEpc)} ₽`} />
               <Stat label="CR" value={`${offer.cr.toFixed(1)}%`} />
               <Stat label="Холд" value={offer.hold} />
             </div>
