@@ -2642,8 +2642,35 @@ function LevelsSheet({
           )}
         </div>
 
-        {/* All levels */}
+        {/* Tabs */}
+        <div className="flex items-center gap-1 border-b border-border bg-secondary/30 px-3 py-2">
+          {(
+            [
+              { id: "all", label: "Все уровни", Icon: Trophy },
+              { id: "history", label: `История${history.length ? ` · ${history.length}` : ""}`, Icon: Clock },
+            ] as const
+          ).map((t) => {
+            const activeTab = tab === t.id;
+            return (
+              <button
+                key={t.id}
+                onClick={() => setTab(t.id)}
+                className={`flex flex-1 items-center justify-center gap-1.5 rounded-md px-3 py-1.5 text-[11px] font-bold uppercase tracking-wider transition ${
+                  activeTab
+                    ? "bg-background text-foreground shadow-sm"
+                    : "text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                <t.Icon className="size-3.5" />
+                {t.label}
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Content */}
         <div className="flex-1 overflow-y-auto p-4">
+          {tab === "all" && (
           <div className="space-y-3">
             {LEVELS.map((lv, i) => {
               const isCurrent = i === info.idx;
