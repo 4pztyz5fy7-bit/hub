@@ -1432,7 +1432,11 @@ function OffersTab({
               key={o.id}
               className="rounded-lg border border-border bg-card p-3 transition-colors hover:border-foreground/20"
             >
-              <div className="flex items-start gap-3">
+              <button
+                type="button"
+                onClick={() => onOpenDetail(o)}
+                className="flex w-full items-start gap-3 text-left"
+              >
                 <OfferTag tag={o.tag} />
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-2">
@@ -1443,13 +1447,18 @@ function OffersTab({
                       </span>
                     )}
                   </div>
-                  <p className="mt-1 text-[10px] text-muted-foreground">{o.category}</p>
+                  <p className="mt-1 text-[10px] text-muted-foreground">
+                    {o.category} • {o.advertiser}
+                  </p>
+                  <p className="mt-1.5 line-clamp-2 text-[10.5px] leading-snug text-muted-foreground/90">
+                    {o.description}
+                  </p>
                 </div>
                 <div className="shrink-0 text-right">
                   <p className="font-mono text-xs font-bold">{o.payout}</p>
                   <p className="font-mono text-[9px] uppercase text-muted-foreground">за действие</p>
                 </div>
-              </div>
+              </button>
               <div className="mt-3 flex items-end justify-between gap-2">
                 <div className="grid grid-cols-2 gap-3">
                   <Stat label="EPC" value={`${fmt(o.epc)} ₽`} />
