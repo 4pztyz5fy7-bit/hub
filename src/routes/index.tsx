@@ -2032,3 +2032,176 @@ function NotificationsSheet({
     </div>
   );
 }
+
+/* ============================= LevelsSheet ============================== */
+
+function LevelsSheet({
+  earned,
+  onClose,
+}: {
+  earned: number;
+  onClose: () => void;
+}) {
+  const info = getLevel(earned);
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-end justify-center bg-foreground/40 backdrop-blur-sm sm:items-center">
+      <div className="animate-in-up flex max-h-[92vh] w-full max-w-[440px] flex-col overflow-hidden rounded-t-2xl border border-border bg-background sm:rounded-2xl">
+        {/* Header */}
+        <div className="flex items-center justify-between border-b border-border px-4 py-3">
+          <div>
+            <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+              Программа лояльности
+            </p>
+            <h3 className="text-sm font-bold">Уровни партнёра</h3>
+          </div>
+          <button
+            onClick={onClose}
+            aria-label="Закрыть"
+            className="grid size-8 place-items-center rounded-full text-muted-foreground hover:bg-accent"
+          >
+            <X className="size-4" />
+          </button>
+        </div>
+
+        {/* Current */}
+        <div className={`border-b border-border ${info.current.bg} px-4 py-4`}>
+          <div className="flex items-center gap-3">
+            <div className={`grid size-12 place-items-center rounded-xl bg-background border ${info.current.ring} ${info.current.color}`}>
+              <info.current.Icon className="size-6" />
+            </div>
+            <div className="min-w-0 flex-1">
+              <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+                Текущий уровень
+              </p>
+              <p className={`text-base font-bold ${info.current.color}`}>
+                {info.current.name}
+              </p>
+              <p className="text-[11px] text-muted-foreground">{info.current.tagline}</p>
+            </div>
+          </div>
+
+          {info.next ? (
+            <>
+              <div className="mt-4 h-1.5 w-full overflow-hidden rounded-full bg-background/60">
+                <div
+                  className={`h-full rounded-full ${info.current.color}`}
+                  style={{
+                    width: `${Math.round(info.progress * 100)}%`,
+                    backgroundColor: "currentColor",
+                  }}
+                />
+              </div>
+              <div className="mt-2 flex items-center justify-between text-[10px]">
+                <span className="font-mono text-muted-foreground">
+                  {fmt(earned)} ₽ заработано
+                </span>
+                <span className={`flex items-center gap-1 font-bold ${info.next.color}`}>
+                  <info.next.Icon className="size-3" />
+                  ещё {fmt(info.remaining)} ₽ до «{info.next.name}»
+                </span>
+              </div>
+            </>
+          ) : (
+            <div className="mt-4 rounded-lg border border-border bg-background/60 px-3 py-2 text-center text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
+              Вы на вершине программы 🎉
+            </div>
+          )}
+        </div>
+
+        {/* All levels */}
+        <div className="flex-1 overflow-y-auto p-4">
+          <div className="space-y-3">
+            {LEVELS.map((lv, i) => {
+              const isCurrent = i === info.idx;
+              const isReached = i <= info.idx;
+              const isLocked = i > info.idx;
+              return (
+                <div
+                  key={lv.id}
+                  className={`overflow-hidden rounded-xl border ${
+                    isCurrent ? `${lv.ring} shadow-sm` : "border-border"
+                  } ${isLocked ? "opacity-60" : ""} bg-card`}
+                >
+                  {/* Header row */}
+                  <div className={`flex items-center gap-3 border-b border-border ${isCurrent ? lv.bg : "bg-secondary/30"} px-4 py-3`}>
+                    <div className={`grid size-10 shrink-0 place-items-center rounded-lg bg-background border ${lv.ring} ${lv.color}`}>
+                      <lv.Icon className="size-5" />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center gap-2">
+                        <p className={`text-sm font-bold ${lv.color}`}>{lv.name}</p>
+                        {isCurrent && (
+                          <span className="rounded-full bg-foreground px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-background">
+                            текущий
+                          </span>
+                        )}
+                        {isReached && !isCurrent && (
+                          <CheckCircle2 className="size-3.5 text-[color:var(--success)]" />
+                        )}
+                        {isLocked && <Lock className="size-3 text-muted-foreground" />}
+                      </div>
+                      <p className="text-[10px] text-muted-foreground">{lv.tagline}</p>
+                    </div>
+                    <div className="shrink-0 text-right">
+                      <p className="font-mono text-[10px] uppercase text-muted-foreground">
+                        от
+                      </p>
+                      <p className="font-mono text-xs font-bold tabular-nums">
+                        {fmt(lv.minEarned)} ₽
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Quick stats */}
+                  <div className="grid grid-cols-2 gap-px bg-border">
+                    <div className="bg-card px-4 py-2">
+                      <p className="text-[9px] font-bold uppercase tracking-wider text-muted-foreground">
+                        Бонус к ставкам
+                      </p>
+                      <p className={`font-mono text-xs font-bold ${lv.bonusPct > 0 ? lv.color : ""}`}>
+                        {lv.bonusPct > 0 ? `+${lv.bonusPct}%` : "—"}
+                      </p>
+                    </div>
+                    <div className="bg-card px-4 py-2">
+                      <p className="text-[9px] font-bold uppercase tracking-wider text-muted-foreground">
+                        Скорость выплат
+                      </p>
+                      <p className="font-mono text-xs font-bold">
+                        {lv.payoutHours >= 24
+                          ? `${Math.round(lv.payoutHours / 24)} дн`
+                          : `${lv.payoutHours} ч`}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Perks */}
+                  <ul className="divide-y divide-border">
+                    {lv.perks.map((p, pi) => (
+                      <li key={pi} className="flex items-start gap-3 px-4 py-2.5">
+                        <div className={`mt-0.5 grid size-6 shrink-0 place-items-center rounded ${lv.bg} ${lv.color}`}>
+                          <p.Icon className="size-3" />
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <p className="text-[11px] font-bold leading-tight">{p.title}</p>
+                          <p className="text-[10px] leading-snug text-muted-foreground">
+                            {p.desc}
+                          </p>
+                        </div>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              );
+            })}
+          </div>
+
+          <p className="mt-4 rounded-lg border border-border bg-secondary/40 p-3 text-center text-[10px] leading-relaxed text-muted-foreground">
+            Уровень пересчитывается автоматически по общему заработку.
+            Бонусы применяются к новым конверсиям, ускоренные выплаты — к новым заявкам.
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+}
