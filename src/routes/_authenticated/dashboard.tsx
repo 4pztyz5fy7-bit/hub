@@ -920,6 +920,22 @@ function DashboardPage() {
               {levelInfo.current.name}
             </span>
           </button>
+          {isAdmin && (
+            <Link
+              to={"/_authenticated/admin" as string}
+              aria-label="Админ-панель"
+              className="flex size-8 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+            >
+              <Shield className="size-4" />
+            </Link>
+          )}
+          <button
+            onClick={handleSignOut}
+            aria-label="Выйти"
+            className="flex size-8 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+          >
+            <LogOut className="size-4" />
+          </button>
           <div className="grid size-8 place-items-center rounded-full border border-border bg-secondary font-mono text-[10px] font-semibold">
             МК
           </div>
