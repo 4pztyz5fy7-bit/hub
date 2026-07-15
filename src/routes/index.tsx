@@ -713,6 +713,11 @@ function DashboardPage() {
 
   const requestPayout = (amount: number) => {
     if (!bank || amount <= 0 || amount > available) return;
+    const lvl = levelInfo.current;
+    if (amount < lvl.minPayout) return;
+    const fee = Math.round((amount * lvl.feePct) / 100);
+    const net = amount - fee;
+    const speedFactor = Math.max(0.35, Math.min(1, lvl.payoutHours / 72));
     const id = `PO-${Math.floor(9000 + Math.random() * 900)}`;
     const p: Payout = {
       id,
@@ -722,6 +727,9 @@ function DashboardPage() {
       method: bankMethodLabel(bank),
       destination: bankDest(bank),
       status: "pending",
+      note: fee > 0
+        ? `Комиссия ${lvl.feePct}% (${fmt(fee)} ₽) • к зачислению ${fmt(net)} ₽ • ${lvl.name}`
+        : `Без комиссии • ${lvl.name}`,
     };
     setPayouts((prev) => [p, ...prev]);
     setAvailable((v) => v - amount);
@@ -729,7 +737,7 @@ function DashboardPage() {
     pushNotif({
       kind: "payout",
       title: "Заявка на вывод",
-      body: `${fmt(amount)} ₽ • ${p.method} ${p.destination}`,
+      body: `${fmt(net)} ₽ к зачислению • ${p.method} ${p.destination} • ${lvl.name}`,
       status: "pending",
     });
 
@@ -738,20 +746,20 @@ function DashboardPage() {
       pushNotif({
         kind: "payout",
         title: "Заявка в обработке",
-        body: `${id} • ${fmt(amount)} ₽`,
+        body: `${id} • ${fmt(net)} ₽ • ${lvl.payoutHours}ч по уровню ${lvl.name}`,
         status: "processing",
       });
-    }, 3500);
+    }, Math.round(3500 * speedFactor));
 
     const t2 = window.setTimeout(() => {
       setPayouts((prev) => prev.map((x) => (x.id === id ? { ...x, status: "paid" } : x)));
       pushNotif({
         kind: "payout",
         title: "Выплата зачислена",
-        body: `${fmt(amount)} ₽ • ${p.method} ${p.destination}`,
+        body: `${fmt(net)} ₽ • ${p.method} ${p.destination}`,
         status: "paid",
       });
-    }, 8000);
+    }, Math.round(8000 * speedFactor));
 
     timeouts.current.push(t1, t2);
   };
