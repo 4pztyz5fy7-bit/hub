@@ -208,6 +208,142 @@ const statsPeriods = [
   { id: "90d" as const, label: "90 дней", mult: 11.2 },
 ];
 
+/* ============================= Levels =================================== */
+
+type LevelPerk = {
+  Icon: LucideIcon;
+  title: string;
+  desc: string;
+};
+
+type Level = {
+  id: "start" | "silver" | "gold" | "platinum" | "diamond";
+  name: string;
+  tagline: string;
+  minEarned: number; // ₽, накопленный доход за всё время
+  bonusPct: number; // прибавка к ставкам
+  payoutHours: number; // скорость выплаты
+  Icon: LucideIcon;
+  color: string; // tailwind text-color class
+  bg: string; // tailwind bg-color class
+  ring: string; // border/ring class
+  perks: LevelPerk[];
+};
+
+const LEVELS: Level[] = [
+  {
+    id: "start",
+    name: "Старт",
+    tagline: "Базовый доступ к партнёрке",
+    minEarned: 0,
+    bonusPct: 0,
+    payoutHours: 72,
+    Icon: Rocket,
+    color: "text-slate-500",
+    bg: "bg-slate-500/10",
+    ring: "border-slate-500/30",
+    perks: [
+      { Icon: Package, title: "Каталог из 40+ офферов", desc: "Все базовые направления" },
+      { Icon: Clock, title: "Выплаты за 3 дня", desc: "Стандартная скорость обработки" },
+      { Icon: Headphones, title: "Поддержка в чате", desc: "Ответ в течение суток" },
+    ],
+  },
+  {
+    id: "silver",
+    name: "Серебро",
+    tagline: "Первый апгрейд ставок",
+    minEarned: 50000,
+    bonusPct: 2,
+    payoutHours: 48,
+    Icon: Shield,
+    color: "text-zinc-500",
+    bg: "bg-zinc-400/15",
+    ring: "border-zinc-400/40",
+    perks: [
+      { Icon: Percent, title: "+2% к каждой конверсии", desc: "Автоматически поверх ставки оффера" },
+      { Icon: Clock, title: "Выплаты за 48 часов", desc: "Ускоренная обработка заявок" },
+      { Icon: Sparkles, title: "Ранний доступ к офферам", desc: "За сутки до общего запуска" },
+    ],
+  },
+  {
+    id: "gold",
+    name: "Золото",
+    tagline: "Приватные офферы и менеджер",
+    minEarned: 150000,
+    bonusPct: 5,
+    payoutHours: 24,
+    Icon: Trophy,
+    color: "text-primary",
+    bg: "bg-primary/10",
+    ring: "border-primary/40",
+    perks: [
+      { Icon: Percent, title: "+5% к ставкам всех офферов", desc: "Стабильный буст EPC" },
+      { Icon: Clock, title: "Выплаты за 24 часа", desc: "Заявки в приоритетной очереди" },
+      { Icon: Lock, title: "Приватные офферы", desc: "Скрытый каталог с повышенными ставками" },
+      { Icon: Headphones, title: "Персональный менеджер", desc: "Прямой контакт в Telegram" },
+    ],
+  },
+  {
+    id: "platinum",
+    name: "Платина",
+    tagline: "Эксклюзивные условия",
+    minEarned: 500000,
+    bonusPct: 8,
+    payoutHours: 12,
+    Icon: Crown,
+    color: "text-violet-500",
+    bg: "bg-violet-500/10",
+    ring: "border-violet-500/40",
+    perks: [
+      { Icon: Percent, title: "+8% к ставкам", desc: "Максимальный буст на все категории" },
+      { Icon: Zap, title: "Выплаты за 12 часов", desc: "VIP-очередь обработки" },
+      { Icon: Gift, title: "Эксклюзивные офферы", desc: "Индивидуальные условия от рекламодателей" },
+      { Icon: TrendingUp, title: "Аналитика Pro", desc: "Расширенные отчёты и когорты" },
+    ],
+  },
+  {
+    id: "diamond",
+    name: "Бриллиант",
+    tagline: "Всё лучшее без ограничений",
+    minEarned: 1500000,
+    bonusPct: 12,
+    payoutHours: 1,
+    Icon: Gem,
+    color: "text-cyan-500",
+    bg: "bg-cyan-500/10",
+    ring: "border-cyan-500/40",
+    perks: [
+      { Icon: Percent, title: "+12% к ставкам", desc: "Топовый бонус в системе" },
+      { Icon: Zap, title: "Мгновенные выплаты", desc: "Зачисление в течение часа, 24/7" },
+      { Icon: Coins, title: "Кэшбэк 1% с оборота", desc: "Ежемесячно на баланс" },
+      { Icon: Trophy, title: "Закрытые соревнования", desc: "Призовой фонд для топ-партнёров" },
+      { Icon: Crown, title: "Личный аккаунт-менеджер", desc: "Персональные условия по офферам" },
+    ],
+  },
+];
+
+function getLevelIndex(earned: number): number {
+  let idx = 0;
+  for (let i = 0; i < LEVELS.length; i++) {
+    if (earned >= LEVELS[i].minEarned) idx = i;
+  }
+  return idx;
+}
+
+function getLevel(earned: number) {
+  const idx = getLevelIndex(earned);
+  const current = LEVELS[idx];
+  const next = LEVELS[idx + 1] ?? null;
+  const prevMin = current.minEarned;
+  const nextMin = next?.minEarned ?? current.minEarned;
+  const range = Math.max(1, nextMin - prevMin);
+  const progress = next ? Math.min(1, (earned - prevMin) / range) : 1;
+  const remaining = next ? Math.max(0, nextMin - earned) : 0;
+  return { idx, current, next, progress, remaining };
+}
+
+
+
 /* ============================ Validators =============================== */
 
 function validateBank(b: BankDetails): Partial<Record<keyof BankDetails, string>> {
