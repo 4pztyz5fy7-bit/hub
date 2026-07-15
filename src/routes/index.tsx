@@ -632,3 +632,62 @@ function DashboardPage() {
   );
 }
 
+function validateBank(b: BankDetails): Partial<Record<keyof BankDetails, string>> {
+  const e: Partial<Record<keyof BankDetails, string>> = {};
+  if (b.holder.trim().length < 3) e.holder = "Укажите ФИО получателя";
+  if (b.method === "card") {
+    const d = b.card.replace(/\D/g, "");
+    if (d.length !== 16) e.card = "Номер карты — 16 цифр";
+  }
+  if (b.method === "sbp") {
+    const d = b.sbpPhone.replace(/\D/g, "");
+    if (d.length !== 11) e.sbpPhone = "Введите телефон полностью";
+  }
+  if (b.method === "account") {
+    if (b.bank.trim().length < 2) e.bank = "Укажите банк";
+    if (b.bik.length !== 9) e.bik = "БИК — 9 цифр";
+    if (b.inn.length !== 10 && b.inn.length !== 12) e.inn = "ИНН — 10 или 12 цифр";
+    if (b.account.length !== 20) e.account = "Счёт — 20 цифр";
+  }
+  return e;
+}
+
+function Field({
+  label,
+  value,
+  onChange,
+  placeholder,
+  error,
+  mono,
+  inputMode,
+}: {
+  label: string;
+  value: string;
+  onChange: (v: string) => void;
+  placeholder?: string;
+  error?: string;
+  mono?: boolean;
+  inputMode?: "text" | "numeric" | "tel";
+}) {
+  return (
+    <label className="block">
+      <span className="mb-1.5 block text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+        {label}
+      </span>
+      <input
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        placeholder={placeholder}
+        inputMode={inputMode}
+        className={`w-full rounded-md border bg-card px-3 py-2.5 text-sm outline-none transition-colors placeholder:text-muted-foreground/50 focus:border-foreground/40 ${
+          error ? "border-destructive/60" : "border-border"
+        } ${mono ? "font-mono tabular-nums" : ""}`}
+      />
+      {error && (
+        <span className="mt-1 block text-[10px] font-medium text-destructive">{error}</span>
+      )}
+    </label>
+  );
+}
+
+
