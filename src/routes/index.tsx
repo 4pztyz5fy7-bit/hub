@@ -1455,6 +1455,14 @@ function OffersTab({
             {filtered.length} из {offers.length}
           </span>
         </div>
+        {level.bonusPct > 0 && (
+          <div className={`mb-3 flex items-center gap-2 rounded-md border ${level.ring} ${level.bg} px-3 py-2`}>
+            <level.Icon className={`size-3.5 shrink-0 ${level.color}`} />
+            <p className={`text-[10.5px] font-bold ${level.color}`}>
+              Бонус уровня «{level.name}»: +{level.bonusPct}% ко всем ставкам применяется автоматически
+            </p>
+          </div>
+        )}
         <button
           onClick={onOpenAdmin}
           className="mb-3 flex w-full items-center justify-between gap-3 rounded-md border border-border bg-secondary/40 px-3 py-2 text-left transition-colors hover:border-foreground/20"
