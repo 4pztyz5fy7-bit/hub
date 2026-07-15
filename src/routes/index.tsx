@@ -1011,6 +1011,7 @@ function DashboardPage() {
       {levelsOpen && (
         <LevelsSheet
           earned={balance}
+          history={levelHistory}
           onClose={() => setLevelsOpen(false)}
         />
       )}
