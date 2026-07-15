@@ -15,6 +15,9 @@ import {
   X,
   CheckCircle2,
   AlertCircle,
+  Coins,
+  Sparkles,
+  Clock,
 } from "lucide-react";
 
 
