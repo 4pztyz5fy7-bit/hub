@@ -555,12 +555,16 @@ function DashboardPage() {
               </span>
             )}
           </button>
-          <div className="flex flex-col items-end leading-none">
-            <span className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
-              Уровень
+          <button
+            onClick={() => setLevelsOpen(true)}
+            aria-label="Открыть уровни"
+            className={`flex items-center gap-1.5 rounded-full border ${levelInfo.current.ring} ${levelInfo.current.bg} px-2.5 py-1 transition-transform active:scale-95`}
+          >
+            <levelInfo.current.Icon className={`size-3.5 ${levelInfo.current.color}`} />
+            <span className={`text-[10px] font-bold uppercase tracking-wider ${levelInfo.current.color}`}>
+              {levelInfo.current.name}
             </span>
-            <span className="text-xs font-semibold text-primary">ЗОЛОТО</span>
-          </div>
+          </button>
           <div className="grid size-8 place-items-center rounded-full border border-border bg-secondary font-mono text-[10px] font-semibold">
             МК
           </div>
