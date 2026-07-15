@@ -2161,11 +2161,13 @@ function Field({
 function PayoutSheet({
   available,
   bank,
+  level,
   onClose,
   onSubmit,
 }: {
   available: number;
   bank: BankDetails;
+  level: Level;
   onClose: () => void;
   onSubmit: (amount: number) => void;
 }) {
@@ -2174,11 +2176,17 @@ function PayoutSheet({
   const err =
     amount <= 0
       ? "Введите сумму"
-      : amount < 500
-        ? "Минимум 500 ₽"
+      : amount < level.minPayout
+        ? `Минимум ${fmt(level.minPayout)} ₽ на уровне ${level.name}`
         : amount > available
           ? `Больше доступного (${fmt(available)} ₽)`
           : "";
+
+  const fee = Math.round((amount * level.feePct) / 100);
+  const net = Math.max(0, amount - fee);
+  const eta = level.payoutHours >= 24
+    ? `${Math.round(level.payoutHours / 24)} дн`
+    : `${level.payoutHours} ч`;
 
   const quick = [Math.floor(available * 0.25), Math.floor(available * 0.5), available];
 
@@ -2201,6 +2209,21 @@ function PayoutSheet({
           </button>
         </div>
         <div className="space-y-4 p-4">
+          {/* Level conditions banner */}
+          <div className={`flex items-center gap-3 rounded-lg border ${level.ring} ${level.bg} px-3 py-2.5`}>
+            <div className={`grid size-8 shrink-0 place-items-center rounded-md bg-background/60 ${level.color}`}>
+              <level.Icon className="size-4" />
+            </div>
+            <div className="min-w-0 flex-1">
+              <p className={`text-[10px] font-bold uppercase tracking-widest ${level.color}`}>
+                Условия уровня «{level.name}»
+              </p>
+              <p className="mt-0.5 truncate text-[10.5px] font-medium">
+                Мин. {fmt(level.minPayout)} ₽ • комиссия {level.feePct}% • ETA {eta}
+              </p>
+            </div>
+          </div>
+
           <div className="rounded-lg border border-border bg-card p-3">
             <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
               Куда
@@ -2246,11 +2269,21 @@ function PayoutSheet({
             </div>
           </div>
 
-          <div className="flex items-center justify-between rounded-md border border-border bg-secondary/40 px-3 py-2">
-            <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
-              Комиссия
-            </span>
-            <span className="font-mono text-[11px] font-bold text-[color:var(--success)]">0 ₽</span>
+          <div className="space-y-1.5 rounded-md border border-border bg-secondary/40 px-3 py-2.5">
+            <SummaryRow label="Сумма заявки" value={`${fmt(amount)} ₽`} />
+            <SummaryRow
+              label={`Комиссия ${level.feePct}%`}
+              value={fee > 0 ? `−${fmt(fee)} ₽` : "0 ₽"}
+              tone={fee > 0 ? "warn" : "success"}
+            />
+            <SummaryRow
+              label="ETA зачисления"
+              value={eta}
+              tone="primary"
+            />
+            <div className="mt-2 border-t border-border pt-2">
+              <SummaryRow label="К зачислению" value={`${fmt(net)} ₽`} strong />
+            </div>
           </div>
         </div>
         <div className="flex gap-2 border-t border-border p-3">
@@ -2269,6 +2302,37 @@ function PayoutSheet({
           </button>
         </div>
       </div>
+    </div>
+  );
+}
+
+function SummaryRow({
+  label,
+  value,
+  tone,
+  strong,
+}: {
+  label: string;
+  value: string;
+  tone?: "success" | "warn" | "primary";
+  strong?: boolean;
+}) {
+  const cls =
+    tone === "success"
+      ? "text-[color:var(--success)]"
+      : tone === "warn"
+        ? "text-[color:var(--warning)]"
+        : tone === "primary"
+          ? "text-primary"
+          : "text-foreground";
+  return (
+    <div className="flex items-center justify-between">
+      <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+        {label}
+      </span>
+      <span className={`font-mono tabular-nums ${strong ? "text-sm font-bold" : "text-[11px] font-bold"} ${cls}`}>
+        {value}
+      </span>
     </div>
   );
 }
