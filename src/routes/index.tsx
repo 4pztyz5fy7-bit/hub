@@ -1310,11 +1310,17 @@ function OffersTab({
   linked,
   copiedOffer,
   onCopyLink,
+  onOpenDetail,
+  requestsCount,
+  onOpenAdmin,
 }: {
   offers: Offer[];
   linked: Set<string>;
   copiedOffer: string | null;
-  onCopyLink: (o: Offer) => void;
+  onCopyLink: (o: Offer, source?: string) => void;
+  onOpenDetail: (o: Offer) => void;
+  requestsCount: number;
+  onOpenAdmin: () => void;
 }) {
   const [q, setQ] = useState("");
   const [cat, setCat] = useState<string>("Все");
