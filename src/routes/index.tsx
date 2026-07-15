@@ -511,7 +511,8 @@ function DashboardPage() {
           </div>
         </div>
       )}
-      </main>
+
+
 
       {/* Bottom nav */}
       <nav className="fixed bottom-0 left-0 right-0 z-30 flex h-16 items-center justify-around border-t border-border bg-background/95 px-2 backdrop-blur-md">
