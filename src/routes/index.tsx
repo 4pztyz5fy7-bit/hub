@@ -750,6 +750,18 @@ function DashboardPage() {
         </div>
         <div className="flex items-center gap-3">
           <button
+            aria-label="Заявки на модерации"
+            onClick={() => setAdminOpen(true)}
+            className="relative flex size-8 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+          >
+            <ClipboardList className="size-4" />
+            {requests.filter((r) => r.status === "new" || r.status === "review").length > 0 && (
+              <span className="absolute -right-0.5 -top-0.5 grid min-w-[16px] place-items-center rounded-full bg-[color:var(--warning)] px-1 font-mono text-[9px] font-bold leading-none text-background">
+                {requests.filter((r) => r.status === "new" || r.status === "review").length}
+              </span>
+            )}
+          </button>
+          <button
             aria-label="Уведомления"
             onClick={() => setNotifOpen(true)}
             className="relative flex size-8 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
