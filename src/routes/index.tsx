@@ -597,6 +597,36 @@ function DashboardPage() {
   const toggleRead = (id: string) =>
     setNotifs((ns) => ns.map((n) => (n.id === id ? { ...n, read: true } : n)));
 
+  /* --------------------------- Level-up watcher ----------------------- */
+  useEffect(() => {
+    const idx = getLevelIndex(balance);
+    if (idx > prevLevelIdxRef.current) {
+      const lvl = LEVELS[idx];
+      prevLevelIdxRef.current = idx;
+      setLevelToast(lvl);
+      pushNotif({
+        kind: "levelup",
+        title: `Новый уровень: ${lvl.name}`,
+        body: `Вы разблокировали ${lvl.perks.length} преимуществ • накоплено ${fmt(balance)} ₽`,
+      });
+      const t = window.setTimeout(() => setLevelToast(null), 5200);
+      return () => clearTimeout(t);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [balance]);
+
+  // Demo: bump balance across a threshold after 18s so the level-up flow fires.
+  useEffect(() => {
+    const t = window.setTimeout(() => {
+      setBalance((b) => {
+        const nextThreshold = LEVELS.find((l) => l.minEarned > b)?.minEarned;
+        return nextThreshold ? nextThreshold + 500 : b;
+      });
+    }, 18000);
+    return () => clearTimeout(t);
+  }, []);
+
+
   /* ----------------------------- Bank --------------------------------- */
 
   const openBank = () => {
