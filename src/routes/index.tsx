@@ -35,6 +35,17 @@ import {
   Lock,
   Percent,
   Gift,
+  FileText,
+  ShieldCheck,
+  Ban,
+  Globe,
+  Timer,
+  Target,
+  Building2,
+  ClipboardList,
+  Inbox,
+  ThumbsUp,
+  ThumbsDown,
   type LucideIcon,
 } from "lucide-react";
 
@@ -77,6 +88,29 @@ type Offer = {
   epc: number;
   cr: number;
   isNew?: boolean;
+  advertiser: string;
+  geo: string[];
+  hold: string;
+  goal: string;
+  description: string;
+  requirements: string[];
+  allowed: string[];
+  denied: string[];
+  landing: string;
+};
+
+type LinkRequestStatus = "new" | "review" | "approved" | "rejected";
+type LinkRequest = {
+  id: string;
+  offerId: string;
+  offerName: string;
+  offerTag: string;
+  createdAt: string;
+  source: string;
+  sub: string;
+  link: string;
+  status: LinkRequestStatus;
+  note?: string;
 };
 
 type Conversion = {
@@ -165,14 +199,126 @@ function bankDest(b: BankDetails) {
 /* ================================ Data ================================= */
 
 const offersData: Offer[] = [
-  { id: "gpb", tag: "BANK", name: "Газпромбанк Gold", category: "Банки", payout: "4 500 ₽", epc: 120, cr: 4.1 },
-  { id: "skl", tag: "EDU", name: "Skillbox: Дизайн интерьеров", category: "Образование", payout: "15%", epc: 85, cr: 3.2 },
-  { id: "tin", tag: "FIN", name: "Т-Инвестиции: брокерский счёт", category: "Инвестиции", payout: "2 800 ₽", epc: 142, cr: 5.8, isNew: true },
-  { id: "lvl", tag: "TRV", name: "Level.Travel: туры в Турцию", category: "Путешествия", payout: "2,5%", epc: 58, cr: 2.1 },
-  { id: "sgl", tag: "INS", name: "Согласие: ОСАГО онлайн", category: "Страхование", payout: "850 ₽", epc: 72, cr: 3.4 },
-  { id: "alf", tag: "BANK", name: "Альфа-Инвестиции", category: "Инвестиции", payout: "1 200 ₽", epc: 96, cr: 4.4, isNew: true },
-  { id: "spr", tag: "EDU", name: "Skypro Web-разработка", category: "Образование", payout: "3 800 ₽", epc: 110, cr: 2.9 },
-  { id: "avs", tag: "TRV", name: "Aviasales Search", category: "Путешествия", payout: "1,8%", epc: 24, cr: 1.6 },
+  {
+    id: "gpb", tag: "BANK", name: "Газпромбанк Gold", category: "Банки", payout: "4 500 ₽", epc: 120, cr: 4.1,
+    advertiser: "Газпромбанк",
+    geo: ["RU"], hold: "45 дней", goal: "Активация карты + первая покупка от 1 000 ₽",
+    description:
+      "Премиальная дебетовая карта Gold с кэшбэком до 10% в выбранных категориях, бесплатным обслуживанием при обороте от 30 000 ₽ и приветственным бонусом 2 000 ₽ новым клиентам.",
+    requirements: [
+      "Возраст клиента 21–65 лет, гражданство РФ",
+      "Первое оформление карты в банке за последние 180 дней",
+      "Активация в течение 14 дней с момента заявки",
+    ],
+    allowed: ["SEO", "Контекст по бренд-запросам", "Email-рассылки по своей базе", "Telegram-каналы"],
+    denied: ["Cashback- и купон-сервисы", "Мотивированный трафик", "Спам в мессенджерах", "Brand bidding в Яндексе"],
+    landing: "https://gpb.ru/lp/gold",
+  },
+  {
+    id: "skl", tag: "EDU", name: "Skillbox: Дизайн интерьеров", category: "Образование", payout: "15%", epc: 85, cr: 3.2,
+    advertiser: "Skillbox",
+    geo: ["RU", "BY", "KZ"], hold: "30 дней", goal: "Оплата курса от 40 000 ₽",
+    description:
+      "Онлайн-курс по дизайну интерьеров: 9 месяцев практики, портфолио из 4 проектов, диплом и помощь в трудоустройстве. Выплата — 15% от суммы первой оплаты клиента.",
+    requirements: [
+      "Оплата в течение 21 дня после первого клика",
+      "Клиент не проходил обучение в Skillbox ранее",
+      "Промокоды платформы аннулируют выплату",
+    ],
+    allowed: ["Тематический контент", "YouTube-обзоры", "Instagram/TikTok", "Таргет с прогревом"],
+    denied: ["Brand bidding", "Cashback-сервисы", "Adult- и gambling-площадки"],
+    landing: "https://skillbox.ru/design-interior",
+  },
+  {
+    id: "tin", tag: "FIN", name: "Т-Инвестиции: брокерский счёт", category: "Инвестиции", payout: "2 800 ₽", epc: 142, cr: 5.8, isNew: true,
+    advertiser: "Т-Банк",
+    geo: ["RU"], hold: "60 дней", goal: "Открытие счёта + первое пополнение от 10 000 ₽",
+    description:
+      "Брокерский счёт с бесплатным обслуживанием, доступом к акциям РФ, фондам и обучающим материалам. Клиент получает 3 акции в подарок — оффер отлично конвертит на финансовом трафике.",
+    requirements: [
+      "Возраст клиента от 18 лет, гражданство РФ",
+      "Пополнение в течение 30 дней с момента регистрации",
+      "Верификация паспорта через Т-ID",
+    ],
+    allowed: ["SEO", "Финансовые блоги", "Telegram-каналы про инвестиции", "Email-рассылки"],
+    denied: ["Cashback", "Мотив-трафик", "Спам-рассылки", "Brand bidding"],
+    landing: "https://tinkoff.ru/invest/",
+  },
+  {
+    id: "lvl", tag: "TRV", name: "Level.Travel: туры в Турцию", category: "Путешествия", payout: "2,5%", epc: 58, cr: 2.1,
+    advertiser: "Level.Travel",
+    geo: ["RU"], hold: "После окончания тура", goal: "Оплаченный тур в Турцию",
+    description:
+      "Онлайн-агрегатор туров с более чем 200 туроператорами. Выплата — 2,5% от стоимости оплаченного тура в Турцию. Средний чек — 120 000 ₽.",
+    requirements: [
+      "Тур должен состояться (без отмены до даты вылета)",
+      "Оплата в течение 7 дней после клика",
+      "Клиент не отменяет и не переносит тур",
+    ],
+    allowed: ["Travel-блоги", "SEO", "YouTube-обзоры", "Тематические Telegram-каналы"],
+    denied: ["Brand bidding", "Cashback", "Adult-площадки"],
+    landing: "https://level.travel/turkey",
+  },
+  {
+    id: "sgl", tag: "INS", name: "Согласие: ОСАГО онлайн", category: "Страхование", payout: "850 ₽", epc: 72, cr: 3.4,
+    advertiser: "СК Согласие",
+    geo: ["RU"], hold: "14 дней", goal: "Оплаченный полис ОСАГО",
+    description:
+      "Оформление полиса ОСАГО онлайн за 10 минут. Электронный полис приходит на email. Выплачивается за каждый оплаченный полис независимо от суммы.",
+    requirements: [
+      "Клиент — физическое лицо, водитель с правами РФ",
+      "Оплата полиса в течение 3 дней после расчёта",
+      "Один клиент — одна выплата в год",
+    ],
+    allowed: ["Автоблоги", "SEO", "Контекст по не-брендовым запросам", "Telegram-каналы"],
+    denied: ["Brand bidding", "Cashback", "Мотив-трафик"],
+    landing: "https://soglasie.ru/osago",
+  },
+  {
+    id: "alf", tag: "BANK", name: "Альфа-Инвестиции", category: "Инвестиции", payout: "1 200 ₽", epc: 96, cr: 4.4, isNew: true,
+    advertiser: "Альфа-Банк",
+    geo: ["RU"], hold: "45 дней", goal: "Открытие счёта + пополнение от 5 000 ₽",
+    description:
+      "Брокерский счёт от Альфа-Банка с доступом к акциям, облигациям и валюте. Приветственный бонус — 5 акций российских компаний.",
+    requirements: [
+      "Возраст от 18 лет, гражданство РФ",
+      "Пополнение в течение 21 дня",
+      "Клиент — новый в Альфа-Инвестициях",
+    ],
+    allowed: ["Финансовые блоги", "SEO", "Telegram-каналы", "YouTube"],
+    denied: ["Cashback", "Мотив-трафик", "Brand bidding"],
+    landing: "https://alfabank.ru/invest",
+  },
+  {
+    id: "spr", tag: "EDU", name: "Skypro Web-разработка", category: "Образование", payout: "3 800 ₽", epc: 110, cr: 2.9,
+    advertiser: "Skypro",
+    geo: ["RU", "BY", "KZ"], hold: "30 дней", goal: "Оплата курса",
+    description:
+      "Профессия «Веб-разработчик» — 10 месяцев обучения с помощью в трудоустройстве. Первая оплата от 5 000 ₽ засчитывается как конверсия.",
+    requirements: [
+      "Оплата в течение 21 дня",
+      "Клиент — новый ученик Skypro",
+      "Возврат в первые 14 дней отменяет выплату",
+    ],
+    allowed: ["Тематический контент", "YouTube", "Instagram/TikTok", "Таргет"],
+    denied: ["Brand bidding", "Cashback", "Adult"],
+    landing: "https://sky.pro/webdev",
+  },
+  {
+    id: "avs", tag: "TRV", name: "Aviasales Search", category: "Путешествия", payout: "1,8%", epc: 24, cr: 1.6,
+    advertiser: "Aviasales",
+    geo: ["RU", "BY", "KZ", "UA"], hold: "После вылета", goal: "Купленный авиабилет",
+    description:
+      "Крупнейший поисковик авиабилетов в СНГ. Выплата — 1,8% от стоимости билета. Работает на любом трафике, где есть спрос на путешествия.",
+    requirements: [
+      "Билет должен быть оплачен и не возвращён",
+      "Полёт состоялся",
+      "Оплата в течение 24 часов после клика",
+    ],
+    allowed: ["Travel-контент", "SEO", "Telegram", "YouTube"],
+    denied: ["Brand bidding по Aviasales", "Cashback", "Adult"],
+    landing: "https://aviasales.ru",
+  },
 ];
 
 const categoriesAll = ["Все", "Банки", "Образование", "Инвестиции", "Путешествия", "Страхование"];
@@ -397,6 +543,30 @@ function DashboardPage() {
   const [payouts, setPayouts] = useState<Payout[]>(initialPayouts);
   const [notifs, setNotifs] = useState<Notification[]>(initialNotifs);
   const [linkedOffers, setLinkedOffers] = useState<Set<string>>(new Set());
+  const [requests, setRequests] = useState<LinkRequest[]>([
+    {
+      id: "REQ-7412",
+      offerId: "gpb",
+      offerName: "Газпромбанк Gold",
+      offerTag: "BANK",
+      createdAt: "Вчера, 18:22",
+      source: "Telegram-канал «Финансы 360»",
+      sub: "tg-fin360",
+      link: "https://kvant.io/p/user772/gpb?sub=tg-fin360",
+      status: "approved",
+    },
+    {
+      id: "REQ-7405",
+      offerId: "spr",
+      offerName: "Skypro Web-разработка",
+      offerTag: "EDU",
+      createdAt: "2 дня назад",
+      source: "YouTube-канал",
+      sub: "yt-webdev",
+      link: "https://kvant.io/p/user772/spr?sub=yt-webdev",
+      status: "review",
+    },
+  ]);
   const conversions = initialConversions;
 
   // Sheets
@@ -406,6 +576,8 @@ function DashboardPage() {
   const [notifFilter, setNotifFilter] = useState<"all" | NotifKind>("all");
   const [payoutOpen, setPayoutOpen] = useState(false);
   const [levelsOpen, setLevelsOpen] = useState(false);
+  const [offerDetail, setOfferDetail] = useState<Offer | null>(null);
+  const [adminOpen, setAdminOpen] = useState(false);
 
   const unreadCount = notifs.filter((n) => !n.read).length;
   const levelInfo = useMemo(() => getLevel(balance), [balance]);
@@ -439,8 +611,9 @@ function DashboardPage() {
   /* --------------------------- Offer link ----------------------------- */
 
   const [copiedOffer, setCopiedOffer] = useState<string | null>(null);
-  const copyOfferLink = async (offer: Offer) => {
-    const link = `https://kvant.io/p/user772/${offer.id}`;
+  const copyOfferLink = async (offer: Offer, source = "Прямая ссылка") => {
+    const sub = `sub-${Math.random().toString(36).slice(2, 6)}`;
+    const link = `https://kvant.io/p/user772/${offer.id}?sub=${sub}`;
     try {
       await navigator.clipboard.writeText(link);
     } catch {}
@@ -448,12 +621,45 @@ function DashboardPage() {
     setTimeout(() => setCopiedOffer((c) => (c === offer.id ? null : c)), 1600);
     const wasLinked = linkedOffers.has(offer.id);
     setLinkedOffers((s) => new Set(s).add(offer.id));
+
+    const reqId = `REQ-${Math.floor(7500 + Math.random() * 500)}`;
+    const req: LinkRequest = {
+      id: reqId,
+      offerId: offer.id,
+      offerName: offer.name,
+      offerTag: offer.tag,
+      createdAt: `Сегодня, ${nowTime()}`,
+      source,
+      sub,
+      link,
+      status: "new",
+    };
+    setRequests((prev) => [req, ...prev]);
+
     pushNotif({
       kind: "offer",
-      title: wasLinked ? "Ссылка скопирована" : "Оффер подключён",
-      body: `${offer.name} • ${link.replace("https://", "")}`,
+      title: wasLinked ? "Новая ссылка создана" : "Оффер подключён",
+      body: `${offer.name} • заявка ${reqId} на модерации`,
+    });
+
+    // Auto-move to review
+    const t1 = window.setTimeout(() => {
+      setRequests((prev) => prev.map((r) => (r.id === reqId ? { ...r, status: "review" } : r)));
+    }, 3000);
+    timeouts.current.push(t1);
+  };
+
+  const decideRequest = (id: string, status: "approved" | "rejected", note?: string) => {
+    setRequests((prev) => prev.map((r) => (r.id === id ? { ...r, status, note } : r)));
+    const req = requests.find((r) => r.id === id);
+    if (!req) return;
+    pushNotif({
+      kind: "offer",
+      title: status === "approved" ? "Ссылка одобрена" : "Ссылка отклонена",
+      body: `${req.offerName} • ${id}${note ? ` — ${note}` : ""}`,
     });
   };
+
 
   /* --------------------------- Payout flow ---------------------------- */
 
@@ -544,6 +750,18 @@ function DashboardPage() {
         </div>
         <div className="flex items-center gap-3">
           <button
+            aria-label="Заявки на модерации"
+            onClick={() => setAdminOpen(true)}
+            className="relative flex size-8 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+          >
+            <ClipboardList className="size-4" />
+            {requests.filter((r) => r.status === "new" || r.status === "review").length > 0 && (
+              <span className="absolute -right-0.5 -top-0.5 grid min-w-[16px] place-items-center rounded-full bg-[color:var(--warning)] px-1 font-mono text-[9px] font-bold leading-none text-background">
+                {requests.filter((r) => r.status === "new" || r.status === "review").length}
+              </span>
+            )}
+          </button>
+          <button
             aria-label="Уведомления"
             onClick={() => setNotifOpen(true)}
             className="relative flex size-8 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
@@ -592,6 +810,9 @@ function DashboardPage() {
             linked={linkedOffers}
             copiedOffer={copiedOffer}
             onCopyLink={copyOfferLink}
+            onOpenDetail={(o) => setOfferDetail(o)}
+            requestsCount={requests.length}
+            onOpenAdmin={() => setAdminOpen(true)}
           />
         )}
         {active === "stats" && (
@@ -649,6 +870,29 @@ function DashboardPage() {
           onClose={() => setLevelsOpen(false)}
         />
       )}
+
+      {/* Offer detail sheet */}
+      {offerDetail && (
+        <OfferDetailSheet
+          offer={offerDetail}
+          linked={linkedOffers.has(offerDetail.id)}
+          copiedOffer={copiedOffer}
+          requests={requests.filter((r) => r.offerId === offerDetail.id)}
+          onCopyLink={copyOfferLink}
+          onClose={() => setOfferDetail(null)}
+        />
+      )}
+
+      {/* Admin (link requests) sheet */}
+      {adminOpen && (
+        <AdminRequestsSheet
+          requests={requests}
+          onDecide={decideRequest}
+          onClose={() => setAdminOpen(false)}
+        />
+      )}
+
+
 
 
 
@@ -1066,11 +1310,17 @@ function OffersTab({
   linked,
   copiedOffer,
   onCopyLink,
+  onOpenDetail,
+  requestsCount,
+  onOpenAdmin,
 }: {
   offers: Offer[];
   linked: Set<string>;
   copiedOffer: string | null;
-  onCopyLink: (o: Offer) => void;
+  onCopyLink: (o: Offer, source?: string) => void;
+  onOpenDetail: (o: Offer) => void;
+  requestsCount: number;
+  onOpenAdmin: () => void;
 }) {
   const [q, setQ] = useState("");
   const [cat, setCat] = useState<string>("Все");
@@ -1100,6 +1350,26 @@ function OffersTab({
             {filtered.length} из {offers.length}
           </span>
         </div>
+        <button
+          onClick={onOpenAdmin}
+          className="mb-3 flex w-full items-center justify-between gap-3 rounded-md border border-border bg-secondary/40 px-3 py-2 text-left transition-colors hover:border-foreground/20"
+        >
+          <div className="flex items-center gap-2">
+            <div className="grid size-7 place-items-center rounded-md bg-primary/10 text-primary">
+              <ClipboardList className="size-3.5" />
+            </div>
+            <div>
+              <p className="text-[11px] font-bold leading-none">Мои заявки на ссылки</p>
+              <p className="mt-1 text-[9px] uppercase tracking-wider text-muted-foreground">
+                Модерация ссылок админом
+              </p>
+            </div>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="font-mono text-[11px] font-bold tabular-nums">{requestsCount}</span>
+            <ChevronRight className="size-3.5 text-muted-foreground" />
+          </div>
+        </button>
         <div className="flex items-center gap-2 rounded-md border border-border bg-card px-3 py-2">
           <Search className="size-3.5 text-muted-foreground" />
           <input
@@ -1162,7 +1432,11 @@ function OffersTab({
               key={o.id}
               className="rounded-lg border border-border bg-card p-3 transition-colors hover:border-foreground/20"
             >
-              <div className="flex items-start gap-3">
+              <button
+                type="button"
+                onClick={() => onOpenDetail(o)}
+                className="flex w-full items-start gap-3 text-left"
+              >
                 <OfferTag tag={o.tag} />
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-2">
@@ -1173,38 +1447,51 @@ function OffersTab({
                       </span>
                     )}
                   </div>
-                  <p className="mt-1 text-[10px] text-muted-foreground">{o.category}</p>
+                  <p className="mt-1 text-[10px] text-muted-foreground">
+                    {o.category} • {o.advertiser}
+                  </p>
+                  <p className="mt-1.5 line-clamp-2 text-[10.5px] leading-snug text-muted-foreground/90">
+                    {o.description}
+                  </p>
                 </div>
                 <div className="shrink-0 text-right">
                   <p className="font-mono text-xs font-bold">{o.payout}</p>
                   <p className="font-mono text-[9px] uppercase text-muted-foreground">за действие</p>
                 </div>
-              </div>
+              </button>
               <div className="mt-3 flex items-end justify-between gap-2">
                 <div className="grid grid-cols-2 gap-3">
                   <Stat label="EPC" value={`${fmt(o.epc)} ₽`} />
                   <Stat label="CR" value={`${o.cr.toFixed(1)}%`} />
                 </div>
-                <button
-                  onClick={() => onCopyLink(o)}
-                  className={`flex items-center gap-1 rounded-md px-3 py-2 text-[11px] font-bold uppercase tracking-wider transition-colors active:scale-95 ${
-                    isCopied
-                      ? "bg-[color:var(--success)]/15 text-[color:var(--success)]"
-                      : isLinked
-                        ? "border border-border bg-card text-foreground hover:bg-accent"
-                        : "bg-foreground text-background"
-                  }`}
-                >
-                  {isCopied ? (
-                    <>
-                      <Check className="size-3" /> Скопировано
-                    </>
-                  ) : (
-                    <>
-                      <Link2 className="size-3" /> {isLinked ? "Ссылка" : "Получить"}
-                    </>
-                  )}
-                </button>
+                <div className="flex items-center gap-1.5">
+                  <button
+                    onClick={() => onOpenDetail(o)}
+                    className="flex items-center gap-1 rounded-md border border-border bg-card px-2.5 py-2 text-[11px] font-bold uppercase tracking-wider text-muted-foreground hover:text-foreground active:scale-95"
+                  >
+                    <FileText className="size-3" />
+                  </button>
+                  <button
+                    onClick={() => onCopyLink(o)}
+                    className={`flex items-center gap-1 rounded-md px-3 py-2 text-[11px] font-bold uppercase tracking-wider transition-colors active:scale-95 ${
+                      isCopied
+                        ? "bg-[color:var(--success)]/15 text-[color:var(--success)]"
+                        : isLinked
+                          ? "border border-border bg-card text-foreground hover:bg-accent"
+                          : "bg-foreground text-background"
+                    }`}
+                  >
+                    {isCopied ? (
+                      <>
+                        <Check className="size-3" /> Скопировано
+                      </>
+                    ) : (
+                      <>
+                        <Link2 className="size-3" /> {isLinked ? "Ссылка" : "Получить"}
+                      </>
+                    )}
+                  </button>
+                </div>
               </div>
             </div>
           );
@@ -1246,7 +1533,7 @@ function StatsTab({ conversions, offers }: { conversions: Conversion[]; offers: 
     const m = new Map<string, { offer: Offer; conv: number; income: number }>();
     conversions.forEach((c) => {
       if (c.status === "rejected") return;
-      const off = offers.find((o) => o.id === c.offerId) ?? {
+      const off: Offer = offers.find((o) => o.id === c.offerId) ?? {
         id: c.offerId,
         tag: "×",
         name: c.offerName,
@@ -1254,6 +1541,15 @@ function StatsTab({ conversions, offers }: { conversions: Conversion[]; offers: 
         payout: "",
         epc: 0,
         cr: 0,
+        advertiser: "—",
+        geo: [],
+        hold: "—",
+        goal: "—",
+        description: "",
+        requirements: [],
+        allowed: [],
+        denied: [],
+        landing: "",
       };
       const cur = m.get(c.offerId) ?? { offer: off, conv: 0, income: 0 };
       cur.conv += 1;
@@ -2200,6 +2496,371 @@ function LevelsSheet({
             Уровень пересчитывается автоматически по общему заработку.
             Бонусы применяются к новым конверсиям, ускоренные выплаты — к новым заявкам.
           </p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ========================= OfferDetailSheet ============================ */
+
+function OfferDetailSheet({
+  offer,
+  linked,
+  copiedOffer,
+  requests,
+  onCopyLink,
+  onClose,
+}: {
+  offer: Offer;
+  linked: boolean;
+  copiedOffer: string | null;
+  requests: LinkRequest[];
+  onCopyLink: (o: Offer, source?: string) => void;
+  onClose: () => void;
+}) {
+  const [source, setSource] = useState("Прямая ссылка");
+  const isCopied = copiedOffer === offer.id;
+  const sources = ["Прямая ссылка", "Telegram", "YouTube", "Instagram", "SEO", "Email"];
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-end justify-center bg-foreground/40 backdrop-blur-sm sm:items-center">
+      <div className="animate-in-up flex max-h-[92vh] w-full max-w-[440px] flex-col overflow-hidden rounded-t-2xl border border-border bg-background sm:rounded-2xl">
+        {/* Header */}
+        <div className="flex items-start justify-between gap-3 border-b border-border px-4 py-3">
+          <div className="flex min-w-0 items-start gap-3">
+            <OfferTag tag={offer.tag} />
+            <div className="min-w-0">
+              <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+                {offer.category}
+              </p>
+              <h3 className="mt-0.5 truncate text-sm font-bold leading-tight">{offer.name}</h3>
+              <p className="mt-1 flex items-center gap-1 text-[10px] text-muted-foreground">
+                <Building2 className="size-3" /> {offer.advertiser}
+              </p>
+            </div>
+          </div>
+          <button
+            onClick={onClose}
+            aria-label="Закрыть"
+            className="grid size-8 shrink-0 place-items-center rounded-full text-muted-foreground hover:bg-accent"
+          >
+            <X className="size-4" />
+          </button>
+        </div>
+
+        {/* Scrollable body */}
+        <div className="flex-1 space-y-5 overflow-y-auto px-4 py-4">
+          {/* Payout hero */}
+          <div className="rounded-xl border border-border bg-gradient-to-br from-secondary/60 to-transparent p-4">
+            <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+              Выплата за конверсию
+            </p>
+            <p className="mt-1 font-mono text-2xl font-bold tabular-nums">{offer.payout}</p>
+            <div className="mt-3 grid grid-cols-3 gap-3">
+              <Stat label="EPC" value={`${fmt(offer.epc)} ₽`} />
+              <Stat label="CR" value={`${offer.cr.toFixed(1)}%`} />
+              <Stat label="Холд" value={offer.hold} />
+            </div>
+          </div>
+
+          {/* Meta */}
+          <div className="grid grid-cols-2 gap-2">
+            <MetaCell Icon={Target} label="Цель" value={offer.goal} />
+            <MetaCell Icon={Globe} label="Гео" value={offer.geo.join(" • ")} />
+            <MetaCell Icon={Timer} label="Холд" value={offer.hold} />
+            <MetaCell Icon={Landmark} label="Лендинг" value={offer.landing.replace("https://", "")} />
+          </div>
+
+          {/* Description */}
+          <section>
+            <h4 className="mb-1.5 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+              Описание
+            </h4>
+            <p className="text-[12px] leading-relaxed text-foreground/90">{offer.description}</p>
+          </section>
+
+          {/* Requirements */}
+          <section>
+            <h4 className="mb-2 flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+              <ShieldCheck className="size-3" /> Требования
+            </h4>
+            <ul className="space-y-1.5">
+              {offer.requirements.map((r, i) => (
+                <li key={i} className="flex gap-2 text-[11.5px] leading-snug text-foreground/90">
+                  <span className="mt-1.5 size-1 shrink-0 rounded-full bg-foreground/50" />
+                  {r}
+                </li>
+              ))}
+            </ul>
+          </section>
+
+          {/* Allowed / Denied */}
+          <section className="grid grid-cols-1 gap-2">
+            <div className="rounded-lg border border-[color:var(--success)]/30 bg-[color:var(--success)]/5 p-3">
+              <h5 className="mb-1.5 flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest text-[color:var(--success)]">
+                <CheckCircle2 className="size-3" /> Разрешённый трафик
+              </h5>
+              <div className="flex flex-wrap gap-1">
+                {offer.allowed.map((a) => (
+                  <span key={a} className="rounded bg-[color:var(--success)]/10 px-2 py-0.5 text-[10px] font-medium text-[color:var(--success)]">
+                    {a}
+                  </span>
+                ))}
+              </div>
+            </div>
+            <div className="rounded-lg border border-destructive/30 bg-destructive/5 p-3">
+              <h5 className="mb-1.5 flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest text-destructive">
+                <Ban className="size-3" /> Запрещённый трафик
+              </h5>
+              <div className="flex flex-wrap gap-1">
+                {offer.denied.map((a) => (
+                  <span key={a} className="rounded bg-destructive/10 px-2 py-0.5 text-[10px] font-medium text-destructive">
+                    {a}
+                  </span>
+                ))}
+              </div>
+            </div>
+          </section>
+
+          {/* Source picker */}
+          <section>
+            <h4 className="mb-2 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+              Источник трафика
+            </h4>
+            <div className="flex flex-wrap gap-1">
+              {sources.map((s) => (
+                <button
+                  key={s}
+                  onClick={() => setSource(s)}
+                  className={`rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider transition-colors ${
+                    source === s
+                      ? "bg-foreground text-background"
+                      : "bg-secondary text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  {s}
+                </button>
+              ))}
+            </div>
+            <p className="mt-2 text-[10px] text-muted-foreground">
+              Каждая ссылка создаёт заявку в модерацию администратора.
+            </p>
+          </section>
+
+          {/* My requests for this offer */}
+          {requests.length > 0 && (
+            <section>
+              <h4 className="mb-2 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+                Мои заявки по офферу
+              </h4>
+              <div className="space-y-1.5">
+                {requests.map((r) => (
+                  <div key={r.id} className="flex items-center justify-between gap-2 rounded-md border border-border bg-card px-3 py-2">
+                    <div className="min-w-0">
+                      <p className="font-mono text-[11px] font-bold">{r.id}</p>
+                      <p className="truncate text-[10px] text-muted-foreground">
+                        {r.source} • {r.createdAt}
+                      </p>
+                    </div>
+                    <RequestStatusPill status={r.status} />
+                  </div>
+                ))}
+              </div>
+            </section>
+          )}
+        </div>
+
+        {/* Footer CTA */}
+        <div className="flex items-center gap-2 border-t border-border bg-background px-4 py-3">
+          <div className="flex-1">
+            <p className="text-[10px] uppercase tracking-widest text-muted-foreground">Партнёрская ссылка</p>
+            <p className="truncate font-mono text-[11px] font-bold">
+              kvant.io/p/user772/{offer.id}
+            </p>
+          </div>
+          <button
+            onClick={() => onCopyLink(offer, source)}
+            className={`flex items-center gap-1.5 rounded-md px-4 py-2.5 text-[11px] font-bold uppercase tracking-wider transition-colors active:scale-95 ${
+              isCopied
+                ? "bg-[color:var(--success)]/15 text-[color:var(--success)]"
+                : "bg-foreground text-background"
+            }`}
+          >
+            {isCopied ? (
+              <>
+                <Check className="size-3.5" /> Скопировано
+              </>
+            ) : (
+              <>
+                <Link2 className="size-3.5" /> {linked ? "Новая ссылка" : "Получить ссылку"}
+              </>
+            )}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function MetaCell({ Icon, label, value }: { Icon: LucideIcon; label: string; value: string }) {
+  return (
+    <div className="rounded-lg border border-border bg-card p-2.5">
+      <p className="flex items-center gap-1 text-[9px] font-bold uppercase tracking-widest text-muted-foreground">
+        <Icon className="size-3" /> {label}
+      </p>
+      <p className="mt-1 truncate text-[11px] font-bold">{value}</p>
+    </div>
+  );
+}
+
+function RequestStatusPill({ status }: { status: LinkRequestStatus }) {
+  const map: Record<LinkRequestStatus, { label: string; cls: string; Icon: LucideIcon }> = {
+    new: { label: "Новая", cls: "bg-primary/10 text-primary", Icon: Sparkles },
+    review: { label: "На модерации", cls: "bg-[color:var(--warning)]/10 text-[color:var(--warning)]", Icon: Clock },
+    approved: { label: "Одобрено", cls: "bg-[color:var(--success)]/10 text-[color:var(--success)]", Icon: CheckCircle2 },
+    rejected: { label: "Отклонено", cls: "bg-destructive/10 text-destructive", Icon: XCircle },
+  };
+  const s = map[status];
+  return (
+    <span className={`flex shrink-0 items-center gap-1 rounded-full px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider ${s.cls}`}>
+      <s.Icon className="size-2.5" /> {s.label}
+    </span>
+  );
+}
+
+/* ========================= AdminRequestsSheet ========================== */
+
+function AdminRequestsSheet({
+  requests,
+  onDecide,
+  onClose,
+}: {
+  requests: LinkRequest[];
+  onDecide: (id: string, status: "approved" | "rejected", note?: string) => void;
+  onClose: () => void;
+}) {
+  const [filter, setFilter] = useState<"all" | LinkRequestStatus>("all");
+  const filtered = filter === "all" ? requests : requests.filter((r) => r.status === filter);
+  const counts = {
+    all: requests.length,
+    new: requests.filter((r) => r.status === "new").length,
+    review: requests.filter((r) => r.status === "review").length,
+    approved: requests.filter((r) => r.status === "approved").length,
+    rejected: requests.filter((r) => r.status === "rejected").length,
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-end justify-center bg-foreground/40 backdrop-blur-sm sm:items-center">
+      <div className="animate-in-up flex max-h-[92vh] w-full max-w-[440px] flex-col overflow-hidden rounded-t-2xl border border-border bg-background sm:rounded-2xl">
+        <div className="flex items-start justify-between border-b border-border px-4 py-3">
+          <div>
+            <p className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+              <ShieldCheck className="size-3" /> Панель администратора
+            </p>
+            <h3 className="mt-0.5 text-sm font-bold">Заявки на партнёрские ссылки</h3>
+            <p className="mt-0.5 font-mono text-[10px] text-muted-foreground">
+              {counts.new + counts.review} в очереди • {counts.approved} одобрено • {counts.rejected} отказ
+            </p>
+          </div>
+          <button
+            onClick={onClose}
+            aria-label="Закрыть"
+            className="grid size-8 shrink-0 place-items-center rounded-full text-muted-foreground hover:bg-accent"
+          >
+            <X className="size-4" />
+          </button>
+        </div>
+
+        <div className="flex gap-1 overflow-x-auto border-b border-border px-4 py-2">
+          {(
+            [
+              { id: "all" as const, label: "Все" },
+              { id: "new" as const, label: "Новые" },
+              { id: "review" as const, label: "На модерации" },
+              { id: "approved" as const, label: "Одобрено" },
+              { id: "rejected" as const, label: "Отказ" },
+            ]
+          ).map((t) => (
+            <button
+              key={t.id}
+              onClick={() => setFilter(t.id)}
+              className={`shrink-0 rounded-full px-3 py-1 text-[10px] font-bold uppercase tracking-wider transition-colors ${
+                filter === t.id
+                  ? "bg-foreground text-background"
+                  : "bg-secondary text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              {t.label}
+              <span className="ml-1 font-mono opacity-70">{counts[t.id]}</span>
+            </button>
+          ))}
+        </div>
+
+        <div className="flex-1 overflow-y-auto">
+          {filtered.length === 0 ? (
+            <div className="flex flex-col items-center justify-center gap-2 py-16 text-center text-muted-foreground">
+              <Inbox className="size-8 opacity-40" />
+              <p className="text-xs">Заявок в этой категории нет</p>
+            </div>
+          ) : (
+            <ul className="divide-y divide-border">
+              {filtered.map((r) => (
+                <li key={r.id} className="space-y-2 px-4 py-3">
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-2">
+                        <OfferTag tag={r.offerTag} />
+                        <p className="truncate text-xs font-bold">{r.offerName}</p>
+                      </div>
+                      <p className="mt-1 font-mono text-[10px] text-muted-foreground">
+                        {r.id} • {r.createdAt}
+                      </p>
+                    </div>
+                    <RequestStatusPill status={r.status} />
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-2 rounded-md border border-border bg-card p-2.5">
+                    <div>
+                      <p className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground">Источник</p>
+                      <p className="truncate text-[11px] font-bold">{r.source}</p>
+                    </div>
+                    <div>
+                      <p className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground">Sub</p>
+                      <p className="truncate font-mono text-[11px] font-bold">{r.sub}</p>
+                    </div>
+                    <div className="col-span-2 min-w-0">
+                      <p className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground">Ссылка</p>
+                      <p className="truncate font-mono text-[10.5px]">{r.link}</p>
+                    </div>
+                  </div>
+
+                  {r.note && (
+                    <p className="rounded bg-destructive/10 px-2 py-1 text-[10px] text-destructive">
+                      Причина отказа: {r.note}
+                    </p>
+                  )}
+
+                  {(r.status === "new" || r.status === "review") && (
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => onDecide(r.id, "approved")}
+                        className="flex flex-1 items-center justify-center gap-1 rounded-md bg-[color:var(--success)]/15 px-3 py-2 text-[11px] font-bold uppercase tracking-wider text-[color:var(--success)] active:scale-95"
+                      >
+                        <ThumbsUp className="size-3" /> Одобрить
+                      </button>
+                      <button
+                        onClick={() => onDecide(r.id, "rejected", "Не соответствует правилам")}
+                        className="flex flex-1 items-center justify-center gap-1 rounded-md bg-destructive/10 px-3 py-2 text-[11px] font-bold uppercase tracking-wider text-destructive active:scale-95"
+                      >
+                        <ThumbsDown className="size-3" /> Отклонить
+                      </button>
+                    </div>
+                  )}
+                </li>
+              ))}
+            </ul>
+          )}
         </div>
       </div>
     </div>
