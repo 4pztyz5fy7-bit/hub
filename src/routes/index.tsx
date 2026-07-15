@@ -198,6 +198,15 @@ function DashboardPage() {
   const [bank, setBank] = useState<BankDetails | null>(null);
   const [bankOpen, setBankOpen] = useState(false);
   const [draft, setDraft] = useState<BankDetails>(emptyBank);
+  const [notifs, setNotifs] = useState<Notification[]>(initialNotifs);
+  const [notifOpen, setNotifOpen] = useState(false);
+  const [notifFilter, setNotifFilter] = useState<"all" | NotifKind>("all");
+  const unreadCount = notifs.filter((n) => !n.read).length;
+  const filteredNotifs =
+    notifFilter === "all" ? notifs : notifs.filter((n) => n.kind === notifFilter);
+  const markAllRead = () => setNotifs((ns) => ns.map((n) => ({ ...n, read: true })));
+  const toggleRead = (id: string) =>
+    setNotifs((ns) => ns.map((n) => (n.id === id ? { ...n, read: true } : n)));
   const refLink = "kvant.io/p/user772/ref";
 
   const openBank = () => {
