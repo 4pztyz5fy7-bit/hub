@@ -981,6 +981,7 @@ function DashboardPage() {
           copiedOffer={copiedOffer}
           requests={requests.filter((r) => r.offerId === offerDetail.id)}
           onCopyLink={copyOfferLink}
+          level={levelInfo.current}
           onClose={() => setOfferDetail(null)}
         />
       )}
