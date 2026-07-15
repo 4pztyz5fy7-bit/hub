@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
 import {
   LayoutGrid,
@@ -822,23 +822,34 @@ function DashboardPage() {
       <nav className="fixed bottom-0 left-0 right-0 z-30 flex h-16 items-center justify-around border-t border-border bg-background/95 px-2 backdrop-blur-md">
         {(
           [
-            { id: "info", label: "Инфо", Icon: LayoutGrid },
-            { id: "offers", label: "Офферы", Icon: Package },
-            { id: "stats", label: "Стата", Icon: BarChart3 },
-            { id: "payouts", label: "Выплаты", Icon: Wallet },
+            { id: "info", label: "Инфо", Icon: LayoutGrid, to: "/" },
+            { id: "offers", label: "Офферы", Icon: Package, to: "/" },
+            { id: "stats", label: "Стата", Icon: BarChart3, to: "/" },
+            { id: "payouts", label: "Выплаты", Icon: Wallet, to: "/payouts" },
           ] as const
-        ).map(({ id, label, Icon }) => (
-          <button
-            key={id}
-            onClick={() => setActive(id)}
-            className={`flex flex-col items-center gap-1 ${
-              active === id ? "text-primary" : "text-muted-foreground"
-            }`}
-          >
-            <Icon className={`size-5 ${active === id ? "" : "opacity-60"}`} />
-            <span className="text-[9px] font-bold uppercase tracking-tighter">{label}</span>
-          </button>
-        ))}
+        ).map(({ id, label, Icon, to }) =>
+          id === "payouts" ? (
+            <Link
+              key={id}
+              to={to}
+              className="flex flex-col items-center gap-1 text-muted-foreground"
+            >
+              <Icon className="size-5 opacity-60" />
+              <span className="text-[9px] font-bold uppercase tracking-tighter">{label}</span>
+            </Link>
+          ) : (
+            <button
+              key={id}
+              onClick={() => setActive(id)}
+              className={`flex flex-col items-center gap-1 ${
+                active === id ? "text-primary" : "text-muted-foreground"
+              }`}
+            >
+              <Icon className={`size-5 ${active === id ? "" : "opacity-60"}`} />
+              <span className="text-[9px] font-bold uppercase tracking-tighter">{label}</span>
+            </button>
+          )
+        )}
       </nav>
     </div>
   );
