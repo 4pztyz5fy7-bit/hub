@@ -903,3 +903,39 @@ function Field({
 }
 
 
+function notifMeta(n: Notification) {
+  if (n.kind === "accrual") {
+    return {
+      Icon: Coins,
+      iconBg: "bg-[color:var(--success)]/10",
+      iconColor: "text-[color:var(--success)]",
+    };
+  }
+  if (n.kind === "offer") {
+    return {
+      Icon: Sparkles,
+      iconBg: "bg-primary/10",
+      iconColor: "text-primary",
+    };
+  }
+  // payout
+  if (n.status === "ok") {
+    return {
+      Icon: CheckCircle2,
+      iconBg: "bg-[color:var(--success)]/10",
+      iconColor: "text-[color:var(--success)]",
+    };
+  }
+  if (n.status === "rejected") {
+    return {
+      Icon: AlertCircle,
+      iconBg: "bg-destructive/10",
+      iconColor: "text-destructive",
+    };
+  }
+  return {
+    Icon: Wallet,
+    iconBg: "bg-[color:var(--warning)]/10",
+    iconColor: "text-[color:var(--warning)]",
+  };
+}
