@@ -10,7 +10,28 @@ import {
   Bell,
   ArrowUpRight,
   TrendingUp,
+  ShieldCheck,
+  ShieldAlert,
+  ShieldQuestion,
+  Clock,
+  X,
+  Mail,
+  Phone,
+  IdCard,
+  Camera,
+  Landmark,
+  ChevronRight,
 } from "lucide-react";
+
+type KycStatus = "not_started" | "in_review" | "verified" | "rejected";
+
+type KycStep = {
+  id: string;
+  label: string;
+  hint: string;
+  Icon: typeof Mail;
+  done: boolean;
+};
 
 export const Route = createFileRoute("/")({
   component: DashboardPage,
@@ -76,7 +97,21 @@ const weekLabels = ["Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Вс"];
 function DashboardPage() {
   const [copied, setCopied] = useState(false);
   const [active, setActive] = useState<"info" | "offers" | "stats" | "payouts">("info");
+  const [kycStatus, setKycStatus] = useState<KycStatus>("in_review");
+  const [kycOpen, setKycOpen] = useState(false);
+  const [steps, setSteps] = useState<KycStep[]>([
+    { id: "email", label: "Email подтверждён", hint: "m***@kvant.io", Icon: Mail, done: true },
+    { id: "phone", label: "Телефон", hint: "+7 (9••) •••-42-18", Icon: Phone, done: true },
+    { id: "passport", label: "Паспортные данные", hint: "Серия, номер, прописка", Icon: IdCard, done: true },
+    { id: "selfie", label: "Селфи с документом", hint: "Проверка занимает до 15 минут", Icon: Camera, done: true },
+    { id: "bank", label: "Реквизиты для выплат", hint: "Карта или расчётный счёт", Icon: Landmark, done: false },
+  ]);
   const refLink = "kvant.io/p/user772/ref";
+
+  const completedSteps = steps.filter((s) => s.done).length;
+  const progressPct = Math.round((completedSteps / steps.length) * 100);
+  const kycMeta = getKycMeta(kycStatus);
+  const canWithdraw = kycStatus === "verified";
 
   const copy = async () => {
     try {
@@ -84,6 +119,18 @@ function DashboardPage() {
       setCopied(true);
       setTimeout(() => setCopied(false), 1600);
     } catch {}
+  };
+
+  const completeStep = (id: string) => {
+    setSteps((prev) => {
+      const next = prev.map((s) => (s.id === id ? { ...s, done: true } : s));
+      const allDone = next.every((s) => s.done);
+      if (allDone) {
+        setKycStatus("in_review");
+        setTimeout(() => setKycStatus("verified"), 1800);
+      }
+      return next;
+    });
   };
 
   return (
@@ -306,21 +353,166 @@ function DashboardPage() {
           </div>
         </section>
 
+        {/* KYC status card */}
+        <section className="animate-in-up" style={{ animationDelay: "280ms" }}>
+          <button
+            onClick={() => setKycOpen(true)}
+            className="group flex w-full items-center gap-3 rounded-lg border border-border bg-card p-4 text-left transition-colors hover:border-foreground/20"
+          >
+            <div
+              className={`grid size-10 shrink-0 place-items-center rounded-md ${kycMeta.iconBg}`}
+            >
+              <kycMeta.Icon className={`size-5 ${kycMeta.iconColor}`} />
+            </div>
+            <div className="min-w-0 flex-1">
+              <div className="flex items-center gap-2">
+                <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+                  KYC-верификация
+                </p>
+                <span
+                  className={`rounded-full px-1.5 py-0.5 font-mono text-[9px] font-bold uppercase ${kycMeta.pillBg} ${kycMeta.pillText}`}
+                >
+                  {kycMeta.label}
+                </span>
+              </div>
+              <p className="mt-1 text-xs font-bold leading-tight">{kycMeta.headline}</p>
+              <div className="mt-2 flex items-center gap-2">
+                <div className="h-1 flex-1 overflow-hidden rounded-full bg-secondary">
+                  <div
+                    className={`h-full ${kycMeta.barColor} transition-all`}
+                    style={{ width: `${progressPct}%` }}
+                  />
+                </div>
+                <span className="font-mono text-[10px] tabular-nums text-muted-foreground">
+                  {completedSteps}/{steps.length}
+                </span>
+              </div>
+            </div>
+            <ChevronRight className="size-4 shrink-0 text-muted-foreground transition-transform group-hover:translate-x-0.5" />
+          </button>
+        </section>
+
         {/* Payouts CTA */}
-        <section className="animate-in-up" style={{ animationDelay: "300ms" }}>
+        <section className="animate-in-up" style={{ animationDelay: "340ms" }}>
           <div className="flex items-center justify-between rounded-lg border border-border bg-card p-4">
             <div>
               <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
                 Доступно к выводу
               </p>
               <p className="mt-1 font-mono text-lg font-bold tabular-nums">128 400 ₽</p>
+              {!canWithdraw && (
+                <p className="mt-1 flex items-center gap-1 text-[10px] text-muted-foreground">
+                  <ShieldAlert className="size-3" />
+                  Вывод доступен после верификации
+                </p>
+              )}
             </div>
-            <button className="rounded-md bg-foreground px-4 py-2.5 text-xs font-bold uppercase tracking-wider text-background transition-transform active:scale-95">
-              Вывести
+            <button
+              onClick={() => !canWithdraw && setKycOpen(true)}
+              disabled={false}
+              className={`rounded-md px-4 py-2.5 text-xs font-bold uppercase tracking-wider transition-transform active:scale-95 ${
+                canWithdraw
+                  ? "bg-foreground text-background"
+                  : "bg-secondary text-muted-foreground"
+              }`}
+            >
+              {canWithdraw ? "Вывести" : "Пройти KYC"}
             </button>
           </div>
         </section>
       </main>
+
+      {/* KYC bottom sheet */}
+      {kycOpen && (
+        <div
+          className="fixed inset-0 z-40 flex items-end justify-center bg-black/40 backdrop-blur-sm sm:items-center"
+          onClick={() => setKycOpen(false)}
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            className="animate-in-up max-h-[90vh] w-full max-w-[420px] overflow-y-auto rounded-t-2xl border border-border bg-background p-5 sm:rounded-2xl"
+          >
+            <div className="mb-4 flex items-start justify-between gap-3">
+              <div>
+                <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+                  Верификация партнёра
+                </p>
+                <h3 className="mt-1 text-lg font-bold tracking-tight">
+                  KYC — Know Your Customer
+                </h3>
+              </div>
+              <button
+                aria-label="Закрыть"
+                onClick={() => setKycOpen(false)}
+                className="grid size-8 place-items-center rounded-full text-muted-foreground hover:bg-accent"
+              >
+                <X className="size-4" />
+              </button>
+            </div>
+
+            <div
+              className={`mb-5 flex items-center gap-3 rounded-lg border p-3 ${kycMeta.bannerBorder} ${kycMeta.bannerBg}`}
+            >
+              <kycMeta.Icon className={`size-5 shrink-0 ${kycMeta.iconColor}`} />
+              <div className="min-w-0">
+                <p className="text-xs font-bold">{kycMeta.headline}</p>
+                <p className="text-[11px] text-muted-foreground">{kycMeta.description}</p>
+              </div>
+            </div>
+
+            <ol className="space-y-2">
+              {steps.map((s, idx) => (
+                <li
+                  key={s.id}
+                  className={`flex items-center gap-3 rounded-lg border p-3 ${
+                    s.done ? "border-border bg-card" : "border-primary/30 bg-primary/5"
+                  }`}
+                >
+                  <div
+                    className={`grid size-9 shrink-0 place-items-center rounded-md ${
+                      s.done ? "bg-[color:var(--success)]/10" : "bg-secondary"
+                    }`}
+                  >
+                    {s.done ? (
+                      <Check className="size-4 text-[color:var(--success)]" />
+                    ) : (
+                      <s.Icon className="size-4 text-primary" />
+                    )}
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-2">
+                      <span className="font-mono text-[9px] font-bold text-muted-foreground">
+                        {String(idx + 1).padStart(2, "0")}
+                      </span>
+                      <p className="text-xs font-bold">{s.label}</p>
+                    </div>
+                    <p className="mt-0.5 text-[10px] text-muted-foreground">{s.hint}</p>
+                  </div>
+                  {s.done ? (
+                    <span className="font-mono text-[9px] font-bold uppercase text-[color:var(--success)]">
+                      OK
+                    </span>
+                  ) : (
+                    <button
+                      onClick={() => completeStep(s.id)}
+                      className="rounded-md bg-primary px-2.5 py-1.5 text-[10px] font-bold uppercase tracking-wider text-primary-foreground active:scale-95"
+                    >
+                      Пройти
+                    </button>
+                  )}
+                </li>
+              ))}
+            </ol>
+
+            <p className="mt-4 text-[10px] leading-relaxed text-muted-foreground">
+              Данные передаются по защищённому каналу и используются только для проверки
+              личности в соответствии с 115-ФЗ. Проверка обычно занимает до 24 часов.
+            </p>
+          </div>
+        </div>
+      )}
+
+
 
       {/* Bottom nav */}
       <nav className="fixed bottom-0 left-0 right-0 z-30 flex h-16 items-center justify-around border-t border-border bg-background/95 px-2 backdrop-blur-md">
@@ -347,3 +539,65 @@ function DashboardPage() {
     </div>
   );
 }
+
+function getKycMeta(status: KycStatus) {
+  switch (status) {
+    case "verified":
+      return {
+        label: "Пройдена",
+        headline: "Личность подтверждена",
+        description: "Вывод средств доступен без ограничений.",
+        Icon: ShieldCheck,
+        iconColor: "text-[color:var(--success)]",
+        iconBg: "bg-[color:var(--success)]/10",
+        pillBg: "bg-[color:var(--success)]/10",
+        pillText: "text-[color:var(--success)]",
+        barColor: "bg-[color:var(--success)]",
+        bannerBg: "bg-[color:var(--success)]/5",
+        bannerBorder: "border-[color:var(--success)]/20",
+      };
+    case "in_review":
+      return {
+        label: "На проверке",
+        headline: "Документы на проверке",
+        description: "Обычно занимает до 24 часов. Мы уведомим по email.",
+        Icon: Clock,
+        iconColor: "text-[color:var(--warning)]",
+        iconBg: "bg-[color:var(--warning)]/10",
+        pillBg: "bg-[color:var(--warning)]/10",
+        pillText: "text-[color:var(--warning)]",
+        barColor: "bg-[color:var(--warning)]",
+        bannerBg: "bg-[color:var(--warning)]/5",
+        bannerBorder: "border-[color:var(--warning)]/20",
+      };
+    case "rejected":
+      return {
+        label: "Отклонено",
+        headline: "Верификация не пройдена",
+        description: "Пересдайте селфи с документом при хорошем освещении.",
+        Icon: ShieldAlert,
+        iconColor: "text-destructive",
+        iconBg: "bg-destructive/10",
+        pillBg: "bg-destructive/10",
+        pillText: "text-destructive",
+        barColor: "bg-destructive",
+        bannerBg: "bg-destructive/5",
+        bannerBorder: "border-destructive/20",
+      };
+    default:
+      return {
+        label: "Не начата",
+        headline: "Пройдите верификацию для вывода средств",
+        description: "Займёт около 3 минут: паспорт, селфи и реквизиты.",
+        Icon: ShieldQuestion,
+        iconColor: "text-muted-foreground",
+        iconBg: "bg-secondary",
+        pillBg: "bg-secondary",
+        pillText: "text-muted-foreground",
+        barColor: "bg-primary",
+        bannerBg: "bg-secondary",
+        bannerBorder: "border-border",
+      };
+  }
+}
+
