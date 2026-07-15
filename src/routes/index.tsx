@@ -2501,3 +2501,368 @@ function LevelsSheet({
     </div>
   );
 }
+
+/* ========================= OfferDetailSheet ============================ */
+
+function OfferDetailSheet({
+  offer,
+  linked,
+  copiedOffer,
+  requests,
+  onCopyLink,
+  onClose,
+}: {
+  offer: Offer;
+  linked: boolean;
+  copiedOffer: string | null;
+  requests: LinkRequest[];
+  onCopyLink: (o: Offer, source?: string) => void;
+  onClose: () => void;
+}) {
+  const [source, setSource] = useState("Прямая ссылка");
+  const isCopied = copiedOffer === offer.id;
+  const sources = ["Прямая ссылка", "Telegram", "YouTube", "Instagram", "SEO", "Email"];
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-end justify-center bg-foreground/40 backdrop-blur-sm sm:items-center">
+      <div className="animate-in-up flex max-h-[92vh] w-full max-w-[440px] flex-col overflow-hidden rounded-t-2xl border border-border bg-background sm:rounded-2xl">
+        {/* Header */}
+        <div className="flex items-start justify-between gap-3 border-b border-border px-4 py-3">
+          <div className="flex min-w-0 items-start gap-3">
+            <OfferTag tag={offer.tag} />
+            <div className="min-w-0">
+              <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+                {offer.category}
+              </p>
+              <h3 className="mt-0.5 truncate text-sm font-bold leading-tight">{offer.name}</h3>
+              <p className="mt-1 flex items-center gap-1 text-[10px] text-muted-foreground">
+                <Building2 className="size-3" /> {offer.advertiser}
+              </p>
+            </div>
+          </div>
+          <button
+            onClick={onClose}
+            aria-label="Закрыть"
+            className="grid size-8 shrink-0 place-items-center rounded-full text-muted-foreground hover:bg-accent"
+          >
+            <X className="size-4" />
+          </button>
+        </div>
+
+        {/* Scrollable body */}
+        <div className="flex-1 space-y-5 overflow-y-auto px-4 py-4">
+          {/* Payout hero */}
+          <div className="rounded-xl border border-border bg-gradient-to-br from-secondary/60 to-transparent p-4">
+            <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+              Выплата за конверсию
+            </p>
+            <p className="mt-1 font-mono text-2xl font-bold tabular-nums">{offer.payout}</p>
+            <div className="mt-3 grid grid-cols-3 gap-3">
+              <Stat label="EPC" value={`${fmt(offer.epc)} ₽`} />
+              <Stat label="CR" value={`${offer.cr.toFixed(1)}%`} />
+              <Stat label="Холд" value={offer.hold} />
+            </div>
+          </div>
+
+          {/* Meta */}
+          <div className="grid grid-cols-2 gap-2">
+            <MetaCell Icon={Target} label="Цель" value={offer.goal} />
+            <MetaCell Icon={Globe} label="Гео" value={offer.geo.join(" • ")} />
+            <MetaCell Icon={Timer} label="Холд" value={offer.hold} />
+            <MetaCell Icon={Landmark} label="Лендинг" value={offer.landing.replace("https://", "")} />
+          </div>
+
+          {/* Description */}
+          <section>
+            <h4 className="mb-1.5 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+              Описание
+            </h4>
+            <p className="text-[12px] leading-relaxed text-foreground/90">{offer.description}</p>
+          </section>
+
+          {/* Requirements */}
+          <section>
+            <h4 className="mb-2 flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+              <ShieldCheck className="size-3" /> Требования
+            </h4>
+            <ul className="space-y-1.5">
+              {offer.requirements.map((r, i) => (
+                <li key={i} className="flex gap-2 text-[11.5px] leading-snug text-foreground/90">
+                  <span className="mt-1.5 size-1 shrink-0 rounded-full bg-foreground/50" />
+                  {r}
+                </li>
+              ))}
+            </ul>
+          </section>
+
+          {/* Allowed / Denied */}
+          <section className="grid grid-cols-1 gap-2">
+            <div className="rounded-lg border border-[color:var(--success)]/30 bg-[color:var(--success)]/5 p-3">
+              <h5 className="mb-1.5 flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest text-[color:var(--success)]">
+                <CheckCircle2 className="size-3" /> Разрешённый трафик
+              </h5>
+              <div className="flex flex-wrap gap-1">
+                {offer.allowed.map((a) => (
+                  <span key={a} className="rounded bg-[color:var(--success)]/10 px-2 py-0.5 text-[10px] font-medium text-[color:var(--success)]">
+                    {a}
+                  </span>
+                ))}
+              </div>
+            </div>
+            <div className="rounded-lg border border-destructive/30 bg-destructive/5 p-3">
+              <h5 className="mb-1.5 flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest text-destructive">
+                <Ban className="size-3" /> Запрещённый трафик
+              </h5>
+              <div className="flex flex-wrap gap-1">
+                {offer.denied.map((a) => (
+                  <span key={a} className="rounded bg-destructive/10 px-2 py-0.5 text-[10px] font-medium text-destructive">
+                    {a}
+                  </span>
+                ))}
+              </div>
+            </div>
+          </section>
+
+          {/* Source picker */}
+          <section>
+            <h4 className="mb-2 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+              Источник трафика
+            </h4>
+            <div className="flex flex-wrap gap-1">
+              {sources.map((s) => (
+                <button
+                  key={s}
+                  onClick={() => setSource(s)}
+                  className={`rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider transition-colors ${
+                    source === s
+                      ? "bg-foreground text-background"
+                      : "bg-secondary text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  {s}
+                </button>
+              ))}
+            </div>
+            <p className="mt-2 text-[10px] text-muted-foreground">
+              Каждая ссылка создаёт заявку в модерацию администратора.
+            </p>
+          </section>
+
+          {/* My requests for this offer */}
+          {requests.length > 0 && (
+            <section>
+              <h4 className="mb-2 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+                Мои заявки по офферу
+              </h4>
+              <div className="space-y-1.5">
+                {requests.map((r) => (
+                  <div key={r.id} className="flex items-center justify-between gap-2 rounded-md border border-border bg-card px-3 py-2">
+                    <div className="min-w-0">
+                      <p className="font-mono text-[11px] font-bold">{r.id}</p>
+                      <p className="truncate text-[10px] text-muted-foreground">
+                        {r.source} • {r.createdAt}
+                      </p>
+                    </div>
+                    <RequestStatusPill status={r.status} />
+                  </div>
+                ))}
+              </div>
+            </section>
+          )}
+        </div>
+
+        {/* Footer CTA */}
+        <div className="flex items-center gap-2 border-t border-border bg-background px-4 py-3">
+          <div className="flex-1">
+            <p className="text-[10px] uppercase tracking-widest text-muted-foreground">Партнёрская ссылка</p>
+            <p className="truncate font-mono text-[11px] font-bold">
+              kvant.io/p/user772/{offer.id}
+            </p>
+          </div>
+          <button
+            onClick={() => onCopyLink(offer, source)}
+            className={`flex items-center gap-1.5 rounded-md px-4 py-2.5 text-[11px] font-bold uppercase tracking-wider transition-colors active:scale-95 ${
+              isCopied
+                ? "bg-[color:var(--success)]/15 text-[color:var(--success)]"
+                : "bg-foreground text-background"
+            }`}
+          >
+            {isCopied ? (
+              <>
+                <Check className="size-3.5" /> Скопировано
+              </>
+            ) : (
+              <>
+                <Link2 className="size-3.5" /> {linked ? "Новая ссылка" : "Получить ссылку"}
+              </>
+            )}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function MetaCell({ Icon, label, value }: { Icon: LucideIcon; label: string; value: string }) {
+  return (
+    <div className="rounded-lg border border-border bg-card p-2.5">
+      <p className="flex items-center gap-1 text-[9px] font-bold uppercase tracking-widest text-muted-foreground">
+        <Icon className="size-3" /> {label}
+      </p>
+      <p className="mt-1 truncate text-[11px] font-bold">{value}</p>
+    </div>
+  );
+}
+
+function RequestStatusPill({ status }: { status: LinkRequestStatus }) {
+  const map: Record<LinkRequestStatus, { label: string; cls: string; Icon: LucideIcon }> = {
+    new: { label: "Новая", cls: "bg-primary/10 text-primary", Icon: Sparkles },
+    review: { label: "На модерации", cls: "bg-[color:var(--warning)]/10 text-[color:var(--warning)]", Icon: Clock },
+    approved: { label: "Одобрено", cls: "bg-[color:var(--success)]/10 text-[color:var(--success)]", Icon: CheckCircle2 },
+    rejected: { label: "Отклонено", cls: "bg-destructive/10 text-destructive", Icon: XCircle },
+  };
+  const s = map[status];
+  return (
+    <span className={`flex shrink-0 items-center gap-1 rounded-full px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider ${s.cls}`}>
+      <s.Icon className="size-2.5" /> {s.label}
+    </span>
+  );
+}
+
+/* ========================= AdminRequestsSheet ========================== */
+
+function AdminRequestsSheet({
+  requests,
+  onDecide,
+  onClose,
+}: {
+  requests: LinkRequest[];
+  onDecide: (id: string, status: "approved" | "rejected", note?: string) => void;
+  onClose: () => void;
+}) {
+  const [filter, setFilter] = useState<"all" | LinkRequestStatus>("all");
+  const filtered = filter === "all" ? requests : requests.filter((r) => r.status === filter);
+  const counts = {
+    all: requests.length,
+    new: requests.filter((r) => r.status === "new").length,
+    review: requests.filter((r) => r.status === "review").length,
+    approved: requests.filter((r) => r.status === "approved").length,
+    rejected: requests.filter((r) => r.status === "rejected").length,
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-end justify-center bg-foreground/40 backdrop-blur-sm sm:items-center">
+      <div className="animate-in-up flex max-h-[92vh] w-full max-w-[440px] flex-col overflow-hidden rounded-t-2xl border border-border bg-background sm:rounded-2xl">
+        <div className="flex items-start justify-between border-b border-border px-4 py-3">
+          <div>
+            <p className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+              <ShieldCheck className="size-3" /> Панель администратора
+            </p>
+            <h3 className="mt-0.5 text-sm font-bold">Заявки на партнёрские ссылки</h3>
+            <p className="mt-0.5 font-mono text-[10px] text-muted-foreground">
+              {counts.new + counts.review} в очереди • {counts.approved} одобрено • {counts.rejected} отказ
+            </p>
+          </div>
+          <button
+            onClick={onClose}
+            aria-label="Закрыть"
+            className="grid size-8 shrink-0 place-items-center rounded-full text-muted-foreground hover:bg-accent"
+          >
+            <X className="size-4" />
+          </button>
+        </div>
+
+        <div className="flex gap-1 overflow-x-auto border-b border-border px-4 py-2">
+          {(
+            [
+              { id: "all" as const, label: "Все" },
+              { id: "new" as const, label: "Новые" },
+              { id: "review" as const, label: "На модерации" },
+              { id: "approved" as const, label: "Одобрено" },
+              { id: "rejected" as const, label: "Отказ" },
+            ]
+          ).map((t) => (
+            <button
+              key={t.id}
+              onClick={() => setFilter(t.id)}
+              className={`shrink-0 rounded-full px-3 py-1 text-[10px] font-bold uppercase tracking-wider transition-colors ${
+                filter === t.id
+                  ? "bg-foreground text-background"
+                  : "bg-secondary text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              {t.label}
+              <span className="ml-1 font-mono opacity-70">{counts[t.id]}</span>
+            </button>
+          ))}
+        </div>
+
+        <div className="flex-1 overflow-y-auto">
+          {filtered.length === 0 ? (
+            <div className="flex flex-col items-center justify-center gap-2 py-16 text-center text-muted-foreground">
+              <Inbox className="size-8 opacity-40" />
+              <p className="text-xs">Заявок в этой категории нет</p>
+            </div>
+          ) : (
+            <ul className="divide-y divide-border">
+              {filtered.map((r) => (
+                <li key={r.id} className="space-y-2 px-4 py-3">
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-2">
+                        <OfferTag tag={r.offerTag} />
+                        <p className="truncate text-xs font-bold">{r.offerName}</p>
+                      </div>
+                      <p className="mt-1 font-mono text-[10px] text-muted-foreground">
+                        {r.id} • {r.createdAt}
+                      </p>
+                    </div>
+                    <RequestStatusPill status={r.status} />
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-2 rounded-md border border-border bg-card p-2.5">
+                    <div>
+                      <p className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground">Источник</p>
+                      <p className="truncate text-[11px] font-bold">{r.source}</p>
+                    </div>
+                    <div>
+                      <p className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground">Sub</p>
+                      <p className="truncate font-mono text-[11px] font-bold">{r.sub}</p>
+                    </div>
+                    <div className="col-span-2 min-w-0">
+                      <p className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground">Ссылка</p>
+                      <p className="truncate font-mono text-[10.5px]">{r.link}</p>
+                    </div>
+                  </div>
+
+                  {r.note && (
+                    <p className="rounded bg-destructive/10 px-2 py-1 text-[10px] text-destructive">
+                      Причина отказа: {r.note}
+                    </p>
+                  )}
+
+                  {(r.status === "new" || r.status === "review") && (
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => onDecide(r.id, "approved")}
+                        className="flex flex-1 items-center justify-center gap-1 rounded-md bg-[color:var(--success)]/15 px-3 py-2 text-[11px] font-bold uppercase tracking-wider text-[color:var(--success)] active:scale-95"
+                      >
+                        <ThumbsUp className="size-3" /> Одобрить
+                      </button>
+                      <button
+                        onClick={() => onDecide(r.id, "rejected", "Не соответствует правилам")}
+                        className="flex flex-1 items-center justify-center gap-1 rounded-md bg-destructive/10 px-3 py-2 text-[11px] font-bold uppercase tracking-wider text-destructive active:scale-95"
+                      >
+                        <ThumbsDown className="size-3" /> Отклонить
+                      </button>
+                    </div>
+                  )}
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
