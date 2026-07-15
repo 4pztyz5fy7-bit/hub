@@ -2305,6 +2305,7 @@ function NotificationsSheet({
                 { id: "accrual" as const, label: "Начисления" },
                 { id: "payout" as const, label: "Выплаты" },
                 { id: "offer" as const, label: "Офферы" },
+                { id: "levelup" as const, label: "Уровни" },
               ]
             ).map((t) => (
               <button
