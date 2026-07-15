@@ -405,8 +405,10 @@ function DashboardPage() {
   const [notifOpen, setNotifOpen] = useState(false);
   const [notifFilter, setNotifFilter] = useState<"all" | NotifKind>("all");
   const [payoutOpen, setPayoutOpen] = useState(false);
+  const [levelsOpen, setLevelsOpen] = useState(false);
 
   const unreadCount = notifs.filter((n) => !n.read).length;
+  const levelInfo = useMemo(() => getLevel(balance), [balance]);
 
   /* --------------------------- Notif helpers -------------------------- */
 
