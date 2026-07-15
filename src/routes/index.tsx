@@ -667,6 +667,16 @@ function DashboardPage() {
       const lvl = LEVELS[idx];
       prevLevelIdxRef.current = idx;
       setLevelToast(lvl);
+      const d = new Date();
+      setLevelHistory((prev) => [
+        ...prev,
+        {
+          levelId: lvl.id,
+          iso: d.toISOString(),
+          date: d.toLocaleDateString("ru-RU", { day: "2-digit", month: "long", year: "numeric" }),
+          earnedAt: balance,
+        },
+      ]);
       pushNotif({
         kind: "levelup",
         title: `Новый уровень: ${lvl.name}`,
