@@ -25,6 +25,17 @@ import {
   Download,
   Plus,
   ChevronRight,
+  Crown,
+  Rocket,
+  Shield,
+  Trophy,
+  Gem,
+  Zap,
+  Headphones,
+  Lock,
+  Percent,
+  Gift,
+  type LucideIcon,
 } from "lucide-react";
 
 export const Route = createFileRoute("/")({
