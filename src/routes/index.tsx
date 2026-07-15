@@ -1381,7 +1381,7 @@ function StatsTab({ conversions, offers }: { conversions: Conversion[]; offers: 
     const m = new Map<string, { offer: Offer; conv: number; income: number }>();
     conversions.forEach((c) => {
       if (c.status === "rejected") return;
-      const off = offers.find((o) => o.id === c.offerId) ?? {
+      const off: Offer = offers.find((o) => o.id === c.offerId) ?? {
         id: c.offerId,
         tag: "×",
         name: c.offerName,
@@ -1389,6 +1389,15 @@ function StatsTab({ conversions, offers }: { conversions: Conversion[]; offers: 
         payout: "",
         epc: 0,
         cr: 0,
+        advertiser: "—",
+        geo: [],
+        hold: "—",
+        goal: "—",
+        description: "",
+        requirements: [],
+        allowed: [],
+        denied: [],
+        landing: "",
       };
       const cur = m.get(c.offerId) ?? { offer: off, conv: 0, income: 0 };
       cur.conv += 1;
