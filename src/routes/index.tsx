@@ -766,7 +766,61 @@ function InfoTab({
         </div>
       </section>
 
+      {/* ============ Уровень: прогресс ============ */}
+      <section className="animate-in-up" style={{ animationDelay: "40ms" }}>
+        <button
+          onClick={onOpenLevels}
+          className={`group flex w-full flex-col gap-3 rounded-xl border ${level.current.ring} ${level.current.bg} p-4 text-left transition-colors hover:brightness-105`}
+        >
+          <div className="flex items-center gap-3">
+            <div className={`grid size-10 shrink-0 place-items-center rounded-lg bg-background ${level.current.color} border ${level.current.ring}`}>
+              <level.current.Icon className="size-5" />
+            </div>
+            <div className="min-w-0 flex-1">
+              <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-muted-foreground">
+                Ваш уровень
+              </p>
+              <p className={`text-sm font-bold ${level.current.color}`}>
+                {level.current.name}
+                {level.current.bonusPct > 0 && (
+                  <span className="ml-1.5 font-mono text-[10px] opacity-80">
+                    +{level.current.bonusPct}% к ставкам
+                  </span>
+                )}
+              </p>
+            </div>
+            <ChevronRight className="size-4 text-muted-foreground transition-transform group-hover:translate-x-0.5" />
+          </div>
+
+          {level.next ? (
+            <>
+              <div className="h-1.5 w-full overflow-hidden rounded-full bg-background/60">
+                <div
+                  className={`h-full rounded-full bg-gradient-to-r from-current to-current ${level.current.color}`}
+                  style={{ width: `${Math.round(level.progress * 100)}%` }}
+                />
+              </div>
+              <div className="flex items-center justify-between text-[10px]">
+                <span className="font-mono text-muted-foreground">
+                  {fmt(balance)} / {fmt(level.next.minEarned)} ₽
+                </span>
+                <span className={`flex items-center gap-1 font-bold ${level.next.color}`}>
+                  <level.next.Icon className="size-3" />
+                  до «{level.next.name}» {fmt(level.remaining)} ₽
+                </span>
+              </div>
+            </>
+          ) : (
+            <div className="flex items-center gap-1.5 rounded-md bg-background/60 px-3 py-2 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+              <Crown className={`size-3 ${level.current.color}`} />
+              Максимальный уровень достигнут
+            </div>
+          )}
+        </button>
+      </section>
+
       {/* ============ KPI ============ */}
+
       <section className="animate-in-up" style={{ animationDelay: "60ms" }}>
         <h3 className="mb-2 text-[10px] font-bold uppercase tracking-[0.14em] text-muted-foreground">
           Показатели дня
