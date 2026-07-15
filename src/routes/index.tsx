@@ -2563,12 +2563,19 @@ function NotificationsSheet({
 
 function LevelsSheet({
   earned,
+  history,
   onClose,
 }: {
   earned: number;
+  history: LevelHistoryEntry[];
   onClose: () => void;
 }) {
   const info = getLevel(earned);
+  const [tab, setTab] = useState<"all" | "history">("all");
+  const historySorted = useMemo(
+    () => [...history].sort((a, b) => (a.iso < b.iso ? 1 : -1)),
+    [history],
+  );
 
   return (
     <div className="fixed inset-0 z-50 flex items-end justify-center bg-foreground/40 backdrop-blur-sm sm:items-center">
