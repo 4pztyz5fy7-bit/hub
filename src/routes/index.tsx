@@ -77,6 +77,29 @@ type Offer = {
   epc: number;
   cr: number;
   isNew?: boolean;
+  advertiser: string;
+  geo: string[];
+  hold: string;
+  goal: string;
+  description: string;
+  requirements: string[];
+  allowed: string[];
+  denied: string[];
+  landing: string;
+};
+
+type LinkRequestStatus = "new" | "review" | "approved" | "rejected";
+type LinkRequest = {
+  id: string;
+  offerId: string;
+  offerName: string;
+  offerTag: string;
+  createdAt: string;
+  source: string;
+  sub: string;
+  link: string;
+  status: LinkRequestStatus;
+  note?: string;
 };
 
 type Conversion = {
