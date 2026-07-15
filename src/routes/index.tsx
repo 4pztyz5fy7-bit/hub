@@ -77,21 +77,7 @@ const weekLabels = ["Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Вс"];
 function DashboardPage() {
   const [copied, setCopied] = useState(false);
   const [active, setActive] = useState<"info" | "offers" | "stats" | "payouts">("info");
-  const [kycStatus, setKycStatus] = useState<KycStatus>("in_review");
-  const [kycOpen, setKycOpen] = useState(false);
-  const [steps, setSteps] = useState<KycStep[]>([
-    { id: "email", label: "Email подтверждён", hint: "m***@kvant.io", Icon: Mail, done: true },
-    { id: "phone", label: "Телефон", hint: "+7 (9••) •••-42-18", Icon: Phone, done: true },
-    { id: "passport", label: "Паспортные данные", hint: "Серия, номер, прописка", Icon: IdCard, done: true },
-    { id: "selfie", label: "Селфи с документом", hint: "Проверка занимает до 15 минут", Icon: Camera, done: true },
-    { id: "bank", label: "Реквизиты для выплат", hint: "Карта или расчётный счёт", Icon: Landmark, done: false },
-  ]);
   const refLink = "kvant.io/p/user772/ref";
-
-  const completedSteps = steps.filter((s) => s.done).length;
-  const progressPct = Math.round((completedSteps / steps.length) * 100);
-  const kycMeta = getKycMeta(kycStatus);
-  const canWithdraw = kycStatus === "verified";
 
   const copy = async () => {
     try {
@@ -101,17 +87,6 @@ function DashboardPage() {
     } catch {}
   };
 
-  const completeStep = (id: string) => {
-    setSteps((prev) => {
-      const next = prev.map((s) => (s.id === id ? { ...s, done: true } : s));
-      const allDone = next.every((s) => s.done);
-      if (allDone) {
-        setKycStatus("in_review");
-        setTimeout(() => setKycStatus("verified"), 1800);
-      }
-      return next;
-    });
-  };
 
   return (
     <div className="min-h-screen bg-background text-foreground selection:bg-primary/10">
