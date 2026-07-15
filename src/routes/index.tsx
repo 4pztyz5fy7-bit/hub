@@ -543,6 +543,30 @@ function DashboardPage() {
   const [payouts, setPayouts] = useState<Payout[]>(initialPayouts);
   const [notifs, setNotifs] = useState<Notification[]>(initialNotifs);
   const [linkedOffers, setLinkedOffers] = useState<Set<string>>(new Set());
+  const [requests, setRequests] = useState<LinkRequest[]>([
+    {
+      id: "REQ-7412",
+      offerId: "gpb",
+      offerName: "Газпромбанк Gold",
+      offerTag: "BANK",
+      createdAt: "Вчера, 18:22",
+      source: "Telegram-канал «Финансы 360»",
+      sub: "tg-fin360",
+      link: "https://kvant.io/p/user772/gpb?sub=tg-fin360",
+      status: "approved",
+    },
+    {
+      id: "REQ-7405",
+      offerId: "spr",
+      offerName: "Skypro Web-разработка",
+      offerTag: "EDU",
+      createdAt: "2 дня назад",
+      source: "YouTube-канал",
+      sub: "yt-webdev",
+      link: "https://kvant.io/p/user772/spr?sub=yt-webdev",
+      status: "review",
+    },
+  ]);
   const conversions = initialConversions;
 
   // Sheets
@@ -552,6 +576,8 @@ function DashboardPage() {
   const [notifFilter, setNotifFilter] = useState<"all" | NotifKind>("all");
   const [payoutOpen, setPayoutOpen] = useState(false);
   const [levelsOpen, setLevelsOpen] = useState(false);
+  const [offerDetail, setOfferDetail] = useState<Offer | null>(null);
+  const [adminOpen, setAdminOpen] = useState(false);
 
   const unreadCount = notifs.filter((n) => !n.read).length;
   const levelInfo = useMemo(() => getLevel(balance), [balance]);
