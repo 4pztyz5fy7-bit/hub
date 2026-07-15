@@ -926,6 +926,7 @@ function DashboardPage() {
         <PayoutSheet
           available={available}
           bank={bank}
+          level={levelInfo.current}
           onClose={() => setPayoutOpen(false)}
           onSubmit={requestPayout}
         />
