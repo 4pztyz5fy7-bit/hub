@@ -36,10 +36,10 @@ function AuthPage() {
   useEffect(() => {
     let cancelled = false;
     supabase.auth.getSession().then(({ data }) => {
-      if (!cancelled && data.session) navigate({ to: "/_authenticated/dashboard" as string });
+      if (!cancelled && data.session) navigate({ to: "/_authenticated/dashboard" });
     });
     const { data: sub } = supabase.auth.onAuthStateChange((event, session) => {
-      if (event === "SIGNED_IN" && session) navigate({ to: "/_authenticated/dashboard" as string });
+      if (event === "SIGNED_IN" && session) navigate({ to: "/_authenticated/dashboard" });
     });
     return () => {
       cancelled = true;

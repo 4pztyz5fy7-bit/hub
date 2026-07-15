@@ -922,7 +922,7 @@ function DashboardPage() {
           </button>
           {isAdmin && (
             <Link
-              to={"/_authenticated/admin" as string}
+              to="/_authenticated/admin"
               aria-label="Админ-панель"
               className="flex size-8 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
             >
