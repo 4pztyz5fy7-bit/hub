@@ -500,6 +500,37 @@ function getLevel(earned: number) {
   return { idx, current, next, progress, remaining };
 }
 
+/* ============================ Level history ============================ */
+
+type LevelHistoryEntry = {
+  levelId: Level["id"];
+  /** Human-readable date shown in the UI */
+  date: string;
+  /** ISO for sort */
+  iso: string;
+  /** Earned amount at unlock moment */
+  earnedAt: number;
+};
+
+/** Seed reached levels with plausible unlock dates before the demo bumps balance. */
+function seedLevelHistory(earned: number): LevelHistoryEntry[] {
+  const reached = getLevelIndex(earned);
+  const now = Date.now();
+  const daysAgo = [128, 41]; // Start, Silver — только для достигнутых
+  const out: LevelHistoryEntry[] = [];
+  for (let i = 0; i <= reached; i++) {
+    const lv = LEVELS[i];
+    const d = new Date(now - (daysAgo[i] ?? 7 * (reached - i + 1)) * 86_400_000);
+    out.push({
+      levelId: lv.id,
+      iso: d.toISOString(),
+      date: d.toLocaleDateString("ru-RU", { day: "2-digit", month: "long", year: "numeric" }),
+      earnedAt: Math.max(lv.minEarned, i === 0 ? 0 : lv.minEarned),
+    });
+  }
+  return out;
+}
+
 /** Applies the current level's `bonusPct` to an offer's numeric fields and payout string. */
 function applyLevelBoost(offer: Offer, bonusPct: number) {
   if (!bonusPct) return { ...offer, boostedPayout: offer.payout, boostedEpc: offer.epc };
@@ -573,6 +604,7 @@ function DashboardPage() {
   const [balance, setBalance] = useState(142850);
   const [levelToast, setLevelToast] = useState<Level | null>(null);
   const prevLevelIdxRef = useRef<number>(getLevelIndex(142850));
+  const [levelHistory, setLevelHistory] = useState<LevelHistoryEntry[]>(() => seedLevelHistory(142850));
   const [bank, setBank] = useState<BankDetails | null>(null);
   const [payouts, setPayouts] = useState<Payout[]>(initialPayouts);
   const [notifs, setNotifs] = useState<Notification[]>(initialNotifs);
@@ -635,6 +667,16 @@ function DashboardPage() {
       const lvl = LEVELS[idx];
       prevLevelIdxRef.current = idx;
       setLevelToast(lvl);
+      const d = new Date();
+      setLevelHistory((prev) => [
+        ...prev,
+        {
+          levelId: lvl.id,
+          iso: d.toISOString(),
+          date: d.toLocaleDateString("ru-RU", { day: "2-digit", month: "long", year: "numeric" }),
+          earnedAt: balance,
+        },
+      ]);
       pushNotif({
         kind: "levelup",
         title: `Новый уровень: ${lvl.name}`,
@@ -969,6 +1011,7 @@ function DashboardPage() {
       {levelsOpen && (
         <LevelsSheet
           earned={balance}
+          history={levelHistory}
           onClose={() => setLevelsOpen(false)}
         />
       )}
@@ -2520,12 +2563,19 @@ function NotificationsSheet({
 
 function LevelsSheet({
   earned,
+  history,
   onClose,
 }: {
   earned: number;
+  history: LevelHistoryEntry[];
   onClose: () => void;
 }) {
   const info = getLevel(earned);
+  const [tab, setTab] = useState<"all" | "history">("all");
+  const historySorted = useMemo(
+    () => [...history].sort((a, b) => (a.iso < b.iso ? 1 : -1)),
+    [history],
+  );
 
   return (
     <div className="fixed inset-0 z-50 flex items-end justify-center bg-foreground/40 backdrop-blur-sm sm:items-center">
@@ -2592,8 +2642,35 @@ function LevelsSheet({
           )}
         </div>
 
-        {/* All levels */}
+        {/* Tabs */}
+        <div className="flex items-center gap-1 border-b border-border bg-secondary/30 px-3 py-2">
+          {(
+            [
+              { id: "all", label: "Все уровни", Icon: Trophy },
+              { id: "history", label: `История${history.length ? ` · ${history.length}` : ""}`, Icon: Clock },
+            ] as const
+          ).map((t) => {
+            const activeTab = tab === t.id;
+            return (
+              <button
+                key={t.id}
+                onClick={() => setTab(t.id)}
+                className={`flex flex-1 items-center justify-center gap-1.5 rounded-md px-3 py-1.5 text-[11px] font-bold uppercase tracking-wider transition ${
+                  activeTab
+                    ? "bg-background text-foreground shadow-sm"
+                    : "text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                <t.Icon className="size-3.5" />
+                {t.label}
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Content */}
         <div className="flex-1 overflow-y-auto p-4">
+          {tab === "all" && (
           <div className="space-y-3">
             {LEVELS.map((lv, i) => {
               const isCurrent = i === info.idx;
@@ -2678,11 +2755,93 @@ function LevelsSheet({
               );
             })}
           </div>
+          )}
 
+          {tab === "all" && (
           <p className="mt-4 rounded-lg border border-border bg-secondary/40 p-3 text-center text-[10px] leading-relaxed text-muted-foreground">
             Уровень пересчитывается автоматически по общему заработку.
             Бонусы применяются к новым конверсиям, ускоренные выплаты — к новым заявкам.
           </p>
+          )}
+
+          {tab === "history" && (
+            historySorted.length === 0 ? (
+              <div className="rounded-xl border border-dashed border-border bg-secondary/30 p-6 text-center">
+                <Trophy className="mx-auto size-6 text-muted-foreground" />
+                <p className="mt-2 text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
+                  Пока нет событий
+                </p>
+                <p className="mt-1 text-[10px] leading-snug text-muted-foreground">
+                  Как только вы достигнете нового уровня — этап появится здесь с датой и списком перков.
+                </p>
+              </div>
+            ) : (
+              <ol className="relative space-y-4 pl-6 before:absolute before:left-2 before:top-1 before:bottom-1 before:w-px before:bg-border">
+                {historySorted.map((h, i) => {
+                  const lv = LEVELS.find((l) => l.id === h.levelId)!;
+                  const isLatest = i === 0;
+                  return (
+                    <li key={`${h.levelId}-${h.iso}`} className="relative">
+                      <span
+                        className={`absolute -left-[18px] top-1 grid size-4 place-items-center rounded-full border-2 border-background ${lv.bg} ${lv.color}`}
+                      >
+                        <span className="size-1.5 rounded-full bg-current" />
+                      </span>
+                      <div className={`overflow-hidden rounded-xl border ${isLatest ? lv.ring : "border-border"} bg-card`}>
+                        <div className={`flex items-center gap-3 border-b border-border ${isLatest ? lv.bg : "bg-secondary/30"} px-3 py-2`}>
+                          <div className={`grid size-9 shrink-0 place-items-center rounded-lg bg-background border ${lv.ring} ${lv.color}`}>
+                            <lv.Icon className="size-4" />
+                          </div>
+                          <div className="min-w-0 flex-1">
+                            <div className="flex items-center gap-2">
+                              <p className={`text-[13px] font-bold ${lv.color}`}>{lv.name}</p>
+                              {isLatest && (
+                                <span className="rounded-full bg-foreground px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-background">
+                                  сейчас
+                                </span>
+                              )}
+                            </div>
+                            <p className="text-[10px] text-muted-foreground">{h.date}</p>
+                          </div>
+                        </div>
+                        <div className="grid grid-cols-2 gap-px bg-border">
+                          <div className="bg-card px-3 py-1.5">
+                            <p className="text-[9px] font-bold uppercase tracking-wider text-muted-foreground">
+                              Порог
+                            </p>
+                            <p className="font-mono text-[11px] font-bold tabular-nums">
+                              {fmt(lv.minEarned)} ₽
+                            </p>
+                          </div>
+                          <div className="bg-card px-3 py-1.5">
+                            <p className="text-[9px] font-bold uppercase tracking-wider text-muted-foreground">
+                              На момент разблокировки
+                            </p>
+                            <p className="font-mono text-[11px] font-bold tabular-nums">
+                              {fmt(h.earnedAt)} ₽
+                            </p>
+                          </div>
+                        </div>
+                        <ul className="divide-y divide-border">
+                          {lv.perks.map((p, pi) => (
+                            <li key={pi} className="flex items-start gap-2.5 px-3 py-2">
+                              <div className={`mt-0.5 grid size-5 shrink-0 place-items-center rounded ${lv.bg} ${lv.color}`}>
+                                <p.Icon className="size-3" />
+                              </div>
+                              <p className="text-[11px] leading-tight">
+                                <span className="font-bold">{p.title}</span>
+                                <span className="text-muted-foreground"> — {p.desc}</span>
+                              </p>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    </li>
+                  );
+                })}
+              </ol>
+            )
+          )}
         </div>
       </div>
     </div>
