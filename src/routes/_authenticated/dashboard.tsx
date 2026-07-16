@@ -1935,7 +1935,7 @@ function UserRequestsTab({
                       </div>
                     ) : (
                       <div className="rounded-lg border border-dashed border-border p-2 text-[11px] text-muted-foreground">
-                        {r.status === "rejected" ? "Заявка отклонена — ссылка не выдана." : "Ссылку выдаст админ после одобрения."}
+                        Ссылка недоступна.
                       </div>
                     )}
                   </div>
