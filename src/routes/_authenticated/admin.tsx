@@ -961,11 +961,25 @@ function RequestsTab() {
 
   if (loading) return <CenterLoader label="Загрузка заявок" />;
 
-  const badges: Record<LinkRow["status"], string> = {
-    new: "bg-primary/15 text-primary",
+  const badges: Record<LinkStatus, string> = {
+    in_progress: "bg-[color:var(--warning)]/15 text-[color:var(--warning)]",
+    completed: "bg-sky-500/15 text-sky-500",
+    finished: "bg-emerald-500/15 text-emerald-500",
+    paid: "bg-primary/15 text-primary",
+    new: "bg-[color:var(--warning)]/15 text-[color:var(--warning)]",
     review: "bg-[color:var(--warning)]/15 text-[color:var(--warning)]",
     approved: "bg-emerald-500/15 text-emerald-500",
     rejected: "bg-destructive/15 text-destructive",
+  };
+  const statusLabels: Record<LinkStatus, string> = {
+    in_progress: "В работе",
+    completed: "Выполнено",
+    finished: "Завершено",
+    paid: "Оплачено",
+    new: "В работе",
+    review: "В работе",
+    approved: "Завершено",
+    rejected: "Отменена",
   };
 
   return (
