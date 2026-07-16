@@ -1969,20 +1969,20 @@ function MiniStat({ label, value, tone = "text-foreground" }: { label: string; v
   );
 }
 
-function RequestTimeline({ status, createdAt, note }: { status: LinkRequestStatus; createdAt: string; note?: string }) {
+function RequestTimeline({ status, createdAt, ordersCount = 0 }: { status: LinkRequestStatus; createdAt: string; note?: string; ordersCount?: number }) {
   const created = new Date(createdAt);
   const createdLabel = isNaN(created.getTime()) ? createdAt : created.toLocaleString("ru-RU", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" });
 
-  const steps: { key: LinkRequestStatus | "created"; label: string; sub?: string; state: "done" | "current" | "pending" | "rejected" }[] = [
+  const order: LinkRequestStatus[] = ["in_progress", "completed", "finished", "paid"];
+  const idx = Math.max(0, order.indexOf(status));
+  const stateFor = (i: number): "done" | "current" | "pending" => (i < idx ? "done" : i === idx ? "current" : "pending");
+
+  const steps: { key: string; label: string; sub?: string; state: "done" | "current" | "pending" }[] = [
     { key: "created", label: "Создана", sub: createdLabel, state: "done" },
-    {
-      key: "review",
-      label: "На проверке",
-      state: status === "new" ? "current" : status === "review" ? "current" : "done",
-    },
-    status === "rejected"
-      ? { key: "rejected", label: "Отклонена", sub: note, state: "rejected" }
-      : { key: "approved", label: "Одобрена", state: status === "approved" ? "done" : "pending" },
+    { key: "in_progress", label: "В работе", state: stateFor(0) },
+    { key: "completed", label: ordersCount > 0 ? `Выполнено · ${ordersCount} заказов` : "Выполнено", state: stateFor(1) },
+    { key: "finished", label: "Завершено", state: stateFor(2) },
+    { key: "paid", label: "Оплачено", state: stateFor(3) },
   ];
 
   return (
