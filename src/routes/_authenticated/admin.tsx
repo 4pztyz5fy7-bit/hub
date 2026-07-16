@@ -22,10 +22,12 @@ type Profile = {
 };
 type RoleRow = { user_id: string; role: "admin" | "user" };
 type Offer = {
-  id: string; name: string; tag: string; advertiser: string | null;
-  geo: string | null; payout: string; epc: number; hold: string | null;
-  goal: string | null; description: string | null; requirements: string | null;
-  active: boolean; created_at: string;
+  id: string; name: string; tag: string; category: string | null;
+  advertiser: string | null; geo: string | null; payout: string;
+  epc: number; cr: number; hold: string | null; goal: string | null;
+  landing: string | null; description: string | null; requirements: string | null;
+  allowed: string[]; denied: string[]; active: boolean; is_new: boolean;
+  created_at: string;
 };
 type PayoutRow = {
   id: string; user_id: string; amount: number; method: string;
