@@ -47,6 +47,8 @@ function LandingPage() {
   const [initialMode, setInitialMode] = useState<Mode>("login");
   const [menuOpen, setMenuOpen] = useState(false);
 
+  const [stats, setStats] = useState<LandingStats | null>(null);
+
   useEffect(() => {
     let cancelled = false;
     supabase.auth.getSession().then(({ data }) => {
@@ -57,6 +59,12 @@ function LandingPage() {
     });
     return () => { cancelled = true; sub.subscription.unsubscribe(); };
   }, [navigate]);
+
+  useEffect(() => {
+    let cancelled = false;
+    getLandingStats().then((s) => { if (!cancelled) setStats(s); }).catch(() => {});
+    return () => { cancelled = true; };
+  }, []);
 
   const openAuth = (m: Mode) => { setInitialMode(m); setAuthOpen(true); setMenuOpen(false); };
 
