@@ -538,6 +538,9 @@ function OffersTab() {
           <div className="mb-2 flex items-start justify-between gap-2">
             <div className="flex items-start gap-2 min-w-0">
               <input type="checkbox" checked={selected.has(o.id)} onChange={() => toggleSel(o.id)} className="mt-1" />
+              {o.image_url && (
+                <img src={o.image_url} alt="" className="size-10 shrink-0 rounded-md border border-border object-cover" />
+              )}
               <div className="min-w-0">
                 <p className="truncate text-sm font-bold">{o.name}</p>
                 <p className="mt-0.5 text-[11px] uppercase tracking-wider text-muted-foreground">{o.tag} · {o.advertiser || "—"} · {o.geo || "—"}</p>
