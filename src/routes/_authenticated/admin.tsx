@@ -590,6 +590,9 @@ function OfferEditor({ offer, onClose, onSaved }: { offer: Offer | null; onClose
     advertiser: offer?.advertiser ?? "",
     geo: offer?.geo ?? "RU",
     payout: offer?.payout ?? "",
+    payout_kind: (offer?.payout_kind ?? "exact") as PayoutKind,
+    payout_min: offer?.payout_min != null ? String(offer.payout_min) : "",
+    payout_max: offer?.payout_max != null ? String(offer.payout_max) : "",
     epc: String(offer?.epc ?? 0),
     cr: String(offer?.cr ?? 0),
     hold: offer?.hold ?? "",
@@ -603,16 +606,39 @@ function OfferEditor({ offer, onClose, onSaved }: { offer: Offer | null; onClose
     is_new: offer?.is_new ?? false,
     image_url: offer?.image_url ?? "",
   });
+  const [cityPayouts, setCityPayouts] = useState<CityPayout[]>(
+    Array.isArray(offer?.city_payouts) ? (offer!.city_payouts as CityPayout[]) : []
+  );
   const [saving, setSaving] = useState(false);
   const [err, setErr] = useState<string | null>(null);
 
   const splitList = (v: string) =>
     v.split(",").map((s) => s.trim()).filter(Boolean);
 
+  // Автосборка строки выплаты для отображения на карточке оффера
+  const fmtNum = (n: number) => n.toLocaleString("ru-RU");
+  const derivedPayout = (() => {
+    const min = Number(form.payout_min);
+    const max = Number(form.payout_max);
+    switch (form.payout_kind) {
+      case "up_to": return Number.isFinite(max) && max > 0 ? `до ${fmtNum(max)} ₽` : "";
+      case "from":  return Number.isFinite(min) && min > 0 ? `от ${fmtNum(min)} ₽` : "";
+      case "range":
+        if (Number.isFinite(min) && Number.isFinite(max) && min > 0 && max > 0)
+          return `${fmtNum(min)} – ${fmtNum(max)} ₽`;
+        return "";
+      default: return form.payout.trim();
+    }
+  })();
+
   const save = async () => {
     setErr(null);
     const id = (form.id || form.name).trim().toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
-    if (!id || !form.name.trim() || !form.payout.trim()) { setErr("Заполните id/название/выплату"); return; }
+    const finalPayout = form.payout_kind === "exact" ? form.payout.trim() : derivedPayout;
+    if (!id || !form.name.trim() || !finalPayout) { setErr("Заполните id / название / выплату"); return; }
+    const cleanCities = cityPayouts
+      .map((c) => ({ city: c.city.trim(), amount: Number(c.amount) || 0 }))
+      .filter((c) => c.city && c.amount > 0);
     setSaving(true);
     const payload = {
       id,
@@ -621,7 +647,11 @@ function OfferEditor({ offer, onClose, onSaved }: { offer: Offer | null; onClose
       category: form.category.trim() || null,
       advertiser: form.advertiser.trim() || null,
       geo: form.geo.trim() || null,
-      payout: form.payout.trim(),
+      payout: finalPayout,
+      payout_kind: form.payout_kind,
+      payout_min: form.payout_min ? Number(form.payout_min) : null,
+      payout_max: form.payout_max ? Number(form.payout_max) : null,
+      city_payouts: cleanCities,
       epc: Number(form.epc) || 0,
       cr: Number(form.cr) || 0,
       hold: form.hold.trim() || null,
@@ -642,6 +672,8 @@ function OfferEditor({ offer, onClose, onSaved }: { offer: Offer | null; onClose
     if (error) { setErr(error.message); return; }
     onSaved();
   };
+
+
 
   const field = (key: keyof typeof form, label: string, placeholder = "") => (
     <label className="block">
