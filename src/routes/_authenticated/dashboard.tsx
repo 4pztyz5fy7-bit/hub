@@ -678,8 +678,17 @@ function DashboardPage() {
   const copyOfferLink = async (offer: Offer, source = "Прямая ссылка") => {
     if (!userId) return;
     const sub = `sub-${Math.random().toString(36).slice(2, 6)}`;
-    const link = `https://kvant.io/p/${userId.slice(0, 6)}/${offer.id}?sub=${sub}`;
-    try { await navigator.clipboard.writeText(link); } catch {}
+    // Ссылка задаётся администратором в карточке оффера (поле «Партнёрская ссылка»).
+    const adminLink = (offer.landing || "").trim();
+    if (!adminLink) {
+      pushNotif({
+        kind: "offer",
+        title: "Ссылка недоступна",
+        body: `${offer.name}: администратор ещё не задал партнёрскую ссылку`,
+      });
+      return;
+    }
+    try { await navigator.clipboard.writeText(adminLink); } catch {}
     setCopiedOffer(offer.id);
     setTimeout(() => setCopiedOffer((c) => (c === offer.id ? null : c)), 1600);
     const wasLinked = linkedOffers.has(offer.id);
@@ -690,7 +699,7 @@ function DashboardPage() {
       offer_id: offer.id,
       offer_name: offer.name,
       offer_tag: offer.tag,
-      source, sub, link,
+      source, sub, link: adminLink,
       status: "new",
     }).select().single();
     if (data) {
@@ -702,7 +711,7 @@ function DashboardPage() {
         createdAt: `Сегодня, ${timeOf(data.created_at)}`,
         source: data.source ?? source,
         sub: data.sub ?? sub,
-        link: data.link ?? link,
+        link: data.link ?? adminLink,
         status: data.status,
       };
       setRequests((prev) => [req, ...prev]);
@@ -2862,7 +2871,7 @@ function OfferDetailSheet({
             <MetaCell Icon={Target} label="Цель" value={offer.goal} />
             <MetaCell Icon={Globe} label="Гео" value={offer.geo.join(" • ")} />
             <MetaCell Icon={Timer} label="Холд" value={offer.hold} />
-            <MetaCell Icon={Landmark} label="Лендинг" value={offer.landing.replace("https://", "")} />
+            <MetaCell Icon={ShieldCheck} label="Статус" value={offer.landing ? "Ссылка готова" : "Скоро"} />
           </div>
 
           {/* Description */}
@@ -2965,16 +2974,10 @@ function OfferDetailSheet({
         </div>
 
         {/* Footer CTA */}
-        <div className="flex items-center gap-2 border-t border-border bg-background px-4 py-3">
-          <div className="flex-1">
-            <p className="text-[10px] uppercase tracking-widest text-muted-foreground">Партнёрская ссылка</p>
-            <p className="truncate font-mono text-[11px] font-bold">
-              kvant.io/p/user772/{offer.id}
-            </p>
-          </div>
+        <div className="border-t border-border bg-background px-4 py-3">
           <button
             onClick={() => onCopyLink(offer, source)}
-            className={`flex items-center gap-1.5 rounded-md px-4 py-2.5 text-[11px] font-bold uppercase tracking-wider transition-colors active:scale-95 ${
+            className={`flex w-full items-center justify-center gap-1.5 rounded-md px-4 py-2.5 text-[11px] font-bold uppercase tracking-wider transition-colors active:scale-95 ${
               isCopied
                 ? "bg-[color:var(--success)]/15 text-[color:var(--success)]"
                 : "bg-foreground text-background"
@@ -2986,7 +2989,7 @@ function OfferDetailSheet({
               </>
             ) : (
               <>
-                <Link2 className="size-3.5" /> {linked ? "Новая ссылка" : "Получить ссылку"}
+                <Link2 className="size-3.5" /> {linked ? "Скопировать снова" : "Скопировать ссылку"}
               </>
             )}
           </button>
