@@ -1093,7 +1093,7 @@ function RequestRowControls({ row, onReload }: { row: LinkRow; onReload: () => v
         />
       </label>
       <label className="block">
-        <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Партнёрская ссылка (создаётся автоматически при копировании)</span>
+        <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Партнёрская ссылка (её копирует пользователь)</span>
         <input
           type="url"
           value={link}

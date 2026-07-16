@@ -774,9 +774,17 @@ function DashboardPage() {
   const [requestingOffer, setRequestingOffer] = useState<string | null>(null);
   const copyOfferLink = async (offer: Offer, source = "Прямая ссылка") => {
     if (!userId || requestingOffer) return;
+    if (!offer.landing) {
+      pushNotif({
+        kind: "offer",
+        title: "Ссылка недоступна",
+        body: `${offer.name}: администратор ещё не задал партнёрскую ссылку.`,
+      });
+      return;
+    }
     setRequestingOffer(offer.id);
     const sub = `sub-${Math.random().toString(36).slice(2, 6)}`;
-    const trackingLink = `https://go.partner.app/${offer.tag.toLowerCase()}?sub=${sub}&uid=${userId.slice(0, 8)}`;
+    const trackingLink = offer.landing.replace(/\{sub\}/gi, sub).replace(/\{uid\}/gi, userId.slice(0, 8));
     try {
       await navigator.clipboard.writeText(trackingLink);
     } catch {
