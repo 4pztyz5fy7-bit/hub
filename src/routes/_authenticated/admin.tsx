@@ -28,6 +28,7 @@ type Offer = {
   epc: number; cr: number; hold: string | null; goal: string | null;
   landing: string | null; description: string | null; requirements: string | null;
   allowed: string[]; denied: string[]; active: boolean; is_new: boolean;
+  image_url: string | null;
   created_at: string;
 };
 type PayoutRow = {
