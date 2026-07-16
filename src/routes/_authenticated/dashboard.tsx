@@ -108,6 +108,7 @@ const emptyBank: BankDetails = {
   sbpPhone: "",
 };
 
+type CityPayout = { city: string; amount: number };
 type Offer = {
   id: string;
   tag: string;
@@ -127,7 +128,9 @@ type Offer = {
   denied: string[];
   landing: string;
   image?: string;
+  cityPayouts: CityPayout[];
 };
+
 
 type LinkRequestStatus =
   | "in_progress"
@@ -624,6 +627,11 @@ function DashboardPage() {
         denied: Array.isArray(r.denied) ? r.denied : [],
         landing: r.landing ?? "",
         image: r.image_url ?? undefined,
+        cityPayouts: Array.isArray(r.city_payouts)
+          ? (r.city_payouts as any[])
+              .map((c) => ({ city: String(c?.city ?? ""), amount: Number(c?.amount ?? 0) }))
+              .filter((c) => c.city && c.amount > 0)
+          : [],
       })));
 
       const pRow = profileRes.data as { bank?: BankDetails | null; display_name?: string | null; avatar_url?: string | null; email?: string | null; settings?: Partial<UserPrefs> | null } | null;
@@ -1841,6 +1849,7 @@ function StatsTab({ conversions, offers, requests }: { conversions: Conversion[]
         allowed: [],
         denied: [],
         landing: "",
+        cityPayouts: [],
       };
       const cur = m.get(c.offerId) ?? { offer: off, conv: 0, income: 0 };
       cur.conv += 1;
@@ -3058,6 +3067,27 @@ function OfferDetailSheet({
             <MetaCell Icon={Timer} label="Холд" value={offer.hold} />
             <MetaCell Icon={ShieldCheck} label="Статус" value={offer.landing ? "Ссылка готова" : "Скоро"} />
           </div>
+
+          {/* City payouts */}
+          {offer.cityPayouts.length > 0 && (
+            <section>
+              <h4 className="mb-2 flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+                <Globe className="size-3" /> Выплата по городам
+              </h4>
+              <div className="grid grid-cols-2 gap-1.5">
+                {offer.cityPayouts.map((c, i) => (
+                  <div key={i} className="flex items-center justify-between rounded-lg border border-border bg-secondary/40 px-2.5 py-1.5">
+                    <span className="truncate text-[12px] font-medium">{c.city}</span>
+                    <span className="font-mono text-[12px] font-bold tabular-nums">
+                      {c.amount.toLocaleString("ru-RU")} ₽
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </section>
+          )}
+
+
 
           {/* Description */}
           <section>

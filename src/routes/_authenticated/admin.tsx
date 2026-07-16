@@ -22,6 +22,8 @@ type Profile = {
   telegram: string | null; created_at: string;
 };
 type RoleRow = { user_id: string; role: "admin" | "user" };
+type PayoutKind = "exact" | "up_to" | "from" | "range";
+type CityPayout = { city: string; amount: number };
 type Offer = {
   id: string; name: string; tag: string; category: string | null;
   advertiser: string | null; geo: string | null; payout: string;
@@ -29,8 +31,13 @@ type Offer = {
   landing: string | null; description: string | null; requirements: string | null;
   allowed: string[]; denied: string[]; active: boolean; is_new: boolean;
   image_url: string | null;
+  payout_kind: PayoutKind;
+  payout_min: number | null;
+  payout_max: number | null;
+  city_payouts: CityPayout[];
   created_at: string;
 };
+
 type PayoutRow = {
   id: string; user_id: string; amount: number; method: string;
   destination: string | null; status: "pending" | "processing" | "paid" | "rejected";
@@ -461,7 +468,7 @@ function OffersTab() {
   const load = useCallback(async () => {
     setLoading(true);
     const { data } = await supabase.from("offers").select("*").order("created_at", { ascending: false });
-    setRows((data ?? []) as Offer[]);
+    setRows(((data ?? []) as unknown) as Offer[]);
     setLoading(false); setSelected(new Set());
   }, []);
   useEffect(() => { load(); }, [load]);
@@ -583,6 +590,9 @@ function OfferEditor({ offer, onClose, onSaved }: { offer: Offer | null; onClose
     advertiser: offer?.advertiser ?? "",
     geo: offer?.geo ?? "RU",
     payout: offer?.payout ?? "",
+    payout_kind: (offer?.payout_kind ?? "exact") as PayoutKind,
+    payout_min: offer?.payout_min != null ? String(offer.payout_min) : "",
+    payout_max: offer?.payout_max != null ? String(offer.payout_max) : "",
     epc: String(offer?.epc ?? 0),
     cr: String(offer?.cr ?? 0),
     hold: offer?.hold ?? "",
@@ -596,16 +606,39 @@ function OfferEditor({ offer, onClose, onSaved }: { offer: Offer | null; onClose
     is_new: offer?.is_new ?? false,
     image_url: offer?.image_url ?? "",
   });
+  const [cityPayouts, setCityPayouts] = useState<CityPayout[]>(
+    Array.isArray(offer?.city_payouts) ? (offer!.city_payouts as CityPayout[]) : []
+  );
   const [saving, setSaving] = useState(false);
   const [err, setErr] = useState<string | null>(null);
 
   const splitList = (v: string) =>
     v.split(",").map((s) => s.trim()).filter(Boolean);
 
+  // Автосборка строки выплаты для отображения на карточке оффера
+  const fmtNum = (n: number) => n.toLocaleString("ru-RU");
+  const derivedPayout = (() => {
+    const min = Number(form.payout_min);
+    const max = Number(form.payout_max);
+    switch (form.payout_kind) {
+      case "up_to": return Number.isFinite(max) && max > 0 ? `до ${fmtNum(max)} ₽` : "";
+      case "from":  return Number.isFinite(min) && min > 0 ? `от ${fmtNum(min)} ₽` : "";
+      case "range":
+        if (Number.isFinite(min) && Number.isFinite(max) && min > 0 && max > 0)
+          return `${fmtNum(min)} – ${fmtNum(max)} ₽`;
+        return "";
+      default: return form.payout.trim();
+    }
+  })();
+
   const save = async () => {
     setErr(null);
     const id = (form.id || form.name).trim().toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
-    if (!id || !form.name.trim() || !form.payout.trim()) { setErr("Заполните id/название/выплату"); return; }
+    const finalPayout = form.payout_kind === "exact" ? form.payout.trim() : derivedPayout;
+    if (!id || !form.name.trim() || !finalPayout) { setErr("Заполните id / название / выплату"); return; }
+    const cleanCities = cityPayouts
+      .map((c) => ({ city: c.city.trim(), amount: Number(c.amount) || 0 }))
+      .filter((c) => c.city && c.amount > 0);
     setSaving(true);
     const payload = {
       id,
@@ -614,7 +647,11 @@ function OfferEditor({ offer, onClose, onSaved }: { offer: Offer | null; onClose
       category: form.category.trim() || null,
       advertiser: form.advertiser.trim() || null,
       geo: form.geo.trim() || null,
-      payout: form.payout.trim(),
+      payout: finalPayout,
+      payout_kind: form.payout_kind,
+      payout_min: form.payout_min ? Number(form.payout_min) : null,
+      payout_max: form.payout_max ? Number(form.payout_max) : null,
+      city_payouts: cleanCities,
       epc: Number(form.epc) || 0,
       cr: Number(form.cr) || 0,
       hold: form.hold.trim() || null,
@@ -635,6 +672,8 @@ function OfferEditor({ offer, onClose, onSaved }: { offer: Offer | null; onClose
     if (error) { setErr(error.message); return; }
     onSaved();
   };
+
+
 
   const field = (key: keyof typeof form, label: string, placeholder = "") => (
     <label className="block">
@@ -717,11 +756,89 @@ function OfferEditor({ offer, onClose, onSaved }: { offer: Offer | null; onClose
             {field("advertiser", "Рекламодатель")}
             {field("geo", "ГЕО", "RU, KZ, BY")}
           </div>
-          <div className="grid grid-cols-3 gap-3">
-            {field("payout", "Выплата", "3500 ₽")}
+          <div className="rounded-xl border border-border bg-secondary/30 p-3 space-y-3">
+            <div className="flex items-center justify-between">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Выплата</span>
+              {form.payout_kind !== "exact" && derivedPayout && (
+                <span className="font-mono text-[11px] font-bold">{derivedPayout}</span>
+              )}
+            </div>
+            <label className="block">
+              <span className="text-[10px] font-medium text-muted-foreground">Тип</span>
+              <select
+                value={form.payout_kind}
+                onChange={(e) => setForm((f) => ({ ...f, payout_kind: e.target.value as PayoutKind }))}
+                className="mt-0.5 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/40"
+              >
+                <option value="exact">Точная сумма</option>
+                <option value="up_to">До (например, до 10 000 ₽)</option>
+                <option value="from">От (например, от 30 000 ₽)</option>
+                <option value="range">Диапазон (от — до)</option>
+              </select>
+            </label>
+            {form.payout_kind === "exact" && field("payout", "Сумма / текст", "3500 ₽")}
+            {form.payout_kind === "up_to" && field("payout_max", "Верхняя граница, ₽", "10000")}
+            {form.payout_kind === "from" && field("payout_min", "Нижняя граница, ₽", "30000")}
+            {form.payout_kind === "range" && (
+              <div className="grid grid-cols-2 gap-3">
+                {field("payout_min", "От, ₽", "10000")}
+                {field("payout_max", "До, ₽", "30000")}
+              </div>
+            )}
+          </div>
+          <div className="grid grid-cols-2 gap-3">
             {field("epc", "EPC")}
             {field("cr", "CR, %")}
           </div>
+
+          {/* Выплаты по городам */}
+          <div className="rounded-xl border border-border bg-secondary/30 p-3 space-y-2">
+            <div className="flex items-center justify-between">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+                Выплата по городам (опционально)
+              </span>
+              <button
+                type="button"
+                onClick={() => setCityPayouts((cs) => [...cs, { city: "", amount: 0 }])}
+                className="inline-flex items-center gap-1 rounded-md border border-border bg-background px-2 py-1 text-[11px] font-bold hover:bg-accent"
+              >
+                <Plus className="size-3" /> Город
+              </button>
+            </div>
+            {cityPayouts.length === 0 && (
+              <p className="text-[11px] text-muted-foreground">
+                Добавьте города с индивидуальной суммой (например, «Москва — 8000», «Казань — 5000»).
+              </p>
+            )}
+            {cityPayouts.map((c, i) => (
+              <div key={i} className="flex gap-2">
+                <input
+                  type="text"
+                  value={c.city}
+                  placeholder="Город"
+                  onChange={(e) => setCityPayouts((cs) => cs.map((x, idx) => idx === i ? { ...x, city: e.target.value } : x))}
+                  className="flex-1 rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/40"
+                />
+                <input
+                  type="number"
+                  inputMode="numeric"
+                  value={c.amount || ""}
+                  placeholder="₽"
+                  onChange={(e) => setCityPayouts((cs) => cs.map((x, idx) => idx === i ? { ...x, amount: Number(e.target.value) || 0 } : x))}
+                  className="w-28 rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/40"
+                />
+                <button
+                  type="button"
+                  onClick={() => setCityPayouts((cs) => cs.filter((_, idx) => idx !== i))}
+                  className="grid size-9 place-items-center rounded-lg border border-border hover:bg-destructive/10 hover:text-destructive"
+                  aria-label="Удалить город"
+                >
+                  <Trash2 className="size-4" />
+                </button>
+              </div>
+            ))}
+          </div>
+
           <div className="grid grid-cols-2 gap-3">
             {field("hold", "Hold", "14 дн.")}
             {field("goal", "Цель", "Одобренная заявка")}
