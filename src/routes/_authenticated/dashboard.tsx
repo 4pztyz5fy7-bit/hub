@@ -59,7 +59,7 @@ export const Route = createFileRoute("/_authenticated/dashboard")({
 
 /* ================================ Types ================================ */
 
-type Tab = "info" | "offers" | "requests" | "stats" | "payouts" | "tools";
+type Tab = "info" | "offers" | "requests" | "stats" | "payouts" | "tools" | "profile";
 
 type BankDetails = {
   method: "card" | "account" | "sbp";
