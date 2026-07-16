@@ -98,8 +98,8 @@ function BulkTools() {
       <Card title="3. Изменить выплату всем офферам категории" Icon={DollarSign}><BulkPayout show={show} /></Card>
       <Card title="4. Поставить NEW всем офферам категории" Icon={Star}><BulkIsNew value={true} label="Поставить NEW" show={show} /></Card>
       <Card title="5. Снять NEW со всех офферов" Icon={Star}><BulkIsNew value={false} label="Снять NEW" show={show} /></Card>
-      <Card title="6. Массовое одобрение заявок 'new'" Icon={ClipboardList}><BulkReq status="approved" from="new" label="Одобрить все new" tone="success" show={show} /></Card>
-      <Card title="7. Массовое отклонение 'new'" Icon={ClipboardList}><BulkReq status="rejected" from="new" label="Отклонить все new" tone="danger" show={show} /></Card>
+      <Card title="6. Массово перевести 'in_progress' → 'completed'" Icon={ClipboardList}><BulkReq status="completed" from="in_progress" label="Перевести все в completed" tone="success" show={show} /></Card>
+      <Card title="7. Массово перевести 'completed' → 'finished'" Icon={ClipboardList}><BulkReq status="finished" from="completed" label="Завершить все completed" tone="success" show={show} /></Card>
       <Card title="8. Перевести все pending выплаты в processing" Icon={Wallet}><BulkPayoutStatus from="pending" to="processing" show={show} /></Card>
       <Card title="9. Пометить processing→paid" Icon={Wallet}><BulkPayoutStatus from="processing" to="paid" tone="success" show={show} /></Card>
       <Card title="10. Клонировать оффер N раз" Icon={Copy}><CloneOffer show={show} /></Card>
