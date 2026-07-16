@@ -928,6 +928,7 @@ function RequestsTab() {
   const [statusF, setStatusF] = useState<"all" | LinkRow["status"]>("all");
   const [q, setQ] = useState("");
   const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [openId, setOpenId] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -948,13 +949,19 @@ function RequestsTab() {
     const query = q.trim().toLowerCase();
     return rows.filter((r) => {
       if (statusF !== "all" && r.status !== statusF) return false;
-      if (query && !(r.offer_name.toLowerCase().includes(query) || r.source?.toLowerCase().includes(query) || r.sub?.toLowerCase().includes(query))) return false;
+      if (query) {
+        const u = profiles[r.user_id];
+        const hay = [
+          r.offer_name, r.source, r.sub, r.link, r.id,
+          u?.email, u?.display_name, u?.telegram, r.user_id,
+        ].filter(Boolean).join(" ").toLowerCase();
+        if (!hay.includes(query)) return false;
+      }
       return true;
     });
-  }, [rows, statusF, q]);
+  }, [rows, statusF, q, profiles]);
 
-  const setStatus = async (id: string, status: LinkRow["status"]) => { await supabase.from("link_requests").update({ status }).eq("id", id); load(); };
-  const del = async (id: string) => { if (!confirm("Удалить заявку?")) return; await supabase.from("link_requests").delete().eq("id", id); load(); };
+  const del = async (id: string) => { if (!confirm("Удалить заявку?")) return; await supabase.from("link_requests").delete().eq("id", id); if (openId === id) setOpenId(null); load(); };
   const bulk = async (status: LinkRow["status"]) => { if (!selected.size) return; await supabase.from("link_requests").update({ status }).in("id", Array.from(selected)); load(); };
   const bulkDel = async () => { if (!selected.size || !confirm(`Удалить ${selected.size} заявок?`)) return; await supabase.from("link_requests").delete().in("id", Array.from(selected)); load(); };
   const toggleSel = (id: string) => setSelected((s) => { const n = new Set(s); n.has(id) ? n.delete(id) : n.add(id); return n; });
@@ -982,12 +989,15 @@ function RequestsTab() {
     rejected: "Отменена",
   };
 
+  const openRow = openId ? rows.find((r) => r.id === openId) ?? null : null;
+  const openProfile = openRow ? profiles[openRow.user_id] : null;
+
   return (
     <div className="space-y-2">
       <div className="flex flex-wrap items-center gap-2">
-        <div className="relative flex-1 min-w-[180px]">
+        <div className="relative min-w-[180px] flex-1">
           <Search className="pointer-events-none absolute left-2.5 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground" />
-          <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Поиск: оффер, source, sub"
+          <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Поиск: оффер, email, tg, source, sub, id"
             className="w-full rounded-lg border border-border bg-background pl-8 pr-3 py-1.5 text-sm" />
         </div>
         <select value={statusF} onChange={(e) => setStatusF(e.target.value as any)} className="rounded-lg border border-border bg-background px-2 py-1.5 text-xs">
@@ -1014,27 +1024,134 @@ function RequestsTab() {
         </div>
       )}
 
-      {filtered.map((r) => {
-        const u = profiles[r.user_id];
-        return (
-          <div key={r.id} className="rounded-xl border border-border bg-card p-3">
-            <div className="mb-2 flex items-start gap-2">
-              <input type="checkbox" checked={selected.has(r.id)} onChange={() => toggleSel(r.id)} className="mt-1" />
-              <div className="min-w-0 flex-1">
-                <p className="truncate text-sm font-bold">{r.offer_name}</p>
-                <p className="mt-0.5 truncate text-[11px] text-muted-foreground">{u?.display_name || u?.email || r.user_id.slice(0, 8)} · {r.source || "—"}{r.sub ? ` / ${r.sub}` : ""}</p>
-                <p className="mt-0.5 text-[10px] text-muted-foreground">{dt(r.created_at)}</p>
+      <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
+        {filtered.map((r) => {
+          const u = profiles[r.user_id];
+          const who = u?.display_name || u?.email || `${r.user_id.slice(0, 8)}…`;
+          return (
+            <div key={r.id} className="group relative flex flex-col rounded-xl border border-border bg-card p-3 transition hover:border-primary/50 hover:shadow-sm">
+              <div className="flex items-start gap-2">
+                <input type="checkbox" checked={selected.has(r.id)} onChange={() => toggleSel(r.id)} onClick={(e) => e.stopPropagation()} className="mt-1 shrink-0" aria-label="Выбрать" />
+                <button type="button" onClick={() => setOpenId(r.id)} className="min-w-0 flex-1 text-left">
+                  <p className="truncate text-sm font-bold">{r.offer_name}</p>
+                  <p className="mt-0.5 truncate text-[11px] text-muted-foreground">{who}{u?.telegram ? ` · ${u.telegram}` : ""}</p>
+                  <p className="mt-0.5 truncate text-[10px] text-muted-foreground">#{r.id.slice(0, 8)} · {dt(r.created_at)}</p>
+                </button>
+                <div className="flex shrink-0 flex-col items-end gap-1">
+                  <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold uppercase ${badges[r.status]}`}>{statusLabels[r.status] ?? r.status}{r.status === "completed" && (r.orders_count ?? 0) > 0 ? ` · ${r.orders_count}` : ""}</span>
+                  <button onClick={() => del(r.id)} title="Удалить" className="grid size-6 place-items-center rounded-md text-destructive hover:bg-destructive/10"><Trash2 className="size-3" /></button>
+                </div>
               </div>
-              <div className="flex flex-col items-end gap-1">
-                <span className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-bold uppercase ${badges[r.status]}`}>{statusLabels[r.status] ?? r.status}{r.status === "completed" && (r.orders_count ?? 0) > 0 ? ` · ${r.orders_count}` : ""}</span>
-                <button onClick={() => del(r.id)} title="Удалить" className="grid size-6 place-items-center rounded-md text-destructive hover:bg-destructive/10"><Trash2 className="size-3" /></button>
-              </div>
+              <button type="button" onClick={() => setOpenId(r.id)} className="mt-2 inline-flex items-center gap-1 self-start rounded-md border border-border px-2 py-1 text-[10px] font-bold uppercase tracking-wider text-muted-foreground hover:bg-accent hover:text-foreground">
+                <Eye className="size-3" /> Подробнее
+              </button>
             </div>
-            <RequestRowControls row={r} onReload={load} />
-          </div>
-        );
-      })}
+          );
+        })}
+      </div>
       {filtered.length === 0 && <EmptyState text="Пусто" />}
+
+      {openRow && (
+        <RequestDetailSheet
+          row={openRow}
+          profile={openProfile}
+          statusLabel={statusLabels[openRow.status] ?? openRow.status}
+          badgeClass={badges[openRow.status]}
+          onClose={() => setOpenId(null)}
+          onReload={load}
+          onDelete={() => del(openRow.id)}
+        />
+      )}
+    </div>
+  );
+}
+
+function RequestDetailSheet({ row, profile, statusLabel, badgeClass, onClose, onReload, onDelete }: {
+  row: LinkRow; profile: Profile | null; statusLabel: string; badgeClass: string;
+  onClose: () => void; onReload: () => void; onDelete: () => void;
+}) {
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") onClose(); };
+    document.addEventListener("keydown", onKey);
+    const prev = document.body.style.overflow; document.body.style.overflow = "hidden";
+    return () => { document.removeEventListener("keydown", onKey); document.body.style.overflow = prev; };
+  }, [onClose]);
+
+  const [copied, setCopied] = useState<string | null>(null);
+  const copyValue = async (label: string, v: string) => { await copy(v); setCopied(label); setTimeout(() => setCopied((c) => (c === label ? null : c)), 1200); };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-stretch justify-end bg-black/60 backdrop-blur-sm sm:items-center sm:justify-center sm:p-4" onClick={onClose}>
+      <div
+        className="relative flex h-full w-full flex-col overflow-hidden border-border bg-card shadow-xl sm:h-auto sm:max-h-[90vh] sm:w-full sm:max-w-2xl sm:rounded-2xl sm:border"
+        onClick={(e) => e.stopPropagation()}
+        role="dialog" aria-modal="true"
+      >
+        <header className="flex items-start gap-3 border-b border-border p-4">
+          <div className="min-w-0 flex-1">
+            <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Заявка #{row.id.slice(0, 8)}</p>
+            <h3 className="mt-0.5 truncate text-base font-bold">{row.offer_name}</h3>
+            <div className="mt-1 flex flex-wrap items-center gap-2">
+              <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold uppercase ${badgeClass}`}>{statusLabel}</span>
+              <span className="text-[11px] text-muted-foreground">{dt(row.created_at)}</span>
+            </div>
+          </div>
+          <button onClick={onClose} aria-label="Закрыть" className="grid size-8 shrink-0 place-items-center rounded-full text-muted-foreground hover:bg-accent hover:text-foreground">
+            <X className="size-4" />
+          </button>
+        </header>
+
+        <div className="flex-1 space-y-4 overflow-y-auto p-4">
+          <section className="rounded-xl border border-border bg-background p-3">
+            <h4 className="mb-2 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Партнёр</h4>
+            <div className="space-y-1.5 text-sm">
+              <DetailRow label="Имя" value={profile?.display_name || "—"} />
+              <DetailRow label="Email" value={profile?.email || "—"} onCopy={profile?.email ? () => copyValue("email", profile.email!) : undefined} copied={copied === "email"} />
+              <DetailRow label="Telegram" value={profile?.telegram || "—"} onCopy={profile?.telegram ? () => copyValue("tg", profile.telegram!) : undefined} copied={copied === "tg"} />
+              <DetailRow label="User ID" value={row.user_id} mono onCopy={() => copyValue("uid", row.user_id)} copied={copied === "uid"} />
+              {profile?.created_at && <DetailRow label="Регистрация" value={dt(profile.created_at)} />}
+            </div>
+          </section>
+
+          <section className="rounded-xl border border-border bg-background p-3">
+            <h4 className="mb-2 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Оффер и источник</h4>
+            <div className="space-y-1.5 text-sm">
+              <DetailRow label="Оффер" value={row.offer_name} />
+              <DetailRow label="Тег" value={row.offer_tag || "—"} />
+              <DetailRow label="Offer ID" value={row.offer_id || "—"} mono />
+              <DetailRow label="Источник" value={row.source || "—"} />
+              <DetailRow label="Sub" value={row.sub || "—"} mono />
+              {row.link && <DetailRow label="Ссылка" value={row.link} mono onCopy={() => copyValue("link", row.link!)} copied={copied === "link"} />}
+            </div>
+          </section>
+
+          <section className="rounded-xl border border-border bg-background p-3">
+            <h4 className="mb-2 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Редактировать</h4>
+            <RequestRowControls row={row} onReload={onReload} />
+          </section>
+        </div>
+
+        <footer className="flex items-center gap-2 border-t border-border p-3">
+          <button onClick={onDelete} className="inline-flex items-center gap-1.5 rounded-lg border border-destructive/40 px-3 py-1.5 text-[11px] font-bold uppercase tracking-wider text-destructive hover:bg-destructive/10">
+            <Trash2 className="size-3" /> Удалить заявку
+          </button>
+          <button onClick={onClose} className="ml-auto rounded-lg border border-border px-3 py-1.5 text-[11px] font-bold uppercase tracking-wider hover:bg-accent">Закрыть</button>
+        </footer>
+      </div>
+    </div>
+  );
+}
+
+function DetailRow({ label, value, mono, onCopy, copied }: { label: string; value: string; mono?: boolean; onCopy?: () => void; copied?: boolean }) {
+  return (
+    <div className="grid grid-cols-[80px_minmax(0,1fr)_auto] items-start gap-2">
+      <span className="pt-0.5 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">{label}</span>
+      <span className={`min-w-0 break-all ${mono ? "font-mono text-[11px]" : "text-[12px]"}`}>{value}</span>
+      {onCopy && (
+        <button onClick={onCopy} className="grid size-6 shrink-0 place-items-center rounded text-muted-foreground hover:bg-accent hover:text-foreground" aria-label={`Копировать ${label}`}>
+          {copied ? <Check className="size-3 text-emerald-500" /> : <Copy className="size-3" />}
+        </button>
+      )}
     </div>
   );
 }
@@ -1050,6 +1167,12 @@ function RequestRowControls({ row, onReload }: { row: LinkRow; onReload: () => v
     link !== (row.link ?? "") ||
     note !== (row.note ?? "") ||
     ordersNum !== (row.orders_count ?? 0);
+
+  useEffect(() => {
+    setLink(row.link ?? "");
+    setNote(row.note ?? "");
+    setOrders(String(row.orders_count ?? 0));
+  }, [row.id, row.link, row.note, row.orders_count]);
 
   const change = async (patch: Partial<Pick<LinkRow, "status" | "link" | "note" | "orders_count">>) => {
     setSaving(true);
