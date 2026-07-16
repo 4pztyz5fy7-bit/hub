@@ -1637,7 +1637,256 @@ function Stat({ label, value }: { label: string; value: string }) {
   );
 }
 
+/* ============================ User Requests ============================ */
+
+function UserRequestsTab({
+  requests,
+  onOpenOffers,
+}: {
+  requests: LinkRequest[];
+  onOpenOffers: () => void;
+}) {
+  const [filter, setFilter] = useState<"all" | LinkRequestStatus>("all");
+  const [q, setQ] = useState("");
+  const [expanded, setExpanded] = useState<string | null>(null);
+  const [copied, setCopied] = useState<string | null>(null);
+
+  const counts = useMemo(
+    () => ({
+      all: requests.length,
+      new: requests.filter((r) => r.status === "new").length,
+      review: requests.filter((r) => r.status === "review").length,
+      approved: requests.filter((r) => r.status === "approved").length,
+      rejected: requests.filter((r) => r.status === "rejected").length,
+    }),
+    [requests],
+  );
+
+  const filtered = useMemo(() => {
+    const query = q.trim().toLowerCase();
+    return requests.filter((r) => {
+      if (filter !== "all" && r.status !== filter) return false;
+      if (query && !(r.offerName.toLowerCase().includes(query) || (r.source ?? "").toLowerCase().includes(query) || (r.sub ?? "").toLowerCase().includes(query))) return false;
+      return true;
+    });
+  }, [requests, filter, q]);
+
+  const doCopy = async (id: string, text: string) => {
+    try { await navigator.clipboard.writeText(text); } catch { /* ignore */ }
+    setCopied(id);
+    setTimeout(() => setCopied((c) => (c === id ? null : c)), 1400);
+  };
+
+  const statusMeta: Record<LinkRequestStatus, { label: string; cls: string; Icon: LucideIcon }> = {
+    new: { label: "Новая", cls: "text-sky-500 border-sky-500/30 bg-sky-500/10", Icon: Clock },
+    review: { label: "На проверке", cls: "text-amber-500 border-amber-500/30 bg-amber-500/10", Icon: Search },
+    approved: { label: "Одобрена", cls: "text-emerald-500 border-emerald-500/30 bg-emerald-500/10", Icon: ThumbsUp },
+    rejected: { label: "Отклонена", cls: "text-destructive border-destructive/30 bg-destructive/10", Icon: ThumbsDown },
+  };
+
+  const chips: { id: "all" | LinkRequestStatus; label: string; n: number }[] = [
+    { id: "all", label: "Все", n: counts.all },
+    { id: "new", label: "Новые", n: counts.new },
+    { id: "review", label: "Проверка", n: counts.review },
+    { id: "approved", label: "Одобрены", n: counts.approved },
+    { id: "rejected", label: "Отклонены", n: counts.rejected },
+  ];
+
+  return (
+    <div className="space-y-3 pb-4">
+      <header className="animate-in-up">
+        <h2 className="text-lg font-bold leading-none">Мои заявки</h2>
+        <p className="mt-1 text-[11px] text-muted-foreground">
+          Полное отслеживание партнёрских ссылок: статус, история и итоговая ссылка от админа.
+        </p>
+      </header>
+
+      <div className="animate-in-up grid grid-cols-4 gap-2" style={{ animationDelay: "40ms" }}>
+        <MiniStat label="Всего" value={counts.all} />
+        <MiniStat label="Проверка" value={counts.new + counts.review} tone="text-amber-500" />
+        <MiniStat label="Одобрено" value={counts.approved} tone="text-emerald-500" />
+        <MiniStat label="Отклон." value={counts.rejected} tone="text-destructive" />
+      </div>
+
+      <div className="animate-in-up flex flex-wrap items-center gap-2" style={{ animationDelay: "60ms" }}>
+        <div className="relative flex-1 min-w-[160px]">
+          <Search className="pointer-events-none absolute left-2.5 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground" />
+          <input
+            value={q}
+            onChange={(e) => setQ(e.target.value)}
+            placeholder="Поиск: оффер, источник, sub"
+            className="w-full rounded-lg border border-border bg-background pl-8 pr-3 py-1.5 text-sm outline-none focus:ring-2 focus:ring-primary/40"
+          />
+        </div>
+      </div>
+
+      <div className="animate-in-up -mx-1 flex gap-1.5 overflow-x-auto px-1 pb-1" style={{ animationDelay: "80ms" }}>
+        {chips.map((c) => (
+          <button
+            key={c.id}
+            onClick={() => setFilter(c.id)}
+            className={`inline-flex shrink-0 items-center gap-1.5 rounded-full border px-3 py-1 text-[11px] font-bold uppercase tracking-wider transition-colors ${
+              filter === c.id
+                ? "border-foreground bg-foreground text-background"
+                : "border-border bg-card text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            {c.label}
+            <span className={`rounded px-1 font-mono text-[10px] ${filter === c.id ? "bg-background/20" : "bg-accent"}`}>{c.n}</span>
+          </button>
+        ))}
+      </div>
+
+      {filtered.length === 0 && (
+        <div className="rounded-xl border border-dashed border-border p-6 text-center">
+          <Inbox className="mx-auto mb-2 size-6 text-muted-foreground" />
+          <p className="text-xs text-muted-foreground">
+            {requests.length === 0 ? "Заявок пока нет" : "Ничего не найдено"}
+          </p>
+          {requests.length === 0 && (
+            <button
+              onClick={onOpenOffers}
+              className="mt-3 inline-flex items-center gap-1 rounded-lg bg-foreground px-3 py-1.5 text-[11px] font-bold uppercase tracking-wider text-background"
+            >
+              <Package className="size-3" /> К офферам
+            </button>
+          )}
+        </div>
+      )}
+
+      <div className="animate-in-up space-y-2" style={{ animationDelay: "100ms" }}>
+        {filtered.map((r) => {
+          const meta = statusMeta[r.status];
+          const isOpen = expanded === r.id;
+          const isCopied = copied === r.id;
+          const created = new Date(r.createdAt);
+          const dateStr = isNaN(created.getTime()) ? r.createdAt : created.toLocaleString("ru-RU", { day: "2-digit", month: "2-digit", year: "2-digit", hour: "2-digit", minute: "2-digit" });
+          const linkReady = r.status === "approved" && Boolean(r.link);
+
+          return (
+            <div key={r.id} className="rounded-xl border border-border bg-card">
+              <button
+                type="button"
+                onClick={() => setExpanded((cur) => (cur === r.id ? null : r.id))}
+                className="flex w-full items-start justify-between gap-3 p-3 text-left"
+              >
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center gap-2">
+                    <OfferTag tag={r.offerTag} />
+                    <p className="truncate text-xs font-bold">{r.offerName}</p>
+                  </div>
+                  <p className="mt-1 text-[10px] uppercase tracking-wider text-muted-foreground">
+                    {r.source || "—"} · sub: <span className="font-mono">{r.sub || "—"}</span>
+                  </p>
+                  <p className="mt-0.5 font-mono text-[10px] text-muted-foreground">#{r.id.slice(0, 8).toUpperCase()} · {dateStr}</p>
+                </div>
+                <span className={`inline-flex shrink-0 items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider ${meta.cls}`}>
+                  <meta.Icon className="size-3" /> {meta.label}
+                </span>
+              </button>
+
+              {isOpen && (
+                <div className="space-y-3 border-t border-border px-3 py-3">
+                  <RequestTimeline status={r.status} createdAt={r.createdAt} note={r.note} />
+
+                  {r.note && (
+                    <div className={`rounded-lg border p-2.5 text-[11.5px] ${r.status === "rejected" ? "border-destructive/30 bg-destructive/10 text-destructive" : "border-border bg-background text-foreground/90"}`}>
+                      <p className="mb-0.5 text-[9px] font-bold uppercase tracking-wider opacity-70">Комментарий администратора</p>
+                      {r.note}
+                    </div>
+                  )}
+
+                  <div>
+                    <p className="mb-1 text-[9px] font-bold uppercase tracking-wider text-muted-foreground">Партнёрская ссылка</p>
+                    {linkReady ? (
+                      <div className="flex items-center gap-2 rounded-lg border border-border bg-background p-2">
+                        <p className="min-w-0 flex-1 truncate font-mono text-[11px]">{r.link}</p>
+                        <button
+                          onClick={() => doCopy(r.id, r.link)}
+                          className={`inline-flex items-center gap-1 rounded-md px-2 py-1 text-[10px] font-bold uppercase tracking-wider ${isCopied ? "bg-[color:var(--success)]/15 text-[color:var(--success)]" : "bg-foreground text-background"}`}
+                        >
+                          {isCopied ? <><Check className="size-3" /> Ок</> : <><Copy className="size-3" /> Копировать</>}
+                        </button>
+                      </div>
+                    ) : (
+                      <div className="rounded-lg border border-dashed border-border p-2 text-[11px] text-muted-foreground">
+                        {r.status === "rejected" ? "Заявка отклонена — ссылка не выдана." : "Ссылку выдаст админ после одобрения."}
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-2 text-[11px]">
+                    <div className="rounded-lg border border-border bg-background p-2">
+                      <p className="text-[9px] font-bold uppercase tracking-wider text-muted-foreground">Источник</p>
+                      <p className="mt-0.5 font-bold">{r.source || "—"}</p>
+                    </div>
+                    <div className="rounded-lg border border-border bg-background p-2">
+                      <p className="text-[9px] font-bold uppercase tracking-wider text-muted-foreground">Sub</p>
+                      <p className="mt-0.5 font-mono">{r.sub || "—"}</p>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+function MiniStat({ label, value, tone = "text-foreground" }: { label: string; value: number; tone?: string }) {
+  return (
+    <div className="rounded-lg border border-border bg-card p-2">
+      <p className={`font-mono text-base font-bold tabular-nums ${tone}`}>{value}</p>
+      <p className="mt-0.5 text-[9px] font-bold uppercase tracking-wider text-muted-foreground">{label}</p>
+    </div>
+  );
+}
+
+function RequestTimeline({ status, createdAt, note }: { status: LinkRequestStatus; createdAt: string; note?: string }) {
+  const created = new Date(createdAt);
+  const createdLabel = isNaN(created.getTime()) ? createdAt : created.toLocaleString("ru-RU", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" });
+
+  const steps: { key: LinkRequestStatus | "created"; label: string; sub?: string; state: "done" | "current" | "pending" | "rejected" }[] = [
+    { key: "created", label: "Создана", sub: createdLabel, state: "done" },
+    {
+      key: "review",
+      label: "На проверке",
+      state: status === "new" ? "current" : status === "review" ? "current" : "done",
+    },
+    status === "rejected"
+      ? { key: "rejected", label: "Отклонена", sub: note, state: "rejected" }
+      : { key: "approved", label: "Одобрена", state: status === "approved" ? "done" : "pending" },
+  ];
+
+  return (
+    <ol className="space-y-2">
+      {steps.map((s, i) => {
+        const color =
+          s.state === "done" ? "bg-emerald-500 text-background"
+          : s.state === "current" ? "bg-amber-500 text-background"
+          : s.state === "rejected" ? "bg-destructive text-background"
+          : "bg-muted text-muted-foreground";
+        return (
+          <li key={s.key} className="flex items-start gap-2">
+            <div className="flex flex-col items-center">
+              <span className={`grid size-5 place-items-center rounded-full text-[10px] font-bold ${color}`}>{i + 1}</span>
+              {i < steps.length - 1 && <span className="mt-0.5 h-4 w-px bg-border" />}
+            </div>
+            <div className="min-w-0 flex-1">
+              <p className="text-[11.5px] font-bold leading-none">{s.label}</p>
+              {s.sub && <p className="mt-0.5 text-[10px] text-muted-foreground">{s.sub}</p>}
+            </div>
+          </li>
+        );
+      })}
+    </ol>
+  );
+}
+
 /* ================================ Stats ================================ */
+
 
 function StatsTab({ conversions, offers }: { conversions: Conversion[]; offers: Offer[] }) {
   const [period, setPeriod] = useState<(typeof statsPeriods)[number]["id"]>("7d");
