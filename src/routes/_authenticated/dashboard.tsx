@@ -48,6 +48,7 @@ import {
   Building2,
   ClipboardList,
   Inbox,
+  UserCircle,
   ThumbsUp,
   ThumbsDown,
   type LucideIcon,
