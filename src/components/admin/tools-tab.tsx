@@ -219,8 +219,8 @@ function ModerationTools() {
   return (
     <div className="space-y-2">
       {t && <div className="rounded-md border border-primary/40 bg-primary/10 px-3 py-2 text-[11px] text-primary">{t}</div>}
-      <Card title="19. Одобрить заявки старше N дней" Icon={ClipboardList} defaultOpen><ApproveOld show={show} /></Card>
-      <Card title="20. Отклонить все заявки от пользователя" Icon={Ban}><RejectByUser show={show} /></Card>
+      <Card title="19. Завершить заявки 'completed' старше N дней" Icon={ClipboardList} defaultOpen><ApproveOld show={show} /></Card>
+      <Card title="20. Завершить заявки пользователя" Icon={Ban}><RejectByUser show={show} /></Card>
       <Card title="21. Заморозить пользователя (снять admin)" Icon={ShieldCheck}><RevokeAdmin show={show} /></Card>
       <Card title="22. Назначить admin по email" Icon={ShieldCheck}><GrantAdmin show={show} /></Card>
       <Card title="23. Broadcast всем пользователям" Icon={Send}><Broadcast target="all" show={show} /></Card>
