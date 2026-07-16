@@ -163,6 +163,8 @@ export function ProfileTab({
       return;
     }
     setP((prev) => (prev ? { ...prev, ...(payload as any) } : prev));
+    onProfileChange?.(payload.display_name ?? "", payload.avatar_url);
+    onPrefsChange?.(prefs);
     setSaved(true);
     setTimeout(() => setSaved(false), 1600);
   };
@@ -170,7 +172,7 @@ export function ProfileTab({
   const reset = () => {
     if (!p) return;
     setDraft(p);
-    setPrefs({ ...DEFAULT_PREFS, ...(p.settings ?? {}) });
+    setPrefsLocal({ ...DEFAULT_PREFS, ...(p.settings ?? {}) });
   };
 
   const copy = async (v: string | null) => {
