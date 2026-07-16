@@ -991,8 +991,11 @@ function RequestsTab() {
             className="w-full rounded-lg border border-border bg-background pl-8 pr-3 py-1.5 text-sm" />
         </div>
         <select value={statusF} onChange={(e) => setStatusF(e.target.value as any)} className="rounded-lg border border-border bg-background px-2 py-1.5 text-xs">
-          <option value="all">Все</option><option value="new">Новые</option><option value="review">На проверке</option>
-          <option value="approved">Одобрены</option><option value="rejected">Отклонены</option>
+          <option value="all">Все</option>
+          <option value="in_progress">В работе</option>
+          <option value="completed">Выполнено</option>
+          <option value="finished">Завершено</option>
+          <option value="paid">Оплачено</option>
         </select>
         <button onClick={() => exportCSV("requests", filtered as any)} className="inline-flex items-center gap-1 rounded-lg border border-border px-2 py-1.5 text-[11px] font-bold hover:bg-accent">
           <Download className="size-3" /> CSV
