@@ -1026,7 +1026,7 @@ function RequestsTab() {
                 <p className="mt-0.5 text-[10px] text-muted-foreground">{dt(r.created_at)}</p>
               </div>
               <div className="flex flex-col items-end gap-1">
-                <span className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-bold uppercase ${badges[r.status]}`}>{r.status}</span>
+                <span className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-bold uppercase ${badges[r.status]}`}>{statusLabels[r.status] ?? r.status}{r.status === "completed" && (r.orders_count ?? 0) > 0 ? ` · ${r.orders_count}` : ""}</span>
                 <button onClick={() => del(r.id)} title="Удалить" className="grid size-6 place-items-center rounded-md text-destructive hover:bg-destructive/10"><Trash2 className="size-3" /></button>
               </div>
             </div>
