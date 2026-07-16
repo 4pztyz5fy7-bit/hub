@@ -1009,7 +1009,7 @@ function DashboardPage() {
           />
         )}
         {active === "stats" && (
-          <StatsTab conversions={conversions} offers={offers} />
+          <StatsTab conversions={conversions} offers={offers} requests={requests} />
         )}
         {active === "payouts" && (
           <PayoutsTab
