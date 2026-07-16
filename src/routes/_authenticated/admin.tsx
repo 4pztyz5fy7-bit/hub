@@ -1042,11 +1042,16 @@ function RequestsTab() {
 function RequestRowControls({ row, onReload }: { row: LinkRow; onReload: () => void }) {
   const [link, setLink] = useState(row.link ?? "");
   const [note, setNote] = useState(row.note ?? "");
+  const [orders, setOrders] = useState<string>(String(row.orders_count ?? 0));
   const [saving, setSaving] = useState(false);
   const [savedFlash, setSavedFlash] = useState(false);
-  const dirty = (link !== (row.link ?? "")) || (note !== (row.note ?? ""));
+  const ordersNum = Math.max(0, Number(orders) || 0);
+  const dirty =
+    link !== (row.link ?? "") ||
+    note !== (row.note ?? "") ||
+    ordersNum !== (row.orders_count ?? 0);
 
-  const change = async (patch: Partial<Pick<LinkRow, "status" | "link" | "note">>) => {
+  const change = async (patch: Partial<Pick<LinkRow, "status" | "link" | "note" | "orders_count">>) => {
     setSaving(true);
     await supabase.from("link_requests").update(patch).eq("id", row.id);
     setSaving(false);
@@ -1056,7 +1061,7 @@ function RequestRowControls({ row, onReload }: { row: LinkRow; onReload: () => v
   };
 
   const saveFields = async () => {
-    await change({ link: link.trim() || null, note: note.trim() || null });
+    await change({ link: link.trim() || null, note: note.trim() || null, orders_count: ordersNum });
   };
 
   return (
@@ -1065,24 +1070,35 @@ function RequestRowControls({ row, onReload }: { row: LinkRow; onReload: () => v
         <label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Статус</label>
         <select
           value={row.status}
-          onChange={(e) => change({ status: e.target.value as LinkRow["status"] })}
+          onChange={(e) => change({ status: e.target.value as LinkStatus })}
           disabled={saving}
           className="rounded-lg border border-border bg-background px-2 py-1 text-xs font-bold"
         >
-          <option value="new">Новая</option>
-          <option value="review">В работе</option>
-          <option value="approved">Выполнена</option>
-          <option value="rejected">Отменена</option>
+          <option value="in_progress">В работе</option>
+          <option value="completed">Выполнено</option>
+          <option value="finished">Завершено</option>
+          <option value="paid">Оплачено</option>
         </select>
         {savedFlash && <span className="text-[10px] font-bold uppercase text-emerald-500">Сохранено</span>}
       </div>
       <label className="block">
-        <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Партнёрская ссылка (видна пользователю после «Выполнена»)</span>
+        <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Выполнено заказов</span>
+        <input
+          type="number"
+          min={0}
+          value={orders}
+          onChange={(e) => setOrders(e.target.value.replace(/[^\d]/g, ""))}
+          placeholder="0"
+          className="mt-0.5 w-full rounded-lg border border-border bg-background px-3 py-1.5 text-sm outline-none focus:ring-2 focus:ring-primary/40"
+        />
+      </label>
+      <label className="block">
+        <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Партнёрская ссылка (создаётся автоматически при копировании)</span>
         <input
           type="url"
           value={link}
           onChange={(e) => setLink(e.target.value)}
-          placeholder="https://track.example.com/?sub=..."
+          placeholder="https://go.partner.app/..."
           className="mt-0.5 w-full rounded-lg border border-border bg-background px-3 py-1.5 text-sm outline-none focus:ring-2 focus:ring-primary/40"
         />
       </label>
@@ -1092,7 +1108,7 @@ function RequestRowControls({ row, onReload }: { row: LinkRow; onReload: () => v
           value={note}
           onChange={(e) => setNote(e.target.value)}
           rows={2}
-          placeholder="Например: ссылка обновлена, промо активно до 30.09"
+          placeholder="Например: подтверждено 3 заказа, ждём холд"
           className="mt-0.5 w-full rounded-lg border border-border bg-background px-3 py-1.5 text-sm outline-none focus:ring-2 focus:ring-primary/40"
         />
       </label>
@@ -1102,7 +1118,7 @@ function RequestRowControls({ row, onReload }: { row: LinkRow; onReload: () => v
           disabled={saving}
           className="w-full rounded-lg bg-foreground px-3 py-1.5 text-[11px] font-bold uppercase tracking-wider text-background disabled:opacity-60"
         >
-          Сохранить ссылку и комментарий
+          Сохранить изменения
         </button>
       )}
     </div>
