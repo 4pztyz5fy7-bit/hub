@@ -56,11 +56,10 @@ function LandingPage() {
             <span className="text-sm font-black tracking-wider">КВАНТ</span>
           </a>
           <nav className="hidden items-center gap-6 md:flex">
-            <a href="#features" className="text-sm text-muted-foreground hover:text-foreground">Возможности</a>
-            <a href="#offers" className="text-sm text-muted-foreground hover:text-foreground">Офферы</a>
-            <a href="#how" className="text-sm text-muted-foreground hover:text-foreground">Как это работает</a>
+            <a href="#top" className="text-sm text-muted-foreground hover:text-foreground">О платформе</a>
             <a href="#faq" className="text-sm text-muted-foreground hover:text-foreground">FAQ</a>
           </nav>
+
           <div className="hidden items-center gap-2 md:flex">
             <button onClick={() => openAuth("login")} className="rounded-lg px-3 py-1.5 text-sm font-semibold text-foreground hover:bg-secondary">
               Войти
