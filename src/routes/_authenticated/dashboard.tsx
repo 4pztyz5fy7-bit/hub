@@ -711,7 +711,7 @@ function DashboardPage() {
         createdAt: `Сегодня, ${timeOf(data.created_at)}`,
         source: data.source ?? source,
         sub: data.sub ?? sub,
-        link: data.link ?? link,
+        link: data.link ?? adminLink,
         status: data.status,
       };
       setRequests((prev) => [req, ...prev]);
