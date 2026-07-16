@@ -100,6 +100,7 @@ type Offer = {
   allowed: string[];
   denied: string[];
   landing: string;
+  image?: string;
 };
 
 type LinkRequestStatus = "new" | "review" | "approved" | "rejected";
