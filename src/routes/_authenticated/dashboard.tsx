@@ -676,55 +676,52 @@ function DashboardPage() {
     await supabase.from("profiles").update({ bank: bankDraft as any }).eq("id", userId);
   };
 
-  /* --------------------------- Offer link ----------------------------- */
+  /* --------------------------- Offer request -------------------------- */
   const [copiedOffer, setCopiedOffer] = useState<string | null>(null);
+  const [requestingOffer, setRequestingOffer] = useState<string | null>(null);
   const copyOfferLink = async (offer: Offer, source = "Прямая ссылка") => {
-    if (!userId) return;
+    if (!userId || requestingOffer) return;
+    setRequestingOffer(offer.id);
     const sub = `sub-${Math.random().toString(36).slice(2, 6)}`;
-    // Ссылка задаётся администратором в карточке оффера (поле «Партнёрская ссылка»).
-    const adminLink = (offer.landing || "").trim();
-    if (!adminLink) {
-      pushNotif({
-        kind: "offer",
-        title: "Ссылка недоступна",
-        body: `${offer.name}: администратор ещё не задал партнёрскую ссылку`,
-      });
-      return;
-    }
-    try { await navigator.clipboard.writeText(adminLink); } catch {}
-    setCopiedOffer(offer.id);
-    setTimeout(() => setCopiedOffer((c) => (c === offer.id ? null : c)), 1600);
-    const wasLinked = linkedOffers.has(offer.id);
-    setLinkedOffers((s) => new Set(s).add(offer.id));
-
-    const { data } = await supabase.from("link_requests").insert({
+    const { data, error } = await supabase.from("link_requests").insert({
       user_id: userId,
       offer_id: offer.id,
       offer_name: offer.name,
       offer_tag: offer.tag,
-      source, sub, link: adminLink,
+      source, sub, link: null,
       status: "new",
     }).select().single();
-    if (data) {
-      const req: LinkRequest = {
-        id: String(data.id).slice(0, 8).toUpperCase(),
-        offerId: data.offer_id ?? offer.id,
-        offerName: data.offer_name,
-        offerTag: data.offer_tag ?? offer.tag,
-        createdAt: `Сегодня, ${timeOf(data.created_at)}`,
-        source: data.source ?? source,
-        sub: data.sub ?? sub,
-        link: data.link ?? adminLink,
-        status: data.status,
-      };
-      setRequests((prev) => [req, ...prev]);
+    setRequestingOffer(null);
+    if (error || !data) {
       pushNotif({
         kind: "offer",
-        title: wasLinked ? "Новая ссылка создана" : "Оффер подключён",
-        body: `${offer.name} • заявка ${req.id} на модерации`,
+        title: "Не удалось создать заявку",
+        body: `${offer.name}: попробуйте ещё раз`,
       });
+      return;
     }
+    setCopiedOffer(offer.id);
+    setTimeout(() => setCopiedOffer((c) => (c === offer.id ? null : c)), 1600);
+    const req: LinkRequest = {
+      id: String(data.id).slice(0, 8).toUpperCase(),
+      offerId: data.offer_id ?? offer.id,
+      offerName: data.offer_name,
+      offerTag: data.offer_tag ?? offer.tag,
+      createdAt: `Сегодня, ${timeOf(data.created_at)}`,
+      source: data.source ?? source,
+      sub: data.sub ?? sub,
+      link: data.link ?? "",
+      status: data.status,
+    };
+    setRequests((prev) => [req, ...prev]);
+    setLinkedOffers((s) => new Set(s).add(offer.id));
+    pushNotif({
+      kind: "offer",
+      title: "Заявка отправлена",
+      body: `${offer.name} • ${req.id} — ждёт модерации. Ссылку админ выдаст в разделе «Заявки».`,
+    });
   };
+
 
   const decideRequest = (id: string, status: "approved" | "rejected", note?: string) => {
     // Client-side only view; real moderation happens in /admin under admin RLS.
@@ -1603,18 +1600,16 @@ function OffersTab({
                     className={`flex items-center gap-1 rounded-md px-3 py-2 text-[11px] font-bold uppercase tracking-wider transition-colors active:scale-95 ${
                       isCopied
                         ? "bg-[color:var(--success)]/15 text-[color:var(--success)]"
-                        : isLinked
-                          ? "border border-border bg-card text-foreground hover:bg-accent"
-                          : "bg-foreground text-background"
+                        : "bg-foreground text-background"
                     }`}
                   >
                     {isCopied ? (
                       <>
-                        <Check className="size-3" /> Скопировано
+                        <Check className="size-3" /> Отправлено
                       </>
                     ) : (
                       <>
-                        <Link2 className="size-3" /> {isLinked ? "Ссылка" : "Получить"}
+                        <Link2 className="size-3" /> Заявка
                       </>
                     )}
                   </button>
@@ -3259,11 +3254,11 @@ function OfferDetailSheet({
           >
             {isCopied ? (
               <>
-                <Check className="size-3.5" /> Скопировано
+                <Check className="size-3.5" /> Заявка отправлена
               </>
             ) : (
               <>
-                <Link2 className="size-3.5" /> {linked ? "Скопировать снова" : "Скопировать ссылку"}
+                <Link2 className="size-3.5" /> {linked ? "Оставить ещё заявку" : "Оставить заявку"}
               </>
             )}
           </button>
