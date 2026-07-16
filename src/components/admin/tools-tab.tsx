@@ -110,9 +110,9 @@ function BulkOffersActive({ value, label, tone, show }: { value: boolean; label:
   const [tag, setTag] = useState("");
   const run = async () => {
     if (!tag || !confirm(`${label} все офферы с тегом "${tag}"?`)) return;
-    const { data } = await supabase.from("offers").update({ active: value }).eq("tag", tag).select("id");
-    const count = data?.length ?? 0;
-    show(`${label}: ${count ?? 0}`);
+    const { data, error } = await supabase.from("offers").update({ active: value }).eq("tag", tag).select("id");
+    if (error) { show(`Ошибка: ${error.message}`); return; }
+    show(`${label}: ${data?.length ?? 0}`);
   };
   return <div className="space-y-2"><Input value={tag} onChange={(e) => setTag(e.target.value)} placeholder="тег (напр. Финансы)" /><Btn tone={tone} onClick={run}>{label}</Btn></div>;
 }
@@ -120,7 +120,8 @@ function BulkPayout({ show }: { show: (s: string) => void }) {
   const [tag, setTag] = useState(""); const [p, setP] = useState("");
   const run = async () => {
     if (!tag || !p || !confirm(`Установить payout="${p}" всем офферам тега "${tag}"?`)) return;
-    const { data } = await supabase.from("offers").update({ payout: p }).eq("tag", tag).select("id");
+    const { data, error } = await supabase.from("offers").update({ payout: p }).eq("tag", tag).select("id");
+    if (error) { show(`Ошибка: ${error.message}`); return; }
     show(`Обновлено: ${data?.length ?? 0}`);
   };
   return <div className="grid grid-cols-2 gap-2"><Input value={tag} onChange={(e) => setTag(e.target.value)} placeholder="тег" /><Input value={p} onChange={(e) => setP(e.target.value)} placeholder="выплата" /><Btn tone="primary" onClick={run}>Применить</Btn></div>;
@@ -129,15 +130,17 @@ function BulkIsNew({ value, label, show }: { value: boolean; label: string; show
   const [tag, setTag] = useState("");
   const run = async () => {
     const q = supabase.from("offers").update({ is_new: value });
-    const { data } = tag ? await q.eq("tag", tag).select("id") : await q.neq("id", "").select("id");
+    const { data, error } = tag ? await q.eq("tag", tag).select("id") : await q.neq("id", "").select("id");
+    if (error) { show(`Ошибка: ${error.message}`); return; }
     show(`${label}: ${data?.length ?? 0}`);
   };
   return <div className="flex gap-2"><Input value={tag} onChange={(e) => setTag(e.target.value)} placeholder="тег (пусто = все)" /><Btn tone="primary" onClick={run}>{label}</Btn></div>;
 }
-function BulkReq({ status, from, label, tone, show }: { status: "approved"|"rejected"; from: "new"|"review"; label: string; tone: "success"|"danger"; show: (s: string) => void }) {
+function BulkReq({ status, from, label, tone, show }: { status: "approved"|"rejected"|"completed"|"finished"|"paid"; from: "new"|"review"|"in_progress"|"completed"|"finished"; label: string; tone: "success"|"danger"; show: (s: string) => void }) {
   const run = async () => {
     if (!confirm(`${label}?`)) return;
-    const { data } = await supabase.from("link_requests").update({ status }).eq("status", from).select("id");
+    const { data, error } = await supabase.from("link_requests").update({ status }).eq("status", from).select("id");
+    if (error) { show(`Ошибка: ${error.message}`); return; }
     show(`Обновлено: ${data?.length ?? 0}`);
   };
   return <Btn tone={tone} onClick={run}>{label}</Btn>;
@@ -145,7 +148,8 @@ function BulkReq({ status, from, label, tone, show }: { status: "approved"|"reje
 function BulkPayoutStatus({ from, to, tone = "primary", show }: { from: "pending"|"processing"; to: "processing"|"paid"; tone?: "primary"|"success"; show: (s: string) => void }) {
   const run = async () => {
     if (!confirm(`Перевести все ${from} → ${to}?`)) return;
-    const { data } = await supabase.from("payout_requests").update({ status: to }).eq("status", from).select("id");
+    const { data, error } = await supabase.from("payout_requests").update({ status: to }).eq("status", from).select("id");
+    if (error) { show(`Ошибка: ${error.message}`); return; }
     show(`Обновлено: ${data?.length ?? 0}`);
   };
   return <Btn tone={tone === "success" ? "success" : "primary"} onClick={run}>{from} → {to}</Btn>;
@@ -153,14 +157,19 @@ function BulkPayoutStatus({ from, to, tone = "primary", show }: { from: "pending
 function CloneOffer({ show }: { show: (s: string) => void }) {
   const [id, setId] = useState(""); const [n, setN] = useState("3");
   const run = async () => {
-    const { data: src } = await supabase.from("offers").select("*").eq("id", id).maybeSingle();
+    if (!id) { show("Укажите offer id"); return; }
+    const { data: src, error: e0 } = await supabase.from("offers").select("*").eq("id", id).maybeSingle();
+    if (e0) { show(`Ошибка: ${e0.message}`); return; }
     if (!src) { show("Оффер не найден"); return; }
-    const rows = Array.from({ length: Math.min(20, num(n)) }).map((_, i) => {
+    const count = Math.max(1, Math.min(20, num(n)));
+    const stamp = Date.now().toString(36);
+    const rand = () => Math.random().toString(36).slice(2, 5);
+    const rows = Array.from({ length: count }).map((_, i) => {
       const { id: _o, created_at: _c, updated_at: _u, ...rest } = src as Record<string, unknown>;
-      return { ...rest, id: `${id}-cl${Date.now().toString(36).slice(-3)}${i}`, name: `${src.name} (копия ${i + 1})` };
+      return { ...rest, id: `${id}-cl-${stamp}-${rand()}${i}`, name: `${src.name} (копия ${i + 1})`, is_new: true };
     });
     const { error } = await supabase.from("offers").insert(rows as never);
-    show(error ? error.message : `Создано: ${rows.length}`);
+    show(error ? `Ошибка: ${error.message}` : `Создано: ${rows.length}`);
   };
   return <div className="grid grid-cols-2 gap-2"><Input value={id} onChange={(e) => setId(e.target.value)} placeholder="offer id" /><Input value={n} onChange={(e) => setN(e.target.value)} placeholder="N копий" /><Btn tone="primary" onClick={run}>Клонировать</Btn></div>;
 }
