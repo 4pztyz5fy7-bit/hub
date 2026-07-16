@@ -168,31 +168,22 @@ function LandingPage() {
               <span className="ml-auto text-[11px] text-muted-foreground">обновление в реальном времени</span>
             </div>
             <div className="relative overflow-hidden">
-              <div className="flex animate-[marquee_40s_linear_infinite] gap-8 whitespace-nowrap py-3 px-4 text-sm">
-                {[
-                  { who: "Артём К.", city: "Казань", offer: "Тинькофф Инвест", sum: "+₽3 200" },
-                  { who: "Мария О.", city: "Минск", offer: "Skillbox PRO", sum: "+₽4 500" },
-                  { who: "Дмитрий В.", city: "СПб", offer: "Альфа Дебет", sum: "+₽2 500" },
-                  { who: "Илья Р.", city: "Алматы", offer: "Aviasales", sum: "+₽1 800" },
-                  { who: "Ольга П.", city: "Москва", offer: "GeekBrains", sum: "+₽6 700" },
-                  { who: "Никита М.", city: "Киев", offer: "Ostrovok B2B", sum: "+₽2 100" },
-                  { who: "Софья Л.", city: "Ереван", offer: "Тинькофф Кредит", sum: "+₽5 400" },
-                  { who: "Пётр Ш.", city: "Тбилиси", offer: "Netology", sum: "+₽3 900" },
-                ].concat([
-                  { who: "Артём К.", city: "Казань", offer: "Тинькофф Инвест", sum: "+₽3 200" },
-                  { who: "Мария О.", city: "Минск", offer: "Skillbox PRO", sum: "+₽4 500" },
-                  { who: "Дмитрий В.", city: "СПб", offer: "Альфа Дебет", sum: "+₽2 500" },
-                  { who: "Илья Р.", city: "Алматы", offer: "Aviasales", sum: "+₽1 800" },
-                ]).map((t, i) => (
-                  <span key={i} className="inline-flex items-center gap-2 text-muted-foreground">
-                    <span className="font-bold text-foreground">{t.who}</span>
-                    <span className="text-[11px] uppercase tracking-wider">{t.city}</span>
-                    <span>→</span>
-                    <span>{t.offer}</span>
-                    <span className="rounded-md bg-emerald-500/15 px-2 py-0.5 text-xs font-bold text-emerald-500">{t.sum}</span>
-                  </span>
-                ))}
-              </div>
+              {tickerItems.length > 0 ? (
+                <div className="flex animate-[marquee_40s_linear_infinite] gap-8 whitespace-nowrap py-3 px-4 text-sm">
+                  {tickerItems.map((t) => (
+                    <span key={t.key} className="inline-flex items-center gap-2 text-muted-foreground">
+                      <span className="font-bold text-foreground">{t.who}</span>
+                      <span>→</span>
+                      <span>{t.offer}</span>
+                      <span className="rounded-md bg-emerald-500/15 px-2 py-0.5 text-xs font-bold text-emerald-500">+{formatRub(t.amount)}</span>
+                    </span>
+                  ))}
+                </div>
+              ) : (
+                <div className="px-4 py-4 text-center text-xs text-muted-foreground">
+                  Первые конверсии появятся здесь, как только партнёры начнут работу.
+                </div>
+              )}
             </div>
           </div>
 
