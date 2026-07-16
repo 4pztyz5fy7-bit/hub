@@ -110,7 +110,8 @@ function BulkOffersActive({ value, label, tone, show }: { value: boolean; label:
   const [tag, setTag] = useState("");
   const run = async () => {
     if (!tag || !confirm(`${label} все офферы с тегом "${tag}"?`)) return;
-    const { count } = await supabase.from("offers").update({ active: value }).eq("tag", tag).select("id", { count: "exact", head: false });
+    const { data } = await supabase.from("offers").update({ active: value }).eq("tag", tag).select("id");
+    const count = data?.length ?? 0;
     show(`${label}: ${count ?? 0}`);
   };
   return <div className="space-y-2"><Input value={tag} onChange={(e) => setTag(e.target.value)} placeholder="тег (напр. Финансы)" /><Btn tone={tone} onClick={run}>{label}</Btn></div>;
