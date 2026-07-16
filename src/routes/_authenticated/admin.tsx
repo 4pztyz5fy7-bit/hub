@@ -622,6 +622,7 @@ function OfferEditor({ offer, onClose, onSaved }: { offer: Offer | null; onClose
       denied: splitList(form.denied),
       active: form.active,
       is_new: form.is_new,
+      image_url: form.image_url ? form.image_url : null,
     };
     const { error } = offer
       ? await supabase.from("offers").update(payload).eq("id", offer.id)
