@@ -916,6 +916,9 @@ function DashboardPage() {
             offers={offers.map((o) => ({ id: o.id, name: o.name, landing: o.landing }))}
           />
         )}
+        {active === "profile" && (
+          <ProfileTab userId={userId} isAdmin={isAdmin} onSignOut={handleSignOut} />
+        )}
       </main>
 
       {/* Bank sheet */}
