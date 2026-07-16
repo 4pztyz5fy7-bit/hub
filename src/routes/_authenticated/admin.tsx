@@ -84,7 +84,7 @@ function AdminPage() {
       <Shield className="size-10 text-muted-foreground" />
       <h1 className="text-lg font-bold">Доступ запрещён</h1>
       <p className="text-sm text-muted-foreground">У вашей учётной записи нет роли администратора.</p>
-      <Link to="/_authenticated/dashboard" className="rounded-lg bg-primary px-4 py-2 text-sm font-bold text-primary-foreground">В кабинет</Link>
+      <Link to="/dashboard" className="rounded-lg bg-primary px-4 py-2 text-sm font-bold text-primary-foreground">В кабинет</Link>
     </div>
   );
 
@@ -99,7 +99,7 @@ function AdminPage() {
     <div className="min-h-screen bg-background text-foreground">
       <header className="sticky top-0 z-20 flex h-14 items-center justify-between border-b border-border bg-background/80 px-4 backdrop-blur-md">
         <div className="flex items-center gap-2.5">
-          <Link to="/_authenticated/dashboard" className="flex size-8 items-center justify-center rounded-full text-muted-foreground hover:bg-accent hover:text-foreground">
+          <Link to="/dashboard" className="flex size-8 items-center justify-center rounded-full text-muted-foreground hover:bg-accent hover:text-foreground">
             <ArrowLeft className="size-4" />
           </Link>
           <Shield className="size-4 text-primary" />
