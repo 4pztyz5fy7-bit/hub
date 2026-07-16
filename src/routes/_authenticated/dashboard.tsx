@@ -2974,16 +2974,10 @@ function OfferDetailSheet({
         </div>
 
         {/* Footer CTA */}
-        <div className="flex items-center gap-2 border-t border-border bg-background px-4 py-3">
-          <div className="flex-1">
-            <p className="text-[10px] uppercase tracking-widest text-muted-foreground">Партнёрская ссылка</p>
-            <p className="truncate font-mono text-[11px] font-bold">
-              kvant.io/p/user772/{offer.id}
-            </p>
-          </div>
+        <div className="border-t border-border bg-background px-4 py-3">
           <button
             onClick={() => onCopyLink(offer, source)}
-            className={`flex items-center gap-1.5 rounded-md px-4 py-2.5 text-[11px] font-bold uppercase tracking-wider transition-colors active:scale-95 ${
+            className={`flex w-full items-center justify-center gap-1.5 rounded-md px-4 py-2.5 text-[11px] font-bold uppercase tracking-wider transition-colors active:scale-95 ${
               isCopied
                 ? "bg-[color:var(--success)]/15 text-[color:var(--success)]"
                 : "bg-foreground text-background"
@@ -2995,7 +2989,7 @@ function OfferDetailSheet({
               </>
             ) : (
               <>
-                <Link2 className="size-3.5" /> {linked ? "Новая ссылка" : "Получить ссылку"}
+                <Link2 className="size-3.5" /> {linked ? "Скопировать снова" : "Скопировать ссылку"}
               </>
             )}
           </button>
