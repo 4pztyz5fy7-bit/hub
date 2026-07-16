@@ -220,7 +220,7 @@ function OverviewTab() {
   const load = useCallback(async () => {
     setLoading(true);
     const dayAgo = new Date(Date.now() - 86400000).toISOString();
-    const [uc, rc, oc, oac, pp, ppSum, ppaid, rn, ct, cAll] = await Promise.all([
+    const [uc, rc, oc, oac, pp, ppSum, ppaid, ct, cAll] = await Promise.all([
       supabase.from("profiles").select("*", { count: "exact", head: true }),
       supabase.from("user_roles").select("*", { count: "exact", head: true }).eq("role", "admin"),
       supabase.from("offers").select("*", { count: "exact", head: true }),
@@ -228,7 +228,6 @@ function OverviewTab() {
       supabase.from("payout_requests").select("*", { count: "exact", head: true }).eq("status", "pending"),
       supabase.from("payout_requests").select("amount").in("status", ["pending", "processing"]),
       supabase.from("payout_requests").select("amount").eq("status", "paid"),
-      supabase.from("link_requests").select("*", { count: "exact", head: true }).in("status", ["new", "review"]),
       supabase.from("conversions").select("*", { count: "exact", head: true }).gte("created_at", dayAgo),
       supabase.from("conversions").select("amount,status"),
     ]);
@@ -238,7 +237,6 @@ function OverviewTab() {
       payoutsPending: pp.count ?? 0,
       payoutsPendingSum: (ppSum.data ?? []).reduce((a, r: any) => a + Number(r.amount || 0), 0),
       payoutsPaidSum: (ppaid.data ?? []).reduce((a, r: any) => a + Number(r.amount || 0), 0),
-      reqNew: rn.count ?? 0,
       convToday: ct.count ?? 0,
       convTotal: (cAll.data ?? []).length,
       revenueTotal: (cAll.data ?? []).filter((c: any) => c.status === "approved").reduce((a, c: any) => a + Number(c.amount || 0), 0),
