@@ -678,8 +678,17 @@ function DashboardPage() {
   const copyOfferLink = async (offer: Offer, source = "Прямая ссылка") => {
     if (!userId) return;
     const sub = `sub-${Math.random().toString(36).slice(2, 6)}`;
-    const link = `https://kvant.io/p/${userId.slice(0, 6)}/${offer.id}?sub=${sub}`;
-    try { await navigator.clipboard.writeText(link); } catch {}
+    // Ссылка задаётся администратором в карточке оффера (поле «Партнёрская ссылка»).
+    const adminLink = (offer.landing || "").trim();
+    if (!adminLink) {
+      pushNotif({
+        kind: "offer",
+        title: "Ссылка недоступна",
+        body: `${offer.name}: администратор ещё не задал партнёрскую ссылку`,
+      });
+      return;
+    }
+    try { await navigator.clipboard.writeText(adminLink); } catch {}
     setCopiedOffer(offer.id);
     setTimeout(() => setCopiedOffer((c) => (c === offer.id ? null : c)), 1600);
     const wasLinked = linkedOffers.has(offer.id);
@@ -690,7 +699,7 @@ function DashboardPage() {
       offer_id: offer.id,
       offer_name: offer.name,
       offer_tag: offer.tag,
-      source, sub, link,
+      source, sub, link: adminLink,
       status: "new",
     }).select().single();
     if (data) {
