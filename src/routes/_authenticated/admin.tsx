@@ -756,11 +756,89 @@ function OfferEditor({ offer, onClose, onSaved }: { offer: Offer | null; onClose
             {field("advertiser", "Рекламодатель")}
             {field("geo", "ГЕО", "RU, KZ, BY")}
           </div>
-          <div className="grid grid-cols-3 gap-3">
-            {field("payout", "Выплата", "3500 ₽")}
+          <div className="rounded-xl border border-border bg-secondary/30 p-3 space-y-3">
+            <div className="flex items-center justify-between">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Выплата</span>
+              {form.payout_kind !== "exact" && derivedPayout && (
+                <span className="font-mono text-[11px] font-bold">{derivedPayout}</span>
+              )}
+            </div>
+            <label className="block">
+              <span className="text-[10px] font-medium text-muted-foreground">Тип</span>
+              <select
+                value={form.payout_kind}
+                onChange={(e) => setForm((f) => ({ ...f, payout_kind: e.target.value as PayoutKind }))}
+                className="mt-0.5 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/40"
+              >
+                <option value="exact">Точная сумма</option>
+                <option value="up_to">До (например, до 10 000 ₽)</option>
+                <option value="from">От (например, от 30 000 ₽)</option>
+                <option value="range">Диапазон (от — до)</option>
+              </select>
+            </label>
+            {form.payout_kind === "exact" && field("payout", "Сумма / текст", "3500 ₽")}
+            {form.payout_kind === "up_to" && field("payout_max", "Верхняя граница, ₽", "10000")}
+            {form.payout_kind === "from" && field("payout_min", "Нижняя граница, ₽", "30000")}
+            {form.payout_kind === "range" && (
+              <div className="grid grid-cols-2 gap-3">
+                {field("payout_min", "От, ₽", "10000")}
+                {field("payout_max", "До, ₽", "30000")}
+              </div>
+            )}
+          </div>
+          <div className="grid grid-cols-2 gap-3">
             {field("epc", "EPC")}
             {field("cr", "CR, %")}
           </div>
+
+          {/* Выплаты по городам */}
+          <div className="rounded-xl border border-border bg-secondary/30 p-3 space-y-2">
+            <div className="flex items-center justify-between">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+                Выплата по городам (опционально)
+              </span>
+              <button
+                type="button"
+                onClick={() => setCityPayouts((cs) => [...cs, { city: "", amount: 0 }])}
+                className="inline-flex items-center gap-1 rounded-md border border-border bg-background px-2 py-1 text-[11px] font-bold hover:bg-accent"
+              >
+                <Plus className="size-3" /> Город
+              </button>
+            </div>
+            {cityPayouts.length === 0 && (
+              <p className="text-[11px] text-muted-foreground">
+                Добавьте города с индивидуальной суммой (например, «Москва — 8000», «Казань — 5000»).
+              </p>
+            )}
+            {cityPayouts.map((c, i) => (
+              <div key={i} className="flex gap-2">
+                <input
+                  type="text"
+                  value={c.city}
+                  placeholder="Город"
+                  onChange={(e) => setCityPayouts((cs) => cs.map((x, idx) => idx === i ? { ...x, city: e.target.value } : x))}
+                  className="flex-1 rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/40"
+                />
+                <input
+                  type="number"
+                  inputMode="numeric"
+                  value={c.amount || ""}
+                  placeholder="₽"
+                  onChange={(e) => setCityPayouts((cs) => cs.map((x, idx) => idx === i ? { ...x, amount: Number(e.target.value) || 0 } : x))}
+                  className="w-28 rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/40"
+                />
+                <button
+                  type="button"
+                  onClick={() => setCityPayouts((cs) => cs.filter((_, idx) => idx !== i))}
+                  className="grid size-9 place-items-center rounded-lg border border-border hover:bg-destructive/10 hover:text-destructive"
+                  aria-label="Удалить город"
+                >
+                  <Trash2 className="size-4" />
+                </button>
+              </div>
+            ))}
+          </div>
+
           <div className="grid grid-cols-2 gap-3">
             {field("hold", "Hold", "14 дн.")}
             {field("goal", "Цель", "Одобренная заявка")}
