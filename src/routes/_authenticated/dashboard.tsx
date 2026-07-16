@@ -903,6 +903,13 @@ function DashboardPage() {
             onRequestPayout={() => (bank ? setPayoutOpen(true) : openBank())}
           />
         )}
+        {active === "tools" && (
+          <ToolsTab
+            userId={userId}
+            refLink={`https://kvant.io/p/${(userId ?? "").slice(0, 6)}/ref`}
+            offers={offers.map((o) => ({ id: o.id, name: o.name, landing: o.landing }))}
+          />
+        )}
       </main>
 
       {/* Bank sheet */}
