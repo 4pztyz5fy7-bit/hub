@@ -129,7 +129,16 @@ type Offer = {
   image?: string;
 };
 
-type LinkRequestStatus = "new" | "review" | "approved" | "rejected";
+type LinkRequestStatus =
+  | "in_progress"
+  | "completed"
+  | "finished"
+  | "paid"
+  // legacy values kept for backward compatibility with existing rows
+  | "new"
+  | "review"
+  | "approved"
+  | "rejected";
 type LinkRequest = {
   id: string;
   offerId: string;
@@ -140,6 +149,7 @@ type LinkRequest = {
   sub: string;
   link: string;
   status: LinkRequestStatus;
+  ordersCount: number;
   note?: string;
 };
 
