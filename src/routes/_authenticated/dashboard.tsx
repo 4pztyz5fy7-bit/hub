@@ -986,7 +986,15 @@ function DashboardPage() {
           />
         )}
         {active === "profile" && (
-          <ProfileTab userId={userId} isAdmin={isAdmin} onSignOut={handleSignOut} />
+          <ProfileTab
+            userId={userId}
+            isAdmin={isAdmin}
+            onSignOut={handleSignOut}
+            prefs={prefs}
+            onPrefsChange={setPrefs}
+            onProfileChange={(name, avatar) => { setUserName(name); setUserAvatar(avatar); }}
+          />
+
         )}
       </main>
 
