@@ -3383,11 +3383,11 @@ function OfferDetailSheet({
           >
             {isCopied ? (
               <>
-                <Check className="size-3.5" /> Заявка отправлена
+                <Check className="size-3.5" /> Ссылка скопирована
               </>
             ) : (
               <>
-                <Link2 className="size-3.5" /> {linked ? "Оставить ещё заявку" : "Оставить заявку"}
+                <Copy className="size-3.5" /> {linked ? "Скопировать ссылку ещё раз" : "Скопировать ссылку"}
               </>
             )}
           </button>
