@@ -39,10 +39,10 @@ function LandingPage() {
   useEffect(() => {
     let cancelled = false;
     supabase.auth.getSession().then(({ data }) => {
-      if (!cancelled && data.session) navigate({ to: "/_authenticated/dashboard" });
+      if (!cancelled && data.session) navigate({ to: "/dashboard" });
     });
     const { data: sub } = supabase.auth.onAuthStateChange((event, session) => {
-      if (event === "SIGNED_IN" && session) navigate({ to: "/_authenticated/dashboard" });
+      if (event === "SIGNED_IN" && session) navigate({ to: "/dashboard" });
     });
     return () => { cancelled = true; sub.subscription.unsubscribe(); };
   }, [navigate]);
