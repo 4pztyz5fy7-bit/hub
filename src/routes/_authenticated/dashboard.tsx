@@ -754,13 +754,19 @@ function DashboardPage() {
     if (!userId || requestingOffer) return;
     setRequestingOffer(offer.id);
     const sub = `sub-${Math.random().toString(36).slice(2, 6)}`;
+    const trackingLink = `https://go.partner.app/${offer.tag.toLowerCase()}?sub=${sub}&uid=${userId.slice(0, 8)}`;
+    try {
+      await navigator.clipboard.writeText(trackingLink);
+    } catch {
+      /* clipboard may be blocked — заявка всё равно создаётся */
+    }
     const { data, error } = await supabase.from("link_requests").insert({
       user_id: userId,
       offer_id: offer.id,
       offer_name: offer.name,
       offer_tag: offer.tag,
-      source, sub, link: null,
-      status: "new",
+      source, sub, link: trackingLink,
+      status: "in_progress",
     }).select().single();
     setRequestingOffer(null);
     if (error || !data) {
@@ -781,20 +787,21 @@ function DashboardPage() {
       createdAt: `Сегодня, ${timeOf(data.created_at)}`,
       source: data.source ?? source,
       sub: data.sub ?? sub,
-      link: data.link ?? "",
-      status: data.status,
+      link: data.link ?? trackingLink,
+      status: normalizeStatus(data.status),
+      ordersCount: Number((data as any).orders_count ?? 0),
     };
     setRequests((prev) => [req, ...prev]);
     setLinkedOffers((s) => new Set(s).add(offer.id));
     pushNotif({
       kind: "offer",
-      title: "Заявка отправлена",
-      body: `${offer.name} • ${req.id} — ждёт модерации. Ссылку админ выдаст в разделе «Заявки».`,
+      title: "Ссылка скопирована",
+      body: `${offer.name} • ${req.id} — заявка создана, админ отслеживает выполнение.`,
     });
   };
 
 
-  const decideRequest = (id: string, status: "approved" | "rejected", note?: string) => {
+  const decideRequest = (id: string, status: LinkRequestStatus, note?: string) => {
     // Client-side only view; real moderation happens in /admin under admin RLS.
     setRequests((prev) => prev.map((r) => (r.id === id ? { ...r, status, note } : r)));
   };
