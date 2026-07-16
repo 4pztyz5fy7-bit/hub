@@ -253,32 +253,47 @@ export type Database = {
         Row: {
           avatar_url: string | null
           bank: Json | null
+          bio: string | null
+          city: string | null
           created_at: string
           display_name: string | null
           email: string | null
           id: string
+          phone: string | null
+          settings: Json
           telegram: string | null
           updated_at: string
+          website: string | null
         }
         Insert: {
           avatar_url?: string | null
           bank?: Json | null
+          bio?: string | null
+          city?: string | null
           created_at?: string
           display_name?: string | null
           email?: string | null
           id: string
+          phone?: string | null
+          settings?: Json
           telegram?: string | null
           updated_at?: string
+          website?: string | null
         }
         Update: {
           avatar_url?: string | null
           bank?: Json | null
+          bio?: string | null
+          city?: string | null
           created_at?: string
           display_name?: string | null
           email?: string | null
           id?: string
+          phone?: string | null
+          settings?: Json
           telegram?: string | null
           updated_at?: string
+          website?: string | null
         }
         Relationships: []
       }
