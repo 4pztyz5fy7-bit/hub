@@ -62,6 +62,30 @@ export const Route = createFileRoute("/_authenticated/dashboard")({
 
 type Tab = "info" | "offers" | "requests" | "stats" | "payouts" | "tools" | "profile";
 
+export type UserPrefs = {
+  notify_email: boolean;
+  notify_push: boolean;
+  notify_marketing: boolean;
+  notify_payouts: boolean;
+  notify_offers: boolean;
+  theme: "system" | "dark" | "light";
+  language: "ru" | "en";
+  compact: boolean;
+  showBalance: boolean;
+};
+
+export const DEFAULT_PREFS: UserPrefs = {
+  notify_email: true,
+  notify_push: true,
+  notify_marketing: false,
+  notify_payouts: true,
+  notify_offers: true,
+  theme: "dark",
+  language: "ru",
+  compact: false,
+  showBalance: true,
+};
+
 type BankDetails = {
   method: "card" | "account" | "sbp";
   holder: string;
