@@ -627,6 +627,11 @@ function DashboardPage() {
         denied: Array.isArray(r.denied) ? r.denied : [],
         landing: r.landing ?? "",
         image: r.image_url ?? undefined,
+        cityPayouts: Array.isArray(r.city_payouts)
+          ? (r.city_payouts as any[])
+              .map((c) => ({ city: String(c?.city ?? ""), amount: Number(c?.amount ?? 0) }))
+              .filter((c) => c.city && c.amount > 0)
+          : [],
       })));
 
       const pRow = profileRes.data as { bank?: BankDetails | null; display_name?: string | null; avatar_url?: string | null; email?: string | null; settings?: Partial<UserPrefs> | null } | null;
