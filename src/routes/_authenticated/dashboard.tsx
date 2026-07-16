@@ -2871,7 +2871,7 @@ function OfferDetailSheet({
             <MetaCell Icon={Target} label="Цель" value={offer.goal} />
             <MetaCell Icon={Globe} label="Гео" value={offer.geo.join(" • ")} />
             <MetaCell Icon={Timer} label="Холд" value={offer.hold} />
-            <MetaCell Icon={Landmark} label="Лендинг" value={offer.landing.replace("https://", "")} />
+            <MetaCell Icon={ShieldCheck} label="Статус" value={offer.landing ? "Ссылка готова" : "Скоро"} />
           </div>
 
           {/* Description */}
