@@ -1360,34 +1360,37 @@ function InfoTab({
               <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-muted-foreground">
                 Доход за неделю
               </p>
-              <p className="mt-0.5 font-mono text-sm font-bold tabular-nums">54 200 ₽</p>
+              <p className="mt-0.5 font-mono text-sm font-bold tabular-nums">{fmt(week.total)} ₽</p>
             </div>
-            <span className="flex items-center gap-1 rounded-full bg-[color:var(--success)]/10 px-2 py-1 font-mono text-[10px] font-medium text-[color:var(--success)]">
-              <TrendingUp className="size-3" /> +18%
+            <span className={`flex items-center gap-1 rounded-full px-2 py-1 font-mono text-[10px] font-medium ${weekDelta >= 0 ? "bg-[color:var(--success)]/10 text-[color:var(--success)]" : "bg-destructive/10 text-destructive"}`}>
+              <TrendingUp className="size-3" /> {weekDelta >= 0 ? "+" : ""}{weekDelta}%
             </span>
           </div>
           <div className="flex h-20 items-end gap-1.5">
-            {chartBars.map((h, i) => (
-              <div
-                key={i}
-                className={`flex-1 rounded-t-sm transition-colors ${
-                  i === 5 ? "bg-primary" : "bg-secondary"
-                }`}
-                style={{ height: `${h}%` }}
-              />
-            ))}
+            {(() => {
+              const max = Math.max(...week.series, 1);
+              const todayIdx = (new Date().getDay() + 6) % 7;
+              return week.series.map((h, i) => (
+                <div
+                  key={i}
+                  className={`flex-1 rounded-t-sm transition-colors ${i === todayIdx ? "bg-primary" : "bg-secondary"}`}
+                  style={{ height: `${Math.max(6, (h / max) * 100)}%` }}
+                />
+              ));
+            })()}
           </div>
           <div className="mt-2 flex gap-1.5">
-            {weekLabels.map((l, i) => (
-              <span
-                key={l}
-                className={`flex-1 text-center font-mono text-[9px] uppercase ${
-                  i === 5 ? "font-bold text-primary" : "text-muted-foreground"
-                }`}
-              >
-                {l}
-              </span>
-            ))}
+            {weekLabels.map((l, i) => {
+              const todayIdx = (new Date().getDay() + 6) % 7;
+              return (
+                <span
+                  key={l}
+                  className={`flex-1 text-center font-mono text-[9px] uppercase ${i === todayIdx ? "font-bold text-primary" : "text-muted-foreground"}`}
+                >
+                  {l}
+                </span>
+              );
+            })}
           </div>
         </div>
       </section>
