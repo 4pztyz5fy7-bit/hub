@@ -36,11 +36,14 @@ type PayoutRow = {
   destination: string | null; status: "pending" | "processing" | "paid" | "rejected";
   note: string | null; created_at: string;
 };
+type LinkStatus =
+  | "in_progress" | "completed" | "finished" | "paid"
+  | "new" | "review" | "approved" | "rejected"; // legacy values still exist in DB
 type LinkRow = {
   id: string; user_id: string; offer_id: string | null; offer_name: string;
   offer_tag: string | null; source: string | null; sub: string | null;
-  link: string | null; note: string | null;
-  status: "new" | "review" | "approved" | "rejected"; created_at: string;
+  link: string | null; note: string | null; orders_count: number;
+  status: LinkStatus; created_at: string;
 };
 type Conversion = {
   id: string; user_id: string; offer_id: string | null; offer_name: string;
@@ -958,11 +961,25 @@ function RequestsTab() {
 
   if (loading) return <CenterLoader label="Загрузка заявок" />;
 
-  const badges: Record<LinkRow["status"], string> = {
-    new: "bg-primary/15 text-primary",
+  const badges: Record<LinkStatus, string> = {
+    in_progress: "bg-[color:var(--warning)]/15 text-[color:var(--warning)]",
+    completed: "bg-sky-500/15 text-sky-500",
+    finished: "bg-emerald-500/15 text-emerald-500",
+    paid: "bg-primary/15 text-primary",
+    new: "bg-[color:var(--warning)]/15 text-[color:var(--warning)]",
     review: "bg-[color:var(--warning)]/15 text-[color:var(--warning)]",
     approved: "bg-emerald-500/15 text-emerald-500",
     rejected: "bg-destructive/15 text-destructive",
+  };
+  const statusLabels: Record<LinkStatus, string> = {
+    in_progress: "В работе",
+    completed: "Выполнено",
+    finished: "Завершено",
+    paid: "Оплачено",
+    new: "В работе",
+    review: "В работе",
+    approved: "Завершено",
+    rejected: "Отменена",
   };
 
   return (
@@ -974,8 +991,11 @@ function RequestsTab() {
             className="w-full rounded-lg border border-border bg-background pl-8 pr-3 py-1.5 text-sm" />
         </div>
         <select value={statusF} onChange={(e) => setStatusF(e.target.value as any)} className="rounded-lg border border-border bg-background px-2 py-1.5 text-xs">
-          <option value="all">Все</option><option value="new">Новые</option><option value="review">На проверке</option>
-          <option value="approved">Одобрены</option><option value="rejected">Отклонены</option>
+          <option value="all">Все</option>
+          <option value="in_progress">В работе</option>
+          <option value="completed">Выполнено</option>
+          <option value="finished">Завершено</option>
+          <option value="paid">Оплачено</option>
         </select>
         <button onClick={() => exportCSV("requests", filtered as any)} className="inline-flex items-center gap-1 rounded-lg border border-border px-2 py-1.5 text-[11px] font-bold hover:bg-accent">
           <Download className="size-3" /> CSV
@@ -985,10 +1005,10 @@ function RequestsTab() {
       {selected.size > 0 && (
         <div className="flex flex-wrap items-center gap-2 rounded-lg border border-primary/30 bg-primary/5 p-2 text-xs">
           <span className="font-bold">Выбрано: {selected.size}</span>
-          <button onClick={() => bulk("new")} className="rounded-md border border-primary/40 px-2 py-1 font-bold text-primary">Новая</button>
-          <button onClick={() => bulk("review")} className="rounded-md border border-border px-2 py-1 font-bold">В работе</button>
-          <button onClick={() => bulk("approved")} className="rounded-md border border-emerald-500/40 px-2 py-1 font-bold text-emerald-500">Выполнена</button>
-          <button onClick={() => bulk("rejected")} className="rounded-md border border-destructive/40 px-2 py-1 font-bold text-destructive">Отменена</button>
+          <button onClick={() => bulk("in_progress")} className="rounded-md border border-[color:var(--warning)]/40 px-2 py-1 font-bold text-[color:var(--warning)]">В работе</button>
+          <button onClick={() => bulk("completed")} className="rounded-md border border-sky-500/40 px-2 py-1 font-bold text-sky-500">Выполнено</button>
+          <button onClick={() => bulk("finished")} className="rounded-md border border-emerald-500/40 px-2 py-1 font-bold text-emerald-500">Завершено</button>
+          <button onClick={() => bulk("paid")} className="rounded-md border border-primary/40 px-2 py-1 font-bold text-primary">Оплачено</button>
           <button onClick={bulkDel} className="rounded-md border border-destructive/40 px-2 py-1 font-bold text-destructive">Удалить</button>
           <button onClick={() => setSelected(new Set())} className="ml-auto text-muted-foreground">Сброс</button>
         </div>
@@ -1006,7 +1026,7 @@ function RequestsTab() {
                 <p className="mt-0.5 text-[10px] text-muted-foreground">{dt(r.created_at)}</p>
               </div>
               <div className="flex flex-col items-end gap-1">
-                <span className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-bold uppercase ${badges[r.status]}`}>{r.status}</span>
+                <span className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-bold uppercase ${badges[r.status]}`}>{statusLabels[r.status] ?? r.status}{r.status === "completed" && (r.orders_count ?? 0) > 0 ? ` · ${r.orders_count}` : ""}</span>
                 <button onClick={() => del(r.id)} title="Удалить" className="grid size-6 place-items-center rounded-md text-destructive hover:bg-destructive/10"><Trash2 className="size-3" /></button>
               </div>
             </div>
@@ -1022,11 +1042,16 @@ function RequestsTab() {
 function RequestRowControls({ row, onReload }: { row: LinkRow; onReload: () => void }) {
   const [link, setLink] = useState(row.link ?? "");
   const [note, setNote] = useState(row.note ?? "");
+  const [orders, setOrders] = useState<string>(String(row.orders_count ?? 0));
   const [saving, setSaving] = useState(false);
   const [savedFlash, setSavedFlash] = useState(false);
-  const dirty = (link !== (row.link ?? "")) || (note !== (row.note ?? ""));
+  const ordersNum = Math.max(0, Number(orders) || 0);
+  const dirty =
+    link !== (row.link ?? "") ||
+    note !== (row.note ?? "") ||
+    ordersNum !== (row.orders_count ?? 0);
 
-  const change = async (patch: Partial<Pick<LinkRow, "status" | "link" | "note">>) => {
+  const change = async (patch: Partial<Pick<LinkRow, "status" | "link" | "note" | "orders_count">>) => {
     setSaving(true);
     await supabase.from("link_requests").update(patch).eq("id", row.id);
     setSaving(false);
@@ -1036,7 +1061,7 @@ function RequestRowControls({ row, onReload }: { row: LinkRow; onReload: () => v
   };
 
   const saveFields = async () => {
-    await change({ link: link.trim() || null, note: note.trim() || null });
+    await change({ link: link.trim() || null, note: note.trim() || null, orders_count: ordersNum });
   };
 
   return (
@@ -1045,24 +1070,35 @@ function RequestRowControls({ row, onReload }: { row: LinkRow; onReload: () => v
         <label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Статус</label>
         <select
           value={row.status}
-          onChange={(e) => change({ status: e.target.value as LinkRow["status"] })}
+          onChange={(e) => change({ status: e.target.value as LinkStatus })}
           disabled={saving}
           className="rounded-lg border border-border bg-background px-2 py-1 text-xs font-bold"
         >
-          <option value="new">Новая</option>
-          <option value="review">В работе</option>
-          <option value="approved">Выполнена</option>
-          <option value="rejected">Отменена</option>
+          <option value="in_progress">В работе</option>
+          <option value="completed">Выполнено</option>
+          <option value="finished">Завершено</option>
+          <option value="paid">Оплачено</option>
         </select>
         {savedFlash && <span className="text-[10px] font-bold uppercase text-emerald-500">Сохранено</span>}
       </div>
       <label className="block">
-        <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Партнёрская ссылка (видна пользователю после «Выполнена»)</span>
+        <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Выполнено заказов</span>
+        <input
+          type="number"
+          min={0}
+          value={orders}
+          onChange={(e) => setOrders(e.target.value.replace(/[^\d]/g, ""))}
+          placeholder="0"
+          className="mt-0.5 w-full rounded-lg border border-border bg-background px-3 py-1.5 text-sm outline-none focus:ring-2 focus:ring-primary/40"
+        />
+      </label>
+      <label className="block">
+        <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Партнёрская ссылка (создаётся автоматически при копировании)</span>
         <input
           type="url"
           value={link}
           onChange={(e) => setLink(e.target.value)}
-          placeholder="https://track.example.com/?sub=..."
+          placeholder="https://go.partner.app/..."
           className="mt-0.5 w-full rounded-lg border border-border bg-background px-3 py-1.5 text-sm outline-none focus:ring-2 focus:ring-primary/40"
         />
       </label>
@@ -1072,7 +1108,7 @@ function RequestRowControls({ row, onReload }: { row: LinkRow; onReload: () => v
           value={note}
           onChange={(e) => setNote(e.target.value)}
           rows={2}
-          placeholder="Например: ссылка обновлена, промо активно до 30.09"
+          placeholder="Например: подтверждено 3 заказа, ждём холд"
           className="mt-0.5 w-full rounded-lg border border-border bg-background px-3 py-1.5 text-sm outline-none focus:ring-2 focus:ring-primary/40"
         />
       </label>
@@ -1082,7 +1118,7 @@ function RequestRowControls({ row, onReload }: { row: LinkRow; onReload: () => v
           disabled={saving}
           className="w-full rounded-lg bg-foreground px-3 py-1.5 text-[11px] font-bold uppercase tracking-wider text-background disabled:opacity-60"
         >
-          Сохранить ссылку и комментарий
+          Сохранить изменения
         </button>
       )}
     </div>

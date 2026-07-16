@@ -129,7 +129,16 @@ type Offer = {
   image?: string;
 };
 
-type LinkRequestStatus = "new" | "review" | "approved" | "rejected";
+type LinkRequestStatus =
+  | "in_progress"
+  | "completed"
+  | "finished"
+  | "paid"
+  // legacy values kept for backward compatibility with existing rows
+  | "new"
+  | "review"
+  | "approved"
+  | "rejected";
 type LinkRequest = {
   id: string;
   offerId: string;
@@ -140,8 +149,30 @@ type LinkRequest = {
   sub: string;
   link: string;
   status: LinkRequestStatus;
+  ordersCount: number;
   note?: string;
 };
+
+/** Map legacy statuses to the new pipeline so both old and fresh rows render. */
+function normalizeStatus(raw: unknown): LinkRequestStatus {
+  const v = String(raw ?? "").toLowerCase();
+  switch (v) {
+    case "in_progress":
+    case "completed":
+    case "finished":
+    case "paid":
+      return v as LinkRequestStatus;
+    case "new":
+    case "review":
+      return "in_progress";
+    case "approved":
+      return "finished";
+    case "rejected":
+      return "in_progress";
+    default:
+      return "in_progress";
+  }
+}
 
 type Conversion = {
   id: string;
@@ -622,7 +653,8 @@ function DashboardPage() {
         source: r.source ?? "",
         sub: r.sub ?? "",
         link: r.link ?? "",
-        status: r.status,
+        status: normalizeStatus(r.status),
+        ordersCount: Number(r.orders_count ?? 0),
         note: r.note ?? undefined,
       })));
       setLinkedOffers(new Set(rows.map((r: any) => r.offer_id).filter(Boolean) as string[]));
@@ -743,13 +775,19 @@ function DashboardPage() {
     if (!userId || requestingOffer) return;
     setRequestingOffer(offer.id);
     const sub = `sub-${Math.random().toString(36).slice(2, 6)}`;
+    const trackingLink = `https://go.partner.app/${offer.tag.toLowerCase()}?sub=${sub}&uid=${userId.slice(0, 8)}`;
+    try {
+      await navigator.clipboard.writeText(trackingLink);
+    } catch {
+      /* clipboard may be blocked — заявка всё равно создаётся */
+    }
     const { data, error } = await supabase.from("link_requests").insert({
       user_id: userId,
       offer_id: offer.id,
       offer_name: offer.name,
       offer_tag: offer.tag,
-      source, sub, link: null,
-      status: "new",
+      source, sub, link: trackingLink,
+      status: "in_progress",
     }).select().single();
     setRequestingOffer(null);
     if (error || !data) {
@@ -770,20 +808,21 @@ function DashboardPage() {
       createdAt: `Сегодня, ${timeOf(data.created_at)}`,
       source: data.source ?? source,
       sub: data.sub ?? sub,
-      link: data.link ?? "",
-      status: data.status,
+      link: data.link ?? trackingLink,
+      status: normalizeStatus(data.status),
+      ordersCount: Number((data as any).orders_count ?? 0),
     };
     setRequests((prev) => [req, ...prev]);
     setLinkedOffers((s) => new Set(s).add(offer.id));
     pushNotif({
       kind: "offer",
-      title: "Заявка отправлена",
-      body: `${offer.name} • ${req.id} — ждёт модерации. Ссылку админ выдаст в разделе «Заявки».`,
+      title: "Ссылка скопирована",
+      body: `${offer.name} • ${req.id} — заявка создана, админ отслеживает выполнение.`,
     });
   };
 
 
-  const decideRequest = (id: string, status: "approved" | "rejected", note?: string) => {
+  const decideRequest = (id: string, status: LinkRequestStatus, note?: string) => {
     // Client-side only view; real moderation happens in /admin under admin RLS.
     setRequests((prev) => prev.map((r) => (r.id === id ? { ...r, status, note } : r)));
   };
@@ -1687,11 +1726,11 @@ function OffersTab({
                   >
                     {isCopied ? (
                       <>
-                        <Check className="size-3" /> Отправлено
+                        <Check className="size-3" /> Скопировано
                       </>
                     ) : (
                       <>
-                        <Link2 className="size-3" /> Заявка
+                        <Copy className="size-3" /> Ссылка
                       </>
                     )}
                   </button>
@@ -1731,10 +1770,11 @@ function UserRequestsTab({
   const counts = useMemo(
     () => ({
       all: requests.length,
-      new: requests.filter((r) => r.status === "new").length,
-      review: requests.filter((r) => r.status === "review").length,
-      approved: requests.filter((r) => r.status === "approved").length,
-      rejected: requests.filter((r) => r.status === "rejected").length,
+      in_progress: requests.filter((r) => r.status === "in_progress").length,
+      completed: requests.filter((r) => r.status === "completed").length,
+      finished: requests.filter((r) => r.status === "finished").length,
+      paid: requests.filter((r) => r.status === "paid").length,
+      orders: requests.reduce((s, r) => s + (r.ordersCount || 0), 0),
     }),
     [requests],
   );
@@ -1755,18 +1795,23 @@ function UserRequestsTab({
   };
 
   const statusMeta: Record<LinkRequestStatus, { label: string; cls: string; Icon: LucideIcon }> = {
-    new: { label: "Новая", cls: "text-sky-500 border-sky-500/30 bg-sky-500/10", Icon: Clock },
-    review: { label: "На проверке", cls: "text-amber-500 border-amber-500/30 bg-amber-500/10", Icon: Search },
-    approved: { label: "Одобрена", cls: "text-emerald-500 border-emerald-500/30 bg-emerald-500/10", Icon: ThumbsUp },
-    rejected: { label: "Отклонена", cls: "text-destructive border-destructive/30 bg-destructive/10", Icon: ThumbsDown },
+    in_progress: { label: "В работе", cls: "text-amber-500 border-amber-500/30 bg-amber-500/10", Icon: Clock },
+    completed: { label: "Выполнено", cls: "text-sky-500 border-sky-500/30 bg-sky-500/10", Icon: ThumbsUp },
+    finished: { label: "Завершено", cls: "text-emerald-500 border-emerald-500/30 bg-emerald-500/10", Icon: CheckCircle2 },
+    paid: { label: "Оплачено", cls: "text-primary border-primary/30 bg-primary/10", Icon: Sparkles },
+    // legacy fallbacks (не показываются после normalizeStatus, оставлены на всякий случай)
+    new: { label: "В работе", cls: "text-amber-500 border-amber-500/30 bg-amber-500/10", Icon: Clock },
+    review: { label: "В работе", cls: "text-amber-500 border-amber-500/30 bg-amber-500/10", Icon: Search },
+    approved: { label: "Завершено", cls: "text-emerald-500 border-emerald-500/30 bg-emerald-500/10", Icon: CheckCircle2 },
+    rejected: { label: "В работе", cls: "text-amber-500 border-amber-500/30 bg-amber-500/10", Icon: Clock },
   };
 
   const chips: { id: "all" | LinkRequestStatus; label: string; n: number }[] = [
     { id: "all", label: "Все", n: counts.all },
-    { id: "new", label: "Новые", n: counts.new },
-    { id: "review", label: "Проверка", n: counts.review },
-    { id: "approved", label: "Одобрены", n: counts.approved },
-    { id: "rejected", label: "Отклонены", n: counts.rejected },
+    { id: "in_progress", label: "В работе", n: counts.in_progress },
+    { id: "completed", label: "Выполнено", n: counts.completed },
+    { id: "finished", label: "Завершено", n: counts.finished },
+    { id: "paid", label: "Оплачено", n: counts.paid },
   ];
 
   return (
@@ -1780,9 +1825,9 @@ function UserRequestsTab({
 
       <div className="animate-in-up grid grid-cols-4 gap-2" style={{ animationDelay: "40ms" }}>
         <MiniStat label="Всего" value={counts.all} />
-        <MiniStat label="Проверка" value={counts.new + counts.review} tone="text-amber-500" />
-        <MiniStat label="Одобрено" value={counts.approved} tone="text-emerald-500" />
-        <MiniStat label="Отклон." value={counts.rejected} tone="text-destructive" />
+        <MiniStat label="В работе" value={counts.in_progress} tone="text-amber-500" />
+        <MiniStat label="Заказов" value={counts.orders} tone="text-sky-500" />
+        <MiniStat label="Оплачено" value={counts.paid} tone="text-primary" />
       </div>
 
       <div className="animate-in-up flex flex-wrap items-center gap-2" style={{ animationDelay: "60ms" }}>
@@ -1838,7 +1883,7 @@ function UserRequestsTab({
           const isCopied = copied === r.id;
           const created = new Date(r.createdAt);
           const dateStr = isNaN(created.getTime()) ? r.createdAt : created.toLocaleString("ru-RU", { day: "2-digit", month: "2-digit", year: "2-digit", hour: "2-digit", minute: "2-digit" });
-          const linkReady = r.status === "approved" && Boolean(r.link);
+          const linkReady = Boolean(r.link);
 
           return (
             <div key={r.id} className="rounded-xl border border-border bg-card">
@@ -1855,19 +1900,22 @@ function UserRequestsTab({
                   <p className="mt-1 text-[10px] uppercase tracking-wider text-muted-foreground">
                     {r.source || "—"} · sub: <span className="font-mono">{r.sub || "—"}</span>
                   </p>
-                  <p className="mt-0.5 font-mono text-[10px] text-muted-foreground">#{r.id.slice(0, 8).toUpperCase()} · {dateStr}</p>
+                  <p className="mt-0.5 font-mono text-[10px] text-muted-foreground">
+                    #{r.id.slice(0, 8).toUpperCase()} · {dateStr}
+                    {r.ordersCount > 0 && <> · <span className="text-sky-500">Заказов: {r.ordersCount}</span></>}
+                  </p>
                 </div>
                 <span className={`inline-flex shrink-0 items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider ${meta.cls}`}>
-                  <meta.Icon className="size-3" /> {meta.label}
+                  <meta.Icon className="size-3" /> {meta.label}{r.status === "completed" && r.ordersCount > 0 ? ` · ${r.ordersCount}` : ""}
                 </span>
               </button>
 
               {isOpen && (
                 <div className="space-y-3 border-t border-border px-3 py-3">
-                  <RequestTimeline status={r.status} createdAt={r.createdAt} note={r.note} />
+                  <RequestTimeline status={r.status} createdAt={r.createdAt} note={r.note} ordersCount={r.ordersCount} />
 
                   {r.note && (
-                    <div className={`rounded-lg border p-2.5 text-[11.5px] ${r.status === "rejected" ? "border-destructive/30 bg-destructive/10 text-destructive" : "border-border bg-background text-foreground/90"}`}>
+                    <div className="rounded-lg border border-border bg-background p-2.5 text-[11.5px] text-foreground/90">
                       <p className="mb-0.5 text-[9px] font-bold uppercase tracking-wider opacity-70">Комментарий администратора</p>
                       {r.note}
                     </div>
@@ -1887,7 +1935,7 @@ function UserRequestsTab({
                       </div>
                     ) : (
                       <div className="rounded-lg border border-dashed border-border p-2 text-[11px] text-muted-foreground">
-                        {r.status === "rejected" ? "Заявка отклонена — ссылка не выдана." : "Ссылку выдаст админ после одобрения."}
+                        Ссылка недоступна.
                       </div>
                     )}
                   </div>
@@ -1921,20 +1969,20 @@ function MiniStat({ label, value, tone = "text-foreground" }: { label: string; v
   );
 }
 
-function RequestTimeline({ status, createdAt, note }: { status: LinkRequestStatus; createdAt: string; note?: string }) {
+function RequestTimeline({ status, createdAt, ordersCount = 0 }: { status: LinkRequestStatus; createdAt: string; note?: string; ordersCount?: number }) {
   const created = new Date(createdAt);
   const createdLabel = isNaN(created.getTime()) ? createdAt : created.toLocaleString("ru-RU", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" });
 
-  const steps: { key: LinkRequestStatus | "created"; label: string; sub?: string; state: "done" | "current" | "pending" | "rejected" }[] = [
+  const order: LinkRequestStatus[] = ["in_progress", "completed", "finished", "paid"];
+  const idx = Math.max(0, order.indexOf(status));
+  const stateFor = (i: number): "done" | "current" | "pending" => (i < idx ? "done" : i === idx ? "current" : "pending");
+
+  const steps: { key: string; label: string; sub?: string; state: "done" | "current" | "pending" }[] = [
     { key: "created", label: "Создана", sub: createdLabel, state: "done" },
-    {
-      key: "review",
-      label: "На проверке",
-      state: status === "new" ? "current" : status === "review" ? "current" : "done",
-    },
-    status === "rejected"
-      ? { key: "rejected", label: "Отклонена", sub: note, state: "rejected" }
-      : { key: "approved", label: "Одобрена", state: status === "approved" ? "done" : "pending" },
+    { key: "in_progress", label: "В работе", state: stateFor(0) },
+    { key: "completed", label: ordersCount > 0 ? `Выполнено · ${ordersCount} заказов` : "Выполнено", state: stateFor(1) },
+    { key: "finished", label: "Завершено", state: stateFor(2) },
+    { key: "paid", label: "Оплачено", state: stateFor(3) },
   ];
 
   return (
@@ -1943,7 +1991,6 @@ function RequestTimeline({ status, createdAt, note }: { status: LinkRequestStatu
         const color =
           s.state === "done" ? "bg-emerald-500 text-background"
           : s.state === "current" ? "bg-amber-500 text-background"
-          : s.state === "rejected" ? "bg-destructive text-background"
           : "bg-muted text-muted-foreground";
         return (
           <li key={s.key} className="flex items-start gap-2">
@@ -3297,7 +3344,7 @@ function OfferDetailSheet({
               ))}
             </div>
             <p className="mt-2 text-[10px] text-muted-foreground">
-              Каждая ссылка создаёт заявку в модерацию администратора.
+              Копирование ссылки автоматически создаёт заявку — админ ведёт её по этапам «в работе → выполнено → завершено → оплачено».
             </p>
           </section>
 
@@ -3336,11 +3383,11 @@ function OfferDetailSheet({
           >
             {isCopied ? (
               <>
-                <Check className="size-3.5" /> Заявка отправлена
+                <Check className="size-3.5" /> Ссылка скопирована
               </>
             ) : (
               <>
-                <Link2 className="size-3.5" /> {linked ? "Оставить ещё заявку" : "Оставить заявку"}
+                <Copy className="size-3.5" /> {linked ? "Скопировать ссылку ещё раз" : "Скопировать ссылку"}
               </>
             )}
           </button>
@@ -3363,10 +3410,14 @@ function MetaCell({ Icon, label, value }: { Icon: LucideIcon; label: string; val
 
 function RequestStatusPill({ status }: { status: LinkRequestStatus }) {
   const map: Record<LinkRequestStatus, { label: string; cls: string; Icon: LucideIcon }> = {
-    new: { label: "Новая", cls: "bg-primary/10 text-primary", Icon: Sparkles },
-    review: { label: "На модерации", cls: "bg-[color:var(--warning)]/10 text-[color:var(--warning)]", Icon: Clock },
-    approved: { label: "Одобрено", cls: "bg-[color:var(--success)]/10 text-[color:var(--success)]", Icon: CheckCircle2 },
-    rejected: { label: "Отклонено", cls: "bg-destructive/10 text-destructive", Icon: XCircle },
+    in_progress: { label: "В работе", cls: "bg-[color:var(--warning)]/10 text-[color:var(--warning)]", Icon: Clock },
+    completed: { label: "Выполнено", cls: "bg-primary/10 text-primary", Icon: ThumbsUp },
+    finished: { label: "Завершено", cls: "bg-[color:var(--success)]/10 text-[color:var(--success)]", Icon: CheckCircle2 },
+    paid: { label: "Оплачено", cls: "bg-primary/15 text-primary", Icon: Sparkles },
+    new: { label: "В работе", cls: "bg-[color:var(--warning)]/10 text-[color:var(--warning)]", Icon: Clock },
+    review: { label: "В работе", cls: "bg-[color:var(--warning)]/10 text-[color:var(--warning)]", Icon: Clock },
+    approved: { label: "Завершено", cls: "bg-[color:var(--success)]/10 text-[color:var(--success)]", Icon: CheckCircle2 },
+    rejected: { label: "В работе", cls: "bg-[color:var(--warning)]/10 text-[color:var(--warning)]", Icon: XCircle },
   };
   const s = map[status];
   return (
@@ -3384,7 +3435,7 @@ function AdminRequestsSheet({
   onClose,
 }: {
   requests: LinkRequest[];
-  onDecide: (id: string, status: "approved" | "rejected", note?: string) => void;
+  onDecide: (id: string, status: LinkRequestStatus, note?: string) => void;
   onClose: () => void;
 }) {
   const [filter, setFilter] = useState<"all" | LinkRequestStatus>("all");
