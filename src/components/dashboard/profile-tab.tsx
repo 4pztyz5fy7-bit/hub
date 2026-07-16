@@ -27,16 +27,16 @@ import {
   BadgeCheck,
 } from "lucide-react";
 
-type Prefs = {
-  notify_email?: boolean;
-  notify_push?: boolean;
-  notify_marketing?: boolean;
-  notify_payouts?: boolean;
-  notify_offers?: boolean;
-  theme?: "system" | "dark" | "light";
-  language?: "ru" | "en";
-  compact?: boolean;
-  showBalance?: boolean;
+export type Prefs = {
+  notify_email: boolean;
+  notify_push: boolean;
+  notify_marketing: boolean;
+  notify_payouts: boolean;
+  notify_offers: boolean;
+  theme: "system" | "dark" | "light";
+  language: "ru" | "en";
+  compact: boolean;
+  showBalance: boolean;
 };
 
 type ProfileData = {
@@ -49,11 +49,11 @@ type ProfileData = {
   bio: string | null;
   city: string | null;
   website: string | null;
-  settings: Prefs | null;
+  settings: Partial<Prefs> | null;
   created_at: string;
 };
 
-const DEFAULT_PREFS: Required<Prefs> = {
+const DEFAULT_PREFS: Prefs = {
   notify_email: true,
   notify_push: true,
   notify_marketing: false,
@@ -69,10 +69,16 @@ export function ProfileTab({
   userId,
   isAdmin,
   onSignOut,
+  prefs: prefsProp,
+  onPrefsChange,
+  onProfileChange,
 }: {
   userId: string | null;
   isAdmin: boolean;
   onSignOut: () => void;
+  prefs?: Prefs;
+  onPrefsChange?: (p: Prefs) => void;
+  onProfileChange?: (name: string, avatar: string | null) => void;
 }) {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
