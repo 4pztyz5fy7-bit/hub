@@ -590,6 +590,7 @@ function OfferEditor({ offer, onClose, onSaved }: { offer: Offer | null; onClose
     denied: (offer?.denied ?? []).join(", "),
     active: offer?.active ?? true,
     is_new: offer?.is_new ?? false,
+    image_url: offer?.image_url ?? "",
   });
   const [saving, setSaving] = useState(false);
   const [err, setErr] = useState<string | null>(null);
