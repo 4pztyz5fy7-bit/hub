@@ -212,7 +212,7 @@ function LandingPage() {
             <div className="max-w-2xl">
               <div className="text-[11px] font-bold uppercase tracking-widest text-primary">Каталог</div>
               <h2 className="mt-2 text-3xl font-black md:text-4xl">Топовые офферы недели</h2>
-              <p className="mt-3 text-muted-foreground">40+ рекламодателей: финтех, EdTech, travel, SaaS. Эксклюзивные ставки — недоступны напрямую.</p>
+              <p className="mt-3 text-muted-foreground">{stats ? `${stats.offersCount} рекламодателей` : "Рекламодатели"}: финтех, EdTech, travel, SaaS. Эксклюзивные ставки — недоступны напрямую.</p>
             </div>
             <button onClick={() => openAuth("register")} className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-card px-3.5 py-2 text-sm font-bold hover:bg-secondary">
               Смотреть все <ArrowRight className="size-4" />
