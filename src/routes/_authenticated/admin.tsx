@@ -255,7 +255,6 @@ function OverviewTab() {
     { label: "Заявок на выплату", value: fmt(s.payoutsPending), Icon: Wallet, color: "text-[color:var(--warning)]" },
     { label: "К выплате, ₽", value: fmt(s.payoutsPendingSum), Icon: DollarSign, color: "text-[color:var(--warning)]" },
     { label: "Выплачено всего, ₽", value: fmt(s.payoutsPaidSum), Icon: Check, color: "text-emerald-500" },
-    { label: "Выплачено всего, ₽", value: fmt(s.payoutsPaidSum), Icon: Check, color: "text-emerald-500" },
     { label: "Конверсий за 24ч", value: fmt(s.convToday), Icon: Activity, color: "text-primary" },
     { label: "Конверсий всего", value: fmt(s.convTotal), Icon: BarChart3, color: "text-foreground" },
     { label: "Доход, ₽", value: fmt(s.revenueTotal), Icon: DollarSign, color: "text-emerald-500" },
