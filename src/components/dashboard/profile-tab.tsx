@@ -87,7 +87,19 @@ export function ProfileTab({
 
   const [p, setP] = useState<ProfileData | null>(null);
   const [draft, setDraft] = useState<Partial<ProfileData>>({});
-  const [prefs, setPrefs] = useState<Required<Prefs>>(DEFAULT_PREFS);
+  const [prefs, setPrefsLocal] = useState<Prefs>(prefsProp ?? DEFAULT_PREFS);
+  const setPrefs = (updater: Prefs | ((s: Prefs) => Prefs)) => {
+    setPrefsLocal((s) => {
+      const next = typeof updater === "function" ? (updater as (s: Prefs) => Prefs)(s) : updater;
+      onPrefsChange?.(next);
+      return next;
+    });
+  };
+  // Keep local in sync if parent updates prefs externally
+  useEffect(() => {
+    if (prefsProp) setPrefsLocal(prefsProp);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [prefsProp]);
 
   const [pwOpen, setPwOpen] = useState(false);
   const [pwNew, setPwNew] = useState("");
