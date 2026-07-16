@@ -190,10 +190,10 @@ function LandingPage() {
           {/* Big stats */}
           <div className="mt-8 grid grid-cols-2 gap-3 md:grid-cols-4">
             {[
-              { v: "12 000+", l: "активных партнёров", Icon: Users },
-              { v: "₽1.2 млрд", l: "выплачено за год", Icon: Wallet },
-              { v: "1 час", l: "минимальная выплата", Icon: Clock },
-              { v: "4.9 / 5", l: "оценка поддержки", Icon: Star },
+              { v: stats ? formatCount(stats.partners) : "—", l: "партнёров в сети", Icon: Users },
+              { v: stats ? formatRub(stats.totalPaid) : "—", l: "выплачено партнёрам", Icon: Wallet },
+              { v: stats ? formatCount(stats.completedConversions) : "—", l: "подтверждённых конверсий", Icon: TrendingUp },
+              { v: stats ? formatCount(stats.offersCount) : "—", l: "активных офферов", Icon: Rocket },
             ].map((s) => (
               <div key={s.l} className="rounded-2xl border border-border bg-card/60 p-4 backdrop-blur">
                 <s.Icon className="size-4 text-primary" />
