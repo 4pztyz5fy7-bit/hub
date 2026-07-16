@@ -2,6 +2,7 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { ToolsTab } from "@/components/dashboard/tools-tab";
+import { ProfileTab } from "@/components/dashboard/profile-tab";
 import { LogOut } from "lucide-react";
 import {
   LayoutGrid,
