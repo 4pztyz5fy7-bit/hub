@@ -894,6 +894,12 @@ function DashboardPage() {
             level={levelInfo.current}
           />
         )}
+        {active === "requests" && (
+          <UserRequestsTab
+            requests={requests}
+            onOpenOffers={() => setActive("offers")}
+          />
+        )}
         {active === "stats" && (
           <StatsTab conversions={conversions} offers={offers} />
         )}
