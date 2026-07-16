@@ -1255,8 +1255,8 @@ function InfoTab({
               <span className="text-[10px] font-bold uppercase tracking-[0.14em] opacity-60">
                 Общий баланс
               </span>
-              <span className="rounded-full bg-white/10 px-2 py-0.5 font-mono text-[10px] font-medium text-[color:var(--success)]">
-                +12,4% • 7дн
+              <span className={`rounded-full bg-white/10 px-2 py-0.5 font-mono text-[10px] font-medium ${weekDelta >= 0 ? "text-[color:var(--success)]" : "text-destructive"}`}>
+                {weekDelta >= 0 ? "+" : ""}{weekDelta}% • 7дн
               </span>
             </div>
             <div className="mt-2 flex items-baseline gap-1.5">
