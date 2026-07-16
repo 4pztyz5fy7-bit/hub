@@ -3,9 +3,11 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { z } from "zod";
 import {
-  Loader2, Mail, Lock, User,
-  X, ArrowRight, Check, Menu,
+  Loader2, Mail, Lock, User, Rocket, ShieldCheck, TrendingUp, Zap, Trophy,
+  X, ArrowRight, Wallet, BarChart3, Headphones, Star, Check, Menu, Sparkles,
+  Clock, Users, Target, Gift, MessageCircle, CreditCard, Globe, Award,
 } from "lucide-react";
+
 
 
 export const Route = createFileRoute("/")({
