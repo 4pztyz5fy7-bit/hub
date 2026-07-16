@@ -498,6 +498,32 @@ function DashboardPage() {
   const [bank, setBank] = useState<BankDetails | null>(null);
   const [linkedOffers, setLinkedOffers] = useState<Set<string>>(new Set());
   const [dataReady, setDataReady] = useState(false);
+  const [userName, setUserName] = useState<string>("");
+  const [userAvatar, setUserAvatar] = useState<string | null>(null);
+  const [prefs, setPrefs] = useState<UserPrefs>(DEFAULT_PREFS);
+
+  // Apply theme
+  useEffect(() => {
+    const root = document.documentElement;
+    const apply = (mode: "dark" | "light") => {
+      root.classList.toggle("dark", mode === "dark");
+      root.style.colorScheme = mode;
+    };
+    if (prefs.theme === "system") {
+      const mq = window.matchMedia("(prefers-color-scheme: dark)");
+      apply(mq.matches ? "dark" : "light");
+      const handler = (e: MediaQueryListEvent) => apply(e.matches ? "dark" : "light");
+      mq.addEventListener("change", handler);
+      return () => mq.removeEventListener("change", handler);
+    }
+    apply(prefs.theme);
+  }, [prefs.theme]);
+
+  // Apply language
+  useEffect(() => {
+    document.documentElement.lang = prefs.language;
+  }, [prefs.language]);
+
 
   // Earnings derived from real conversions and payouts
   const balance = useMemo(
