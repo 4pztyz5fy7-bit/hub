@@ -14,6 +14,44 @@ export type Database = {
   }
   public: {
     Tables: {
+      conversions: {
+        Row: {
+          amount: number
+          created_at: string
+          id: string
+          offer_id: string | null
+          offer_name: string
+          status: string
+          user_id: string
+        }
+        Insert: {
+          amount?: number
+          created_at?: string
+          id?: string
+          offer_id?: string | null
+          offer_name: string
+          status?: string
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          id?: string
+          offer_id?: string | null
+          offer_name?: string
+          status?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "conversions_offer_id_fkey"
+            columns: ["offer_id"]
+            isOneToOne: false
+            referencedRelation: "offers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       link_requests: {
         Row: {
           created_at: string
@@ -67,17 +105,59 @@ export type Database = {
           },
         ]
       }
+      notifications: {
+        Row: {
+          amount: string | null
+          body: string
+          created_at: string
+          id: string
+          kind: string
+          read: boolean
+          status: string | null
+          title: string
+          user_id: string
+        }
+        Insert: {
+          amount?: string | null
+          body: string
+          created_at?: string
+          id?: string
+          kind: string
+          read?: boolean
+          status?: string | null
+          title: string
+          user_id: string
+        }
+        Update: {
+          amount?: string | null
+          body?: string
+          created_at?: string
+          id?: string
+          kind?: string
+          read?: boolean
+          status?: string | null
+          title?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       offers: {
         Row: {
           active: boolean
           advertiser: string | null
+          allowed: string[]
+          category: string | null
+          cr: number
           created_at: string
+          denied: string[]
           description: string | null
           epc: number
           geo: string | null
           goal: string | null
           hold: string | null
           id: string
+          is_new: boolean
+          landing: string | null
           name: string
           payout: string
           requirements: string | null
@@ -87,13 +167,19 @@ export type Database = {
         Insert: {
           active?: boolean
           advertiser?: string | null
+          allowed?: string[]
+          category?: string | null
+          cr?: number
           created_at?: string
+          denied?: string[]
           description?: string | null
           epc?: number
           geo?: string | null
           goal?: string | null
           hold?: string | null
           id: string
+          is_new?: boolean
+          landing?: string | null
           name: string
           payout: string
           requirements?: string | null
@@ -103,13 +189,19 @@ export type Database = {
         Update: {
           active?: boolean
           advertiser?: string | null
+          allowed?: string[]
+          category?: string | null
+          cr?: number
           created_at?: string
+          denied?: string[]
           description?: string | null
           epc?: number
           geo?: string | null
           goal?: string | null
           hold?: string | null
           id?: string
+          is_new?: boolean
+          landing?: string | null
           name?: string
           payout?: string
           requirements?: string | null
@@ -157,6 +249,7 @@ export type Database = {
       profiles: {
         Row: {
           avatar_url: string | null
+          bank: Json | null
           created_at: string
           display_name: string | null
           email: string | null
@@ -166,6 +259,7 @@ export type Database = {
         }
         Insert: {
           avatar_url?: string | null
+          bank?: Json | null
           created_at?: string
           display_name?: string | null
           email?: string | null
@@ -175,6 +269,7 @@ export type Database = {
         }
         Update: {
           avatar_url?: string | null
+          bank?: Json | null
           created_at?: string
           display_name?: string | null
           email?: string | null

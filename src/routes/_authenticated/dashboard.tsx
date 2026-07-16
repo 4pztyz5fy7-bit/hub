@@ -199,153 +199,8 @@ function bankDest(b: BankDetails) {
 }
 
 /* ================================ Data ================================= */
-
-const offersData: Offer[] = [
-  {
-    id: "gpb", tag: "BANK", name: "Газпромбанк Gold", category: "Банки", payout: "4 500 ₽", epc: 120, cr: 4.1,
-    advertiser: "Газпромбанк",
-    geo: ["RU"], hold: "45 дней", goal: "Активация карты + первая покупка от 1 000 ₽",
-    description:
-      "Премиальная дебетовая карта Gold с кэшбэком до 10% в выбранных категориях, бесплатным обслуживанием при обороте от 30 000 ₽ и приветственным бонусом 2 000 ₽ новым клиентам.",
-    requirements: [
-      "Возраст клиента 21–65 лет, гражданство РФ",
-      "Первое оформление карты в банке за последние 180 дней",
-      "Активация в течение 14 дней с момента заявки",
-    ],
-    allowed: ["SEO", "Контекст по бренд-запросам", "Email-рассылки по своей базе", "Telegram-каналы"],
-    denied: ["Cashback- и купон-сервисы", "Мотивированный трафик", "Спам в мессенджерах", "Brand bidding в Яндексе"],
-    landing: "https://gpb.ru/lp/gold",
-  },
-  {
-    id: "skl", tag: "EDU", name: "Skillbox: Дизайн интерьеров", category: "Образование", payout: "15%", epc: 85, cr: 3.2,
-    advertiser: "Skillbox",
-    geo: ["RU", "BY", "KZ"], hold: "30 дней", goal: "Оплата курса от 40 000 ₽",
-    description:
-      "Онлайн-курс по дизайну интерьеров: 9 месяцев практики, портфолио из 4 проектов, диплом и помощь в трудоустройстве. Выплата — 15% от суммы первой оплаты клиента.",
-    requirements: [
-      "Оплата в течение 21 дня после первого клика",
-      "Клиент не проходил обучение в Skillbox ранее",
-      "Промокоды платформы аннулируют выплату",
-    ],
-    allowed: ["Тематический контент", "YouTube-обзоры", "Instagram/TikTok", "Таргет с прогревом"],
-    denied: ["Brand bidding", "Cashback-сервисы", "Adult- и gambling-площадки"],
-    landing: "https://skillbox.ru/design-interior",
-  },
-  {
-    id: "tin", tag: "FIN", name: "Т-Инвестиции: брокерский счёт", category: "Инвестиции", payout: "2 800 ₽", epc: 142, cr: 5.8, isNew: true,
-    advertiser: "Т-Банк",
-    geo: ["RU"], hold: "60 дней", goal: "Открытие счёта + первое пополнение от 10 000 ₽",
-    description:
-      "Брокерский счёт с бесплатным обслуживанием, доступом к акциям РФ, фондам и обучающим материалам. Клиент получает 3 акции в подарок — оффер отлично конвертит на финансовом трафике.",
-    requirements: [
-      "Возраст клиента от 18 лет, гражданство РФ",
-      "Пополнение в течение 30 дней с момента регистрации",
-      "Верификация паспорта через Т-ID",
-    ],
-    allowed: ["SEO", "Финансовые блоги", "Telegram-каналы про инвестиции", "Email-рассылки"],
-    denied: ["Cashback", "Мотив-трафик", "Спам-рассылки", "Brand bidding"],
-    landing: "https://tinkoff.ru/invest/",
-  },
-  {
-    id: "lvl", tag: "TRV", name: "Level.Travel: туры в Турцию", category: "Путешествия", payout: "2,5%", epc: 58, cr: 2.1,
-    advertiser: "Level.Travel",
-    geo: ["RU"], hold: "После окончания тура", goal: "Оплаченный тур в Турцию",
-    description:
-      "Онлайн-агрегатор туров с более чем 200 туроператорами. Выплата — 2,5% от стоимости оплаченного тура в Турцию. Средний чек — 120 000 ₽.",
-    requirements: [
-      "Тур должен состояться (без отмены до даты вылета)",
-      "Оплата в течение 7 дней после клика",
-      "Клиент не отменяет и не переносит тур",
-    ],
-    allowed: ["Travel-блоги", "SEO", "YouTube-обзоры", "Тематические Telegram-каналы"],
-    denied: ["Brand bidding", "Cashback", "Adult-площадки"],
-    landing: "https://level.travel/turkey",
-  },
-  {
-    id: "sgl", tag: "INS", name: "Согласие: ОСАГО онлайн", category: "Страхование", payout: "850 ₽", epc: 72, cr: 3.4,
-    advertiser: "СК Согласие",
-    geo: ["RU"], hold: "14 дней", goal: "Оплаченный полис ОСАГО",
-    description:
-      "Оформление полиса ОСАГО онлайн за 10 минут. Электронный полис приходит на email. Выплачивается за каждый оплаченный полис независимо от суммы.",
-    requirements: [
-      "Клиент — физическое лицо, водитель с правами РФ",
-      "Оплата полиса в течение 3 дней после расчёта",
-      "Один клиент — одна выплата в год",
-    ],
-    allowed: ["Автоблоги", "SEO", "Контекст по не-брендовым запросам", "Telegram-каналы"],
-    denied: ["Brand bidding", "Cashback", "Мотив-трафик"],
-    landing: "https://soglasie.ru/osago",
-  },
-  {
-    id: "alf", tag: "BANK", name: "Альфа-Инвестиции", category: "Инвестиции", payout: "1 200 ₽", epc: 96, cr: 4.4, isNew: true,
-    advertiser: "Альфа-Банк",
-    geo: ["RU"], hold: "45 дней", goal: "Открытие счёта + пополнение от 5 000 ₽",
-    description:
-      "Брокерский счёт от Альфа-Банка с доступом к акциям, облигациям и валюте. Приветственный бонус — 5 акций российских компаний.",
-    requirements: [
-      "Возраст от 18 лет, гражданство РФ",
-      "Пополнение в течение 21 дня",
-      "Клиент — новый в Альфа-Инвестициях",
-    ],
-    allowed: ["Финансовые блоги", "SEO", "Telegram-каналы", "YouTube"],
-    denied: ["Cashback", "Мотив-трафик", "Brand bidding"],
-    landing: "https://alfabank.ru/invest",
-  },
-  {
-    id: "spr", tag: "EDU", name: "Skypro Web-разработка", category: "Образование", payout: "3 800 ₽", epc: 110, cr: 2.9,
-    advertiser: "Skypro",
-    geo: ["RU", "BY", "KZ"], hold: "30 дней", goal: "Оплата курса",
-    description:
-      "Профессия «Веб-разработчик» — 10 месяцев обучения с помощью в трудоустройстве. Первая оплата от 5 000 ₽ засчитывается как конверсия.",
-    requirements: [
-      "Оплата в течение 21 дня",
-      "Клиент — новый ученик Skypro",
-      "Возврат в первые 14 дней отменяет выплату",
-    ],
-    allowed: ["Тематический контент", "YouTube", "Instagram/TikTok", "Таргет"],
-    denied: ["Brand bidding", "Cashback", "Adult"],
-    landing: "https://sky.pro/webdev",
-  },
-  {
-    id: "avs", tag: "TRV", name: "Aviasales Search", category: "Путешествия", payout: "1,8%", epc: 24, cr: 1.6,
-    advertiser: "Aviasales",
-    geo: ["RU", "BY", "KZ", "UA"], hold: "После вылета", goal: "Купленный авиабилет",
-    description:
-      "Крупнейший поисковик авиабилетов в СНГ. Выплата — 1,8% от стоимости билета. Работает на любом трафике, где есть спрос на путешествия.",
-    requirements: [
-      "Билет должен быть оплачен и не возвращён",
-      "Полёт состоялся",
-      "Оплата в течение 24 часов после клика",
-    ],
-    allowed: ["Travel-контент", "SEO", "Telegram", "YouTube"],
-    denied: ["Brand bidding по Aviasales", "Cashback", "Adult"],
-    landing: "https://aviasales.ru",
-  },
-];
-
-const categoriesAll = ["Все", "Банки", "Образование", "Инвестиции", "Путешествия", "Страхование"];
-
-const initialConversions: Conversion[] = [
-  { id: "8824102", time: "14:20", offerId: "alf", offerName: "Альфа-Инвестиции", amount: 1200, status: "ok" },
-  { id: "8824095", time: "12:45", offerId: "avs", offerName: "Aviasales Search", amount: 142, status: "pending" },
-  { id: "8824041", time: "11:02", offerId: "gpb", offerName: "Газпромбанк Gold", amount: 4500, status: "ok" },
-  { id: "8824010", time: "09:38", offerId: "skl", offerName: "Skillbox: Дизайн", amount: 3800, status: "ok" },
-  { id: "8823912", time: "Вчера", offerId: "spr", offerName: "Skypro Web-Dev", amount: 3800, status: "ok" },
-  { id: "8823887", time: "Вчера", offerId: "lvl", offerName: "Level.Travel", amount: 980, status: "rejected" },
-];
-
-const initialPayouts: Payout[] = [
-  { id: "PO-8218", date: "12 июл", time: "09:41", amount: 50000, method: "СБП", destination: "+7 985 •• •• 42", status: "paid" },
-  { id: "PO-8177", date: "04 июл", time: "18:12", amount: 12400, method: "Карта", destination: "•••• 4417", status: "paid" },
-  { id: "PO-8154", date: "28 июн", time: "11:08", amount: 8600, method: "Расч. счёт", destination: "•••• 0000", status: "rejected", note: "Неверный БИК" },
-  { id: "PO-8121", date: "20 июн", time: "16:22", amount: 35200, method: "СБП", destination: "+7 985 •• •• 42", status: "paid" },
-];
-
-const initialNotifs: Notification[] = [
-  { id: "n1", kind: "accrual", title: "Начисление", body: "Газпромбанк Gold • ID 8824041", time: "14:20", amount: "+4 500 ₽", read: false },
-  { id: "n2", kind: "offer", title: "Новый оффер", body: "Т-Инвестиции: брокерский счёт • EPC 142 ₽", time: "12:10", read: false },
-  { id: "n3", kind: "payout", title: "Выплата зачислена", body: "50 000 ₽ • СБП", time: "Вчера", status: "paid", read: true },
-];
+// All offers, conversions, payouts and notifications are loaded from the DB
+// inside DashboardPage. No static seed lists here.
 
 const chartBars = [40, 62, 55, 85, 45, 95, 70];
 const weekLabels = ["Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Вс"];
@@ -598,44 +453,38 @@ function payoutStatusMeta(s: PayoutStatus) {
 
 /* ============================== Root shell ============================= */
 
+const MONTHS_RU = ["янв","фев","мар","апр","мая","июн","июл","авг","сен","окт","ноя","дек"] as const;
+const pad2 = (n: number) => String(n).padStart(2, "0");
+const timeOf = (iso: string) => { const d = new Date(iso); return `${pad2(d.getHours())}:${pad2(d.getMinutes())}`; };
+const dateShortOf = (iso: string) => { const d = new Date(iso); return `${d.getDate()} ${MONTHS_RU[d.getMonth()]}`; };
+
 function DashboardPage() {
   const [active, setActive] = useState<Tab>("info");
 
-  // Shared state
-  const [available, setAvailable] = useState(128400);
-  const [balance, setBalance] = useState(142850);
-  const [levelToast, setLevelToast] = useState<Level | null>(null);
-  const prevLevelIdxRef = useRef<number>(getLevelIndex(142850));
-  const [levelHistory, setLevelHistory] = useState<LevelHistoryEntry[]>(() => seedLevelHistory(142850));
+  const [userId, setUserId] = useState<string | null>(null);
+  const [offers, setOffers] = useState<Offer[]>([]);
+  const [payouts, setPayouts] = useState<Payout[]>([]);
+  const [notifs, setNotifs] = useState<Notification[]>([]);
+  const [requests, setRequests] = useState<LinkRequest[]>([]);
+  const [conversions, setConversions] = useState<Conversion[]>([]);
   const [bank, setBank] = useState<BankDetails | null>(null);
-  const [payouts, setPayouts] = useState<Payout[]>(initialPayouts);
-  const [notifs, setNotifs] = useState<Notification[]>(initialNotifs);
   const [linkedOffers, setLinkedOffers] = useState<Set<string>>(new Set());
-  const [requests, setRequests] = useState<LinkRequest[]>([
-    {
-      id: "REQ-7412",
-      offerId: "gpb",
-      offerName: "Газпромбанк Gold",
-      offerTag: "BANK",
-      createdAt: "Вчера, 18:22",
-      source: "Telegram-канал «Финансы 360»",
-      sub: "tg-fin360",
-      link: "https://kvant.io/p/user772/gpb?sub=tg-fin360",
-      status: "approved",
-    },
-    {
-      id: "REQ-7405",
-      offerId: "spr",
-      offerName: "Skypro Web-разработка",
-      offerTag: "EDU",
-      createdAt: "2 дня назад",
-      source: "YouTube-канал",
-      sub: "yt-webdev",
-      link: "https://kvant.io/p/user772/spr?sub=yt-webdev",
-      status: "review",
-    },
-  ]);
-  const conversions = initialConversions;
+  const [dataReady, setDataReady] = useState(false);
+
+  // Earnings derived from real conversions and payouts
+  const balance = useMemo(
+    () => conversions.filter((c) => c.status === "ok").reduce((s, c) => s + c.amount, 0),
+    [conversions],
+  );
+  const spent = useMemo(
+    () => payouts.filter((p) => p.status !== "rejected").reduce((s, p) => s + p.amount, 0),
+    [payouts],
+  );
+  const available = Math.max(0, balance - spent);
+
+  const [levelToast, setLevelToast] = useState<Level | null>(null);
+  const prevLevelIdxRef = useRef<number>(-1);
+  const [levelHistory, setLevelHistory] = useState<LevelHistoryEntry[]>([]);
 
   // Sheets
   const [bankOpen, setBankOpen] = useState(false);
@@ -648,21 +497,103 @@ function DashboardPage() {
   const [adminOpen, setAdminOpen] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
   const navigate = useNavigate();
+
+  /* --------------------- Load everything from the DB ------------------- */
   useEffect(() => {
     let cancelled = false;
     (async () => {
       const { data: u } = await supabase.auth.getUser();
-      if (!u.user) return;
-      const { data } = await supabase
-        .from("user_roles")
-        .select("role")
-        .eq("user_id", u.user.id)
-        .eq("role", "admin")
-        .maybeSingle();
-      if (!cancelled) setIsAdmin(Boolean(data));
+      if (!u.user || cancelled) return;
+      const uid = u.user.id;
+      setUserId(uid);
+
+      const [role, offersRes, profileRes, payoutsRes, reqsRes, convRes, notifRes] = await Promise.all([
+        supabase.from("user_roles").select("role").eq("user_id", uid).eq("role", "admin").maybeSingle(),
+        supabase.from("offers").select("*").eq("active", true).order("created_at", { ascending: false }),
+        supabase.from("profiles").select("bank").eq("id", uid).maybeSingle(),
+        supabase.from("payout_requests").select("*").eq("user_id", uid).order("created_at", { ascending: false }),
+        supabase.from("link_requests").select("*").eq("user_id", uid).order("created_at", { ascending: false }),
+        supabase.from("conversions").select("*").eq("user_id", uid).order("created_at", { ascending: false }),
+        supabase.from("notifications").select("*").eq("user_id", uid).order("created_at", { ascending: false }).limit(50),
+      ]);
+      if (cancelled) return;
+
+      setIsAdmin(Boolean(role.data));
+
+      setOffers((offersRes.data ?? []).map((r: any): Offer => ({
+        id: r.id, tag: r.tag, name: r.name,
+        category: r.category ?? r.tag ?? "Другое",
+        payout: r.payout, epc: r.epc, cr: Number(r.cr ?? 0),
+        isNew: Boolean(r.is_new),
+        advertiser: r.advertiser ?? "",
+        geo: r.geo ? String(r.geo).split(/[,;\s]+/).filter(Boolean) : [],
+        hold: r.hold ?? "", goal: r.goal ?? "",
+        description: r.description ?? "",
+        requirements: r.requirements ? String(r.requirements).split(/\n+/).filter(Boolean) : [],
+        allowed: Array.isArray(r.allowed) ? r.allowed : [],
+        denied: Array.isArray(r.denied) ? r.denied : [],
+        landing: r.landing ?? "",
+      })));
+
+      const pBank = (profileRes.data as { bank?: BankDetails | null } | null)?.bank;
+      if (pBank) setBank(pBank);
+
+      setPayouts((payoutsRes.data ?? []).map((r: any): Payout => ({
+        id: String(r.id).slice(0, 8).toUpperCase(),
+        date: dateShortOf(r.created_at),
+        time: timeOf(r.created_at),
+        amount: Number(r.amount),
+        method: r.method,
+        destination: r.destination ?? "",
+        status: r.status,
+        note: r.note ?? undefined,
+      })));
+
+      const rows = reqsRes.data ?? [];
+      setRequests(rows.map((r: any): LinkRequest => ({
+        id: String(r.id).slice(0, 8).toUpperCase(),
+        offerId: r.offer_id ?? "",
+        offerName: r.offer_name,
+        offerTag: r.offer_tag ?? "",
+        createdAt: `${new Date(r.created_at).toLocaleDateString("ru-RU")}, ${timeOf(r.created_at)}`,
+        source: r.source ?? "",
+        sub: r.sub ?? "",
+        link: r.link ?? "",
+        status: r.status,
+        note: r.note ?? undefined,
+      })));
+      setLinkedOffers(new Set(rows.map((r: any) => r.offer_id).filter(Boolean) as string[]));
+
+      setConversions((convRes.data ?? []).map((r: any): Conversion => ({
+        id: String(r.id).slice(0, 8),
+        time: timeOf(r.created_at),
+        offerId: r.offer_id ?? "",
+        offerName: r.offer_name,
+        amount: Number(r.amount),
+        status: r.status as Conversion["status"],
+      })));
+
+      setNotifs((notifRes.data ?? []).map((r: any): Notification => ({
+        id: r.id, kind: r.kind as NotifKind, title: r.title, body: r.body,
+        time: timeOf(r.created_at),
+        amount: r.amount ?? undefined,
+        status: (r.status ?? undefined) as Notification["status"],
+        read: r.read,
+      })));
+
+      setDataReady(true);
     })();
     return () => { cancelled = true; };
   }, []);
+
+  // Seed level history once real balance is known
+  useEffect(() => {
+    if (!dataReady) return;
+    prevLevelIdxRef.current = getLevelIndex(balance);
+    setLevelHistory(seedLevelHistory(balance));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [dataReady]);
+
   const handleSignOut = async () => {
     await supabase.auth.signOut();
     navigate({ to: "/" });
@@ -672,21 +603,38 @@ function DashboardPage() {
   const levelInfo = useMemo(() => getLevel(balance), [balance]);
 
   /* --------------------------- Notif helpers -------------------------- */
-
-  const pushNotif = (n: Omit<Notification, "id" | "time" | "read">) => {
-    setNotifs((prev) => [
-      { id: uid("n"), time: nowTime(), read: false, ...n },
-      ...prev,
-    ]);
+  const pushNotif = async (n: Omit<Notification, "id" | "time" | "read">) => {
+    if (!userId) return;
+    const { data } = await supabase.from("notifications").insert({
+      user_id: userId,
+      kind: n.kind, title: n.title, body: n.body,
+      amount: n.amount ?? null, status: n.status ?? null,
+    }).select().single();
+    if (data) {
+      setNotifs((prev) => [{
+        id: data.id, kind: data.kind as NotifKind, title: data.title, body: data.body,
+        time: timeOf(data.created_at),
+        amount: data.amount ?? undefined,
+        status: (data.status ?? undefined) as Notification["status"],
+        read: data.read,
+      }, ...prev]);
+    }
   };
-  const markAllRead = () => setNotifs((ns) => ns.map((n) => ({ ...n, read: true })));
-  const toggleRead = (id: string) =>
+  const markAllRead = async () => {
+    if (!userId) return;
+    setNotifs((ns) => ns.map((n) => ({ ...n, read: true })));
+    await supabase.from("notifications").update({ read: true }).eq("user_id", userId).eq("read", false);
+  };
+  const toggleRead = async (id: string) => {
     setNotifs((ns) => ns.map((n) => (n.id === id ? { ...n, read: true } : n)));
+    await supabase.from("notifications").update({ read: true }).eq("id", id);
+  };
 
   /* --------------------------- Level-up watcher ----------------------- */
   useEffect(() => {
+    if (!dataReady) return;
     const idx = getLevelIndex(balance);
-    if (idx > prevLevelIdxRef.current) {
+    if (prevLevelIdxRef.current >= 0 && idx > prevLevelIdxRef.current) {
       const lvl = LEVELS[idx];
       prevLevelIdxRef.current = idx;
       setLevelToast(lvl);
@@ -709,169 +657,104 @@ function DashboardPage() {
       return () => clearTimeout(t);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [balance]);
-
-  // Demo: bump balance across a threshold after 18s so the level-up flow fires.
-  useEffect(() => {
-    const t = window.setTimeout(() => {
-      setBalance((b) => {
-        const nextThreshold = LEVELS.find((l) => l.minEarned > b)?.minEarned;
-        return nextThreshold ? nextThreshold + 500 : b;
-      });
-    }, 18000);
-    return () => clearTimeout(t);
-  }, []);
-
+  }, [balance, dataReady]);
 
   /* ----------------------------- Bank --------------------------------- */
-
   const openBank = () => {
     setBankDraft(bank ?? emptyBank);
     setBankOpen(true);
   };
   const bankErrors = validateBank(bankDraft);
   const canSaveBank = Object.keys(bankErrors).length === 0;
-  const saveBank = () => {
-    if (!canSaveBank) return;
+  const saveBank = async () => {
+    if (!canSaveBank || !userId) return;
     setBank(bankDraft);
     setBankOpen(false);
+    await supabase.from("profiles").update({ bank: bankDraft as any }).eq("id", userId);
   };
 
   /* --------------------------- Offer link ----------------------------- */
-
   const [copiedOffer, setCopiedOffer] = useState<string | null>(null);
   const copyOfferLink = async (offer: Offer, source = "Прямая ссылка") => {
+    if (!userId) return;
     const sub = `sub-${Math.random().toString(36).slice(2, 6)}`;
-    const link = `https://kvant.io/p/user772/${offer.id}?sub=${sub}`;
-    try {
-      await navigator.clipboard.writeText(link);
-    } catch {}
+    const link = `https://kvant.io/p/${userId.slice(0, 6)}/${offer.id}?sub=${sub}`;
+    try { await navigator.clipboard.writeText(link); } catch {}
     setCopiedOffer(offer.id);
     setTimeout(() => setCopiedOffer((c) => (c === offer.id ? null : c)), 1600);
     const wasLinked = linkedOffers.has(offer.id);
     setLinkedOffers((s) => new Set(s).add(offer.id));
 
-    const reqId = `REQ-${Math.floor(7500 + Math.random() * 500)}`;
-    const req: LinkRequest = {
-      id: reqId,
-      offerId: offer.id,
-      offerName: offer.name,
-      offerTag: offer.tag,
-      createdAt: `Сегодня, ${nowTime()}`,
-      source,
-      sub,
-      link,
+    const { data } = await supabase.from("link_requests").insert({
+      user_id: userId,
+      offer_id: offer.id,
+      offer_name: offer.name,
+      offer_tag: offer.tag,
+      source, sub, link,
       status: "new",
-    };
-    setRequests((prev) => [req, ...prev]);
-
-    pushNotif({
-      kind: "offer",
-      title: wasLinked ? "Новая ссылка создана" : "Оффер подключён",
-      body: `${offer.name} • заявка ${reqId} на модерации`,
-    });
-
-    // Auto-move to review
-    const t1 = window.setTimeout(() => {
-      setRequests((prev) => prev.map((r) => (r.id === reqId ? { ...r, status: "review" } : r)));
-    }, 3000);
-    timeouts.current.push(t1);
+    }).select().single();
+    if (data) {
+      const req: LinkRequest = {
+        id: String(data.id).slice(0, 8).toUpperCase(),
+        offerId: data.offer_id ?? offer.id,
+        offerName: data.offer_name,
+        offerTag: data.offer_tag ?? offer.tag,
+        createdAt: `Сегодня, ${timeOf(data.created_at)}`,
+        source: data.source ?? source,
+        sub: data.sub ?? sub,
+        link: data.link ?? link,
+        status: data.status,
+      };
+      setRequests((prev) => [req, ...prev]);
+      pushNotif({
+        kind: "offer",
+        title: wasLinked ? "Новая ссылка создана" : "Оффер подключён",
+        body: `${offer.name} • заявка ${req.id} на модерации`,
+      });
+    }
   };
 
   const decideRequest = (id: string, status: "approved" | "rejected", note?: string) => {
+    // Client-side only view; real moderation happens in /admin under admin RLS.
     setRequests((prev) => prev.map((r) => (r.id === id ? { ...r, status, note } : r)));
-    const req = requests.find((r) => r.id === id);
-    if (!req) return;
-    pushNotif({
-      kind: "offer",
-      title: status === "approved" ? "Ссылка одобрена" : "Ссылка отклонена",
-      body: `${req.offerName} • ${id}${note ? ` — ${note}` : ""}`,
-    });
   };
 
-
   /* --------------------------- Payout flow ---------------------------- */
-
-  const timeouts = useRef<number[]>([]);
-  useEffect(() => () => timeouts.current.forEach((t) => clearTimeout(t)), []);
-
-  const requestPayout = (amount: number) => {
-    if (!bank || amount <= 0 || amount > available) return;
+  const requestPayout = async (amount: number) => {
+    if (!bank || !userId || amount <= 0 || amount > available) return;
     const lvl = levelInfo.current;
     if (amount < lvl.minPayout) return;
     const fee = Math.round((amount * lvl.feePct) / 100);
     const net = amount - fee;
-    const speedFactor = Math.max(0.35, Math.min(1, lvl.payoutHours / 72));
-    const id = `PO-${Math.floor(9000 + Math.random() * 900)}`;
-    const p: Payout = {
-      id,
-      date: todayShort(),
-      time: nowTime(),
-      amount,
-      method: bankMethodLabel(bank),
-      destination: bankDest(bank),
-      status: "pending",
-      note: fee > 0
-        ? `Комиссия ${lvl.feePct}% (${fmt(fee)} ₽) • к зачислению ${fmt(net)} ₽ • ${lvl.name}`
-        : `Без комиссии • ${lvl.name}`,
-    };
-    setPayouts((prev) => [p, ...prev]);
-    setAvailable((v) => v - amount);
+    const method = bankMethodLabel(bank);
+    const destination = bankDest(bank);
+    const note = fee > 0
+      ? `Комиссия ${lvl.feePct}% (${fmt(fee)} ₽) • к зачислению ${fmt(net)} ₽ • ${lvl.name}`
+      : `Без комиссии • ${lvl.name}`;
+    const { data } = await supabase.from("payout_requests").insert({
+      user_id: userId, amount, method, destination, status: "pending", note,
+    }).select().single();
     setPayoutOpen(false);
-    pushNotif({
-      kind: "payout",
-      title: "Заявка на вывод",
-      body: `${fmt(net)} ₽ к зачислению • ${p.method} ${p.destination} • ${lvl.name}`,
-      status: "pending",
-    });
-
-    const t1 = window.setTimeout(() => {
-      setPayouts((prev) => prev.map((x) => (x.id === id ? { ...x, status: "processing" } : x)));
+    if (data) {
+      const p: Payout = {
+        id: String(data.id).slice(0, 8).toUpperCase(),
+        date: dateShortOf(data.created_at),
+        time: timeOf(data.created_at),
+        amount: Number(data.amount),
+        method: data.method,
+        destination: data.destination ?? "",
+        status: data.status,
+        note: data.note ?? undefined,
+      };
+      setPayouts((prev) => [p, ...prev]);
       pushNotif({
         kind: "payout",
-        title: "Заявка в обработке",
-        body: `${id} • ${fmt(net)} ₽ • ${lvl.payoutHours}ч по уровню ${lvl.name}`,
-        status: "processing",
+        title: "Заявка на вывод",
+        body: `${fmt(net)} ₽ к зачислению • ${method} ${destination} • ${lvl.name}`,
+        status: "pending",
       });
-    }, Math.round(3500 * speedFactor));
-
-    const t2 = window.setTimeout(() => {
-      setPayouts((prev) => prev.map((x) => (x.id === id ? { ...x, status: "paid" } : x)));
-      pushNotif({
-        kind: "payout",
-        title: "Выплата зачислена",
-        body: `${fmt(net)} ₽ • ${p.method} ${p.destination}`,
-        status: "paid",
-      });
-    }, Math.round(8000 * speedFactor));
-
-    timeouts.current.push(t1, t2);
+    }
   };
-
-  /* --------------------------- Simulate ping -------------------------- */
-  // One-time incoming accrual after 12s + a new offer after 22s.
-  useEffect(() => {
-    const t1 = window.setTimeout(() => {
-      pushNotif({
-        kind: "accrual",
-        title: "Начисление",
-        body: "Т-Инвестиции • новая конверсия",
-        amount: "+2 800 ₽",
-      });
-    }, 12000);
-    const t2 = window.setTimeout(() => {
-      pushNotif({
-        kind: "offer",
-        title: "Новый оффер",
-        body: "Ozon Fresh: доставка продуктов • 350 ₽ за заказ",
-      });
-    }, 22000);
-    return () => {
-      clearTimeout(t1);
-      clearTimeout(t2);
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
 
   /* ============================== Render ============================== */
 
@@ -977,7 +860,7 @@ function DashboardPage() {
             available={available}
             bank={bank}
             conversions={conversions}
-            offers={offersData}
+            offers={offers}
             onOpenBank={openBank}
             onGoOffers={() => setActive("offers")}
             onGoConversions={() => setActive("stats")}
@@ -987,7 +870,7 @@ function DashboardPage() {
         )}
         {active === "offers" && (
           <OffersTab
-            offers={offersData}
+            offers={offers}
             linked={linkedOffers}
             copiedOffer={copiedOffer}
             onCopyLink={copyOfferLink}
@@ -998,7 +881,7 @@ function DashboardPage() {
           />
         )}
         {active === "stats" && (
-          <StatsTab conversions={conversions} offers={offersData} />
+          <StatsTab conversions={conversions} offers={offers} />
         )}
         {active === "payouts" && (
           <PayoutsTab
@@ -1512,6 +1395,11 @@ function OffersTab({
   const [q, setQ] = useState("");
   const [cat, setCat] = useState<string>("Все");
   const [sort, setSort] = useState<"epc" | "cr" | "new">("epc");
+  const categoriesAll = useMemo<string[]>(
+    () => ["Все", ...Array.from(new Set(offers.map((o) => o.category).filter(Boolean)))],
+    [offers],
+  );
+
 
   const filtered = useMemo(() => {
     const s = q.trim().toLowerCase();
