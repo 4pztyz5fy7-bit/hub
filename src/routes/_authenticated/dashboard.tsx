@@ -982,6 +982,7 @@ function DashboardPage() {
             available={available}
             bank={bank}
             conversions={conversions}
+            requests={requests}
             offers={offers}
             onOpenBank={openBank}
             onGoOffers={() => setActive("offers")}
