@@ -485,6 +485,11 @@ const MONTHS_RU = ["янв","фев","мар","апр","мая","июн","июл
 const pad2 = (n: number) => String(n).padStart(2, "0");
 const timeOf = (iso: string) => { const d = new Date(iso); return `${pad2(d.getHours())}:${pad2(d.getMinutes())}`; };
 const dateShortOf = (iso: string) => { const d = new Date(iso); return `${d.getDate()} ${MONTHS_RU[d.getMonth()]}`; };
+const getInitials = (name: string) => {
+  const n = (name || "").trim();
+  if (!n) return "?";
+  return n.split(/\s+/).slice(0, 2).map((s) => s[0]?.toUpperCase() ?? "").join("") || "?";
+};
 
 function DashboardPage() {
   const [active, setActive] = useState<Tab>("info");
