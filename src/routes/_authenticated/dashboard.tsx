@@ -1936,7 +1936,7 @@ function UserRequestsTab({
                       </div>
                     ) : (
                       <div className="rounded-lg border border-dashed border-border p-2 text-[11px] text-muted-foreground">
-                        Ссылка недоступна.
+                        {isClosed ? "Заявка завершена — ссылка больше недоступна." : "Ссылка недоступна."}
                       </div>
                     )}
                   </div>
