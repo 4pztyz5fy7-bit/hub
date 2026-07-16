@@ -68,6 +68,12 @@ function LandingPage() {
 
   const openAuth = (m: Mode) => { setInitialMode(m); setAuthOpen(true); setMenuOpen(false); };
 
+  const tickerItems = useMemo(() => {
+    const items = stats?.ticker ?? [];
+    if (items.length === 0) return [];
+    return items.concat(items).map((t, i) => ({ ...t, key: i }));
+  }, [stats]);
+
   return (
     <div className="min-h-screen bg-background text-foreground">
       {/* NAV */}
