@@ -1825,9 +1825,9 @@ function UserRequestsTab({
 
       <div className="animate-in-up grid grid-cols-4 gap-2" style={{ animationDelay: "40ms" }}>
         <MiniStat label="Всего" value={counts.all} />
-        <MiniStat label="Проверка" value={counts.new + counts.review} tone="text-amber-500" />
-        <MiniStat label="Одобрено" value={counts.approved} tone="text-emerald-500" />
-        <MiniStat label="Отклон." value={counts.rejected} tone="text-destructive" />
+        <MiniStat label="В работе" value={counts.in_progress} tone="text-amber-500" />
+        <MiniStat label="Заказов" value={counts.orders} tone="text-sky-500" />
+        <MiniStat label="Оплачено" value={counts.paid} tone="text-primary" />
       </div>
 
       <div className="animate-in-up flex flex-wrap items-center gap-2" style={{ animationDelay: "60ms" }}>
