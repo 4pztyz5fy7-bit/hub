@@ -1599,18 +1599,16 @@ function OffersTab({
                     className={`flex items-center gap-1 rounded-md px-3 py-2 text-[11px] font-bold uppercase tracking-wider transition-colors active:scale-95 ${
                       isCopied
                         ? "bg-[color:var(--success)]/15 text-[color:var(--success)]"
-                        : isLinked
-                          ? "border border-border bg-card text-foreground hover:bg-accent"
-                          : "bg-foreground text-background"
+                        : "bg-foreground text-background"
                     }`}
                   >
                     {isCopied ? (
                       <>
-                        <Check className="size-3" /> Скопировано
+                        <Check className="size-3" /> Отправлено
                       </>
                     ) : (
                       <>
-                        <Link2 className="size-3" /> {isLinked ? "Ссылка" : "Получить"}
+                        <Link2 className="size-3" /> Заявка
                       </>
                     )}
                   </button>
