@@ -137,6 +137,7 @@ function AdminPage() {
     { id: "requests", label: "Заявки", Icon: ClipboardList },
     { id: "conversions", label: "Конверсии", Icon: Activity },
     { id: "broadcast", label: "Рассылка", Icon: Bell },
+    { id: "tools", label: "Инструменты", Icon: Wrench },
   ];
 
   return (
