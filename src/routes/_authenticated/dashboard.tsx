@@ -2077,26 +2077,61 @@ function RequestTimeline({ status, createdAt, ordersCount = 0 }: { status: LinkR
 /* ================================ Stats ================================ */
 
 
-function StatsTab({ conversions, offers }: { conversions: Conversion[]; offers: Offer[] }) {
+function StatsTab({ conversions, offers, requests }: { conversions: Conversion[]; offers: Offer[]; requests: LinkRequest[] }) {
   const [period, setPeriod] = useState<(typeof statsPeriods)[number]["id"]>("7d");
-  const mult = statsPeriods.find((p) => p.id === period)!.mult;
+  const days = statsPeriods.find((p) => p.id === period)!.days;
 
-  const baseIncome = 54200;
-  const baseClicks = 1284;
-  const baseConversions = conversions.length;
-  const baseEpc = 84.2;
+  const cutoff = useMemo(() => {
+    const d = new Date();
+    d.setDate(d.getDate() - (days - 1));
+    d.setHours(0, 0, 0, 0);
+    return d;
+  }, [days]);
 
-  const income = Math.round(baseIncome * mult);
-  const clicks = Math.round(baseClicks * mult);
-  const convs = Math.round(baseConversions * mult);
-  const epc = (baseEpc * (0.9 + Math.random() * 0.2)).toFixed(1);
+  const scoped = useMemo(
+    () => conversions.filter((c) => {
+      const d = new Date(c.createdAt);
+      return !isNaN(d.getTime()) && d >= cutoff;
+    }),
+    [conversions, cutoff],
+  );
 
-  const bars = chartBars.map((h) => Math.round(h * (0.8 + Math.random() * 0.4)));
-  const maxBar = Math.max(...bars);
+  const income = scoped.filter((c) => c.status === "ok").reduce((s, c) => s + c.amount, 0);
+  const convs = scoped.filter((c) => c.status === "ok").length;
+  const totalOrders = useMemo(() => requests.reduce((s, r) => s + (r.ordersCount || 0), 0), [requests]);
+  const epc = convs > 0 ? (income / convs).toFixed(0) : "0";
+
+  // Bars: bucket scoped income into up to 7 evenly-spaced buckets, оканчивая сегодняшним днём.
+  const bucketCount = Math.min(7, days);
+  const bars = useMemo(() => {
+    const arr = new Array(bucketCount).fill(0) as number[];
+    const bucketSize = Math.max(1, Math.ceil(days / bucketCount));
+    const now = new Date();
+    now.setHours(23, 59, 59, 999);
+    for (const c of scoped) {
+      if (c.status !== "ok") continue;
+      const d = new Date(c.createdAt);
+      const diffDays = Math.floor((now.getTime() - d.getTime()) / 86400000);
+      const idx = bucketCount - 1 - Math.floor(diffDays / bucketSize);
+      if (idx >= 0 && idx < bucketCount) arr[idx] += c.amount;
+    }
+    return arr;
+  }, [scoped, days, bucketCount]);
+  const maxBar = Math.max(...bars, 1);
+  const barLabels = useMemo(() => {
+    const arr: string[] = [];
+    const bucketSize = Math.max(1, Math.ceil(days / bucketCount));
+    for (let i = bucketCount - 1; i >= 0; i--) {
+      const d = new Date();
+      d.setDate(d.getDate() - i * bucketSize);
+      arr.push(bucketSize === 1 ? weekLabels[(d.getDay() + 6) % 7] : `${d.getDate()}.${String(d.getMonth() + 1).padStart(2, "0")}`);
+    }
+    return arr;
+  }, [days, bucketCount]);
 
   const byOffer = useMemo(() => {
     const m = new Map<string, { offer: Offer; conv: number; income: number }>();
-    conversions.forEach((c) => {
+    scoped.forEach((c) => {
       if (c.status === "rejected") return;
       const off: Offer = offers.find((o) => o.id === c.offerId) ?? {
         id: c.offerId,
@@ -2121,10 +2156,8 @@ function StatsTab({ conversions, offers }: { conversions: Conversion[]; offers: 
       cur.income += c.amount;
       m.set(c.offerId, cur);
     });
-    return [...m.values()]
-      .map((x) => ({ ...x, conv: Math.round(x.conv * mult), income: Math.round(x.income * mult) }))
-      .sort((a, b) => b.income - a.income);
-  }, [conversions, offers, mult]);
+    return [...m.values()].sort((a, b) => b.income - a.income);
+  }, [scoped, offers]);
 
   return (
     <>
@@ -2150,8 +2183,8 @@ function StatsTab({ conversions, offers }: { conversions: Conversion[]; offers: 
         <div className="grid grid-cols-2 gap-px overflow-hidden rounded-lg border border-border bg-border">
           <KpiRow label="Доход" value={`${fmt(income)} ₽`} accent />
           <KpiRow label="Конверсии" value={fmt(convs)} />
-          <KpiRow label="Клики" value={fmt(clicks)} />
-          <KpiRow label="EPC" value={`${epc} ₽`} />
+          <KpiRow label="Заказы" value={fmt(totalOrders)} />
+          <KpiRow label="Средний чек" value={`${fmt(Number(epc))} ₽`} />
         </div>
       </section>
 
@@ -2171,19 +2204,19 @@ function StatsTab({ conversions, offers }: { conversions: Conversion[]; offers: 
               <div key={i} className="flex flex-1 flex-col items-center gap-1">
                 <div
                   className={`w-full rounded-t-sm ${
-                    h === maxBar ? "bg-primary" : "bg-secondary"
+                    h === maxBar && h > 0 ? "bg-primary" : "bg-secondary"
                   }`}
-                  style={{ height: `${(h / maxBar) * 100}%` }}
+                  style={{ height: `${Math.max(4, (h / maxBar) * 100)}%` }}
                 />
               </div>
             ))}
           </div>
           <div className="flex gap-1.5">
-            {weekLabels.map((l, i) => (
+            {barLabels.map((l, i) => (
               <span
-                key={l}
+                key={`${l}-${i}`}
                 className={`flex-1 text-center font-mono text-[9px] uppercase ${
-                  bars[i] === maxBar ? "font-bold text-primary" : "text-muted-foreground"
+                  bars[i] === maxBar && bars[i] > 0 ? "font-bold text-primary" : "text-muted-foreground"
                 }`}
               >
                 {l}
