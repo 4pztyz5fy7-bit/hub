@@ -1,6 +1,7 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { ToolsTab } from "@/components/dashboard/tools-tab";
 import { LogOut } from "lucide-react";
 import {
   LayoutGrid,
@@ -57,7 +58,7 @@ export const Route = createFileRoute("/_authenticated/dashboard")({
 
 /* ================================ Types ================================ */
 
-type Tab = "info" | "offers" | "stats" | "payouts";
+type Tab = "info" | "offers" | "stats" | "payouts" | "tools";
 
 type BankDetails = {
   method: "card" | "account" | "sbp";
@@ -902,6 +903,13 @@ function DashboardPage() {
             onRequestPayout={() => (bank ? setPayoutOpen(true) : openBank())}
           />
         )}
+        {active === "tools" && (
+          <ToolsTab
+            userId={userId}
+            refLink={`https://kvant.io/p/${(userId ?? "").slice(0, 6)}/ref`}
+            offers={offers.map((o) => ({ id: o.id, name: o.name, landing: o.landing }))}
+          />
+        )}
       </main>
 
       {/* Bank sheet */}
@@ -983,6 +991,7 @@ function DashboardPage() {
             { id: "offers", label: "Офферы", Icon: Package },
             { id: "stats", label: "Стата", Icon: BarChart3 },
             { id: "payouts", label: "Выплаты", Icon: Wallet },
+            { id: "tools", label: "Инстр.", Icon: Package },
           ] as const
         ).map(({ id, label, Icon }) => (
           <button
