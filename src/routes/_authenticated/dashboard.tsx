@@ -1900,10 +1900,13 @@ function UserRequestsTab({
                   <p className="mt-1 text-[10px] uppercase tracking-wider text-muted-foreground">
                     {r.source || "—"} · sub: <span className="font-mono">{r.sub || "—"}</span>
                   </p>
-                  <p className="mt-0.5 font-mono text-[10px] text-muted-foreground">#{r.id.slice(0, 8).toUpperCase()} · {dateStr}</p>
+                  <p className="mt-0.5 font-mono text-[10px] text-muted-foreground">
+                    #{r.id.slice(0, 8).toUpperCase()} · {dateStr}
+                    {r.ordersCount > 0 && <> · <span className="text-sky-500">Заказов: {r.ordersCount}</span></>}
+                  </p>
                 </div>
                 <span className={`inline-flex shrink-0 items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider ${meta.cls}`}>
-                  <meta.Icon className="size-3" /> {meta.label}
+                  <meta.Icon className="size-3" /> {meta.label}{r.status === "completed" && r.ordersCount > 0 ? ` · ${r.ordersCount}` : ""}
                 </span>
               </button>
 
