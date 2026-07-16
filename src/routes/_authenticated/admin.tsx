@@ -175,6 +175,7 @@ function AdminPage() {
         {tab === "requests" && <RequestsTab />}
         {tab === "conversions" && <ConversionsTab />}
         {tab === "broadcast" && <BroadcastTab />}
+        {tab === "tools" && <AdminToolsTab />}
       </main>
     </div>
   );
