@@ -236,25 +236,31 @@ function ApproveOld({ show }: { show: (s: string) => void }) {
   const [d, setD] = useState("3");
   const run = async () => {
     const iso = new Date(Date.now() - num(d) * 86400000).toISOString();
-    const { data } = await supabase.from("link_requests").update({ status: "approved" }).eq("status", "new").lt("created_at", iso).select("id");
-    show(`Одобрено: ${data?.length ?? 0}`);
+    const { data, error } = await supabase.from("link_requests").update({ status: "finished" }).eq("status", "completed").lt("created_at", iso).select("id");
+    if (error) { show(`Ошибка: ${error.message}`); return; }
+    show(`Завершено: ${data?.length ?? 0}`);
   };
-  return <div className="flex gap-2"><Input value={d} onChange={(e) => setD(e.target.value)} placeholder="дней" /><Btn tone="success" onClick={run}>Одобрить</Btn></div>;
+  return <div className="flex gap-2"><Input value={d} onChange={(e) => setD(e.target.value)} placeholder="дней" /><Btn tone="success" onClick={run}>Завершить</Btn></div>;
 }
 function RejectByUser({ show }: { show: (s: string) => void }) {
   const [u, setU] = useState("");
   const run = async () => {
-    const { data } = await supabase.from("link_requests").update({ status: "rejected" }).eq("user_id", u).in("status", ["new","review"]).select("id");
-    show(`Отклонено: ${data?.length ?? 0}`);
+    if (!u) { show("Укажите user_id"); return; }
+    const { data, error } = await supabase.from("link_requests").update({ status: "finished" }).eq("user_id", u).in("status", ["in_progress","completed","new","review"]).select("id");
+    if (error) { show(`Ошибка: ${error.message}`); return; }
+    show(`Завершено: ${data?.length ?? 0}`);
   };
-  return <div className="flex gap-2"><Input value={u} onChange={(e) => setU(e.target.value)} placeholder="user_id" /><Btn tone="danger" onClick={run}>Отклонить</Btn></div>;
+  return <div className="flex gap-2"><Input value={u} onChange={(e) => setU(e.target.value)} placeholder="user_id" /><Btn tone="danger" onClick={run}>Завершить</Btn></div>;
 }
 function RevokeAdmin({ show }: { show: (s: string) => void }) {
   const [u, setU] = useState("");
   const run = async () => {
+    if (!u) { show("Укажите user_id"); return; }
+    const { data: me } = await supabase.auth.getUser();
+    if (me.user && me.user.id === u) { show("Нельзя снять роль с себя"); return; }
     if (!confirm("Снять роль admin?")) return;
     const { error } = await supabase.from("user_roles").delete().eq("user_id", u).eq("role", "admin");
-    show(error ? error.message : "Готово");
+    show(error ? `Ошибка: ${error.message}` : "Готово");
   };
   return <div className="flex gap-2"><Input value={u} onChange={(e) => setU(e.target.value)} placeholder="user_id" /><Btn tone="danger" onClick={run}>Снять admin</Btn></div>;
 }
