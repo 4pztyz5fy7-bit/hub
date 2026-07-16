@@ -1,5 +1,5 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { z } from "zod";
 import {
@@ -7,6 +7,17 @@ import {
   X, ArrowRight, Wallet, BarChart3, Headphones, Star, Check, Menu, Sparkles,
   Clock, Users, Target, Gift, MessageCircle, CreditCard, Globe, Award,
 } from "lucide-react";
+import { getLandingStats, type LandingStats } from "@/lib/landing-stats.functions";
+
+function formatRub(n: number): string {
+  if (n >= 1_000_000_000) return `₽${(n / 1_000_000_000).toFixed(n >= 10_000_000_000 ? 0 : 1)} млрд`;
+  if (n >= 1_000_000) return `₽${(n / 1_000_000).toFixed(n >= 10_000_000 ? 0 : 1)} млн`;
+  if (n >= 1_000) return `₽${(n / 1_000).toFixed(0)} тыс`;
+  return `₽${Math.round(n)}`;
+}
+function formatCount(n: number): string {
+  return new Intl.NumberFormat("ru-RU").format(n);
+}
 
 
 
