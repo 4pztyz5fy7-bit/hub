@@ -1883,7 +1883,7 @@ function UserRequestsTab({
           const isCopied = copied === r.id;
           const created = new Date(r.createdAt);
           const dateStr = isNaN(created.getTime()) ? r.createdAt : created.toLocaleString("ru-RU", { day: "2-digit", month: "2-digit", year: "2-digit", hour: "2-digit", minute: "2-digit" });
-          const linkReady = r.status === "approved" && Boolean(r.link);
+          const linkReady = Boolean(r.link);
 
           return (
             <div key={r.id} className="rounded-xl border border-border bg-card">
