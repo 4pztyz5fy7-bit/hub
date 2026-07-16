@@ -564,7 +564,7 @@ function DashboardPage() {
       const [role, offersRes, profileRes, payoutsRes, reqsRes, convRes, notifRes] = await Promise.all([
         supabase.from("user_roles").select("role").eq("user_id", uid).eq("role", "admin").maybeSingle(),
         supabase.from("offers").select("*").eq("active", true).order("created_at", { ascending: false }),
-        supabase.from("profiles").select("bank").eq("id", uid).maybeSingle(),
+        supabase.from("profiles").select("bank,display_name,avatar_url,email,settings").eq("id", uid).maybeSingle(),
         supabase.from("payout_requests").select("*").eq("user_id", uid).order("created_at", { ascending: false }),
         supabase.from("link_requests").select("*").eq("user_id", uid).order("created_at", { ascending: false }),
         supabase.from("conversions").select("*").eq("user_id", uid).order("created_at", { ascending: false }),
