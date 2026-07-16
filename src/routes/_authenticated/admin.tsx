@@ -1005,10 +1005,10 @@ function RequestsTab() {
       {selected.size > 0 && (
         <div className="flex flex-wrap items-center gap-2 rounded-lg border border-primary/30 bg-primary/5 p-2 text-xs">
           <span className="font-bold">Выбрано: {selected.size}</span>
-          <button onClick={() => bulk("new")} className="rounded-md border border-primary/40 px-2 py-1 font-bold text-primary">Новая</button>
-          <button onClick={() => bulk("review")} className="rounded-md border border-border px-2 py-1 font-bold">В работе</button>
-          <button onClick={() => bulk("approved")} className="rounded-md border border-emerald-500/40 px-2 py-1 font-bold text-emerald-500">Выполнена</button>
-          <button onClick={() => bulk("rejected")} className="rounded-md border border-destructive/40 px-2 py-1 font-bold text-destructive">Отменена</button>
+          <button onClick={() => bulk("in_progress")} className="rounded-md border border-[color:var(--warning)]/40 px-2 py-1 font-bold text-[color:var(--warning)]">В работе</button>
+          <button onClick={() => bulk("completed")} className="rounded-md border border-sky-500/40 px-2 py-1 font-bold text-sky-500">Выполнено</button>
+          <button onClick={() => bulk("finished")} className="rounded-md border border-emerald-500/40 px-2 py-1 font-bold text-emerald-500">Завершено</button>
+          <button onClick={() => bulk("paid")} className="rounded-md border border-primary/40 px-2 py-1 font-bold text-primary">Оплачено</button>
           <button onClick={bulkDel} className="rounded-md border border-destructive/40 px-2 py-1 font-bold text-destructive">Удалить</button>
           <button onClick={() => setSelected(new Set())} className="ml-auto text-muted-foreground">Сброс</button>
         </div>
