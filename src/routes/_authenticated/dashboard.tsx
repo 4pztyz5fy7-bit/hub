@@ -1071,7 +1071,7 @@ function DashboardPage() {
             { id: "stats", label: "Стата", Icon: BarChart3 },
             { id: "payouts", label: "Выплаты", Icon: Wallet },
             { id: "tools", label: "Инстр.", Icon: ClipboardList },
-            { id: "profile", label: "Профиль", Icon: UserCircle },
+            
           ] as const
         ).map(({ id, label, Icon }) => (
           <button
