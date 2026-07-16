@@ -1391,7 +1391,7 @@ function OffersTab({
   onCopyLink: (o: Offer, source?: string) => void;
   onOpenDetail: (o: Offer) => void;
   requestsCount: number;
-  onOpenAdmin: () => void;
+  onOpenAdmin?: () => void;
   level: Level;
 }) {
   const [q, setQ] = useState("");
