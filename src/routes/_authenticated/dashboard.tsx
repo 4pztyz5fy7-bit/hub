@@ -632,7 +632,8 @@ function DashboardPage() {
         source: r.source ?? "",
         sub: r.sub ?? "",
         link: r.link ?? "",
-        status: r.status,
+        status: normalizeStatus(r.status),
+        ordersCount: Number(r.orders_count ?? 0),
         note: r.note ?? undefined,
       })));
       setLinkedOffers(new Set(rows.map((r: any) => r.offer_id).filter(Boolean) as string[]));
