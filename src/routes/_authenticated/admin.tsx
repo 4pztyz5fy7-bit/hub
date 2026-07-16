@@ -985,9 +985,10 @@ function RequestsTab() {
       {selected.size > 0 && (
         <div className="flex flex-wrap items-center gap-2 rounded-lg border border-primary/30 bg-primary/5 p-2 text-xs">
           <span className="font-bold">Выбрано: {selected.size}</span>
-          <button onClick={() => bulk("approved")} className="rounded-md border border-emerald-500/40 px-2 py-1 font-bold text-emerald-500">Одобрить</button>
-          <button onClick={() => bulk("review")} className="rounded-md border border-border px-2 py-1 font-bold">На проверку</button>
-          <button onClick={() => bulk("rejected")} className="rounded-md border border-destructive/40 px-2 py-1 font-bold text-destructive">Отклонить</button>
+          <button onClick={() => bulk("new")} className="rounded-md border border-primary/40 px-2 py-1 font-bold text-primary">Новая</button>
+          <button onClick={() => bulk("review")} className="rounded-md border border-border px-2 py-1 font-bold">В работе</button>
+          <button onClick={() => bulk("approved")} className="rounded-md border border-emerald-500/40 px-2 py-1 font-bold text-emerald-500">Выполнена</button>
+          <button onClick={() => bulk("rejected")} className="rounded-md border border-destructive/40 px-2 py-1 font-bold text-destructive">Отменена</button>
           <button onClick={bulkDel} className="rounded-md border border-destructive/40 px-2 py-1 font-bold text-destructive">Удалить</button>
           <button onClick={() => setSelected(new Set())} className="ml-auto text-muted-foreground">Сброс</button>
         </div>
@@ -1009,17 +1010,81 @@ function RequestsTab() {
                 <button onClick={() => del(r.id)} title="Удалить" className="grid size-6 place-items-center rounded-md text-destructive hover:bg-destructive/10"><Trash2 className="size-3" /></button>
               </div>
             </div>
-            {r.status !== "approved" && r.status !== "rejected" && (
-              <div className="flex gap-2">
-                <button onClick={() => setStatus(r.id, "review")} className="flex-1 rounded-lg border border-primary/40 px-3 py-1.5 text-[11px] font-bold text-primary hover:bg-primary/10">На проверку</button>
-                <button onClick={() => setStatus(r.id, "approved")} className="flex-1 rounded-lg bg-emerald-500 px-3 py-1.5 text-[11px] font-bold text-background hover:bg-emerald-600"><Check className="mr-1 inline size-3" />Одобрить</button>
-                <button onClick={() => setStatus(r.id, "rejected")} className="rounded-lg border border-destructive/40 px-3 py-1.5 text-[11px] font-bold text-destructive hover:bg-destructive/10"><X className="size-3" /></button>
-              </div>
-            )}
+            <RequestRowControls row={r} onReload={load} />
           </div>
         );
       })}
       {filtered.length === 0 && <EmptyState text="Пусто" />}
+    </div>
+  );
+}
+
+function RequestRowControls({ row, onReload }: { row: LinkRow; onReload: () => void }) {
+  const [link, setLink] = useState(row.link ?? "");
+  const [note, setNote] = useState(row.note ?? "");
+  const [saving, setSaving] = useState(false);
+  const [savedFlash, setSavedFlash] = useState(false);
+  const dirty = (link !== (row.link ?? "")) || (note !== (row.note ?? ""));
+
+  const change = async (patch: Partial<Pick<LinkRow, "status" | "link" | "note">>) => {
+    setSaving(true);
+    await supabase.from("link_requests").update(patch).eq("id", row.id);
+    setSaving(false);
+    setSavedFlash(true);
+    setTimeout(() => setSavedFlash(false), 1200);
+    onReload();
+  };
+
+  const saveFields = async () => {
+    await change({ link: link.trim() || null, note: note.trim() || null });
+  };
+
+  return (
+    <div className="space-y-2">
+      <div className="flex flex-wrap items-center gap-2">
+        <label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Статус</label>
+        <select
+          value={row.status}
+          onChange={(e) => change({ status: e.target.value as LinkRow["status"] })}
+          disabled={saving}
+          className="rounded-lg border border-border bg-background px-2 py-1 text-xs font-bold"
+        >
+          <option value="new">Новая</option>
+          <option value="review">В работе</option>
+          <option value="approved">Выполнена</option>
+          <option value="rejected">Отменена</option>
+        </select>
+        {savedFlash && <span className="text-[10px] font-bold uppercase text-emerald-500">Сохранено</span>}
+      </div>
+      <label className="block">
+        <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Партнёрская ссылка (видна пользователю после «Выполнена»)</span>
+        <input
+          type="url"
+          value={link}
+          onChange={(e) => setLink(e.target.value)}
+          placeholder="https://track.example.com/?sub=..."
+          className="mt-0.5 w-full rounded-lg border border-border bg-background px-3 py-1.5 text-sm outline-none focus:ring-2 focus:ring-primary/40"
+        />
+      </label>
+      <label className="block">
+        <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Комментарий пользователю</span>
+        <textarea
+          value={note}
+          onChange={(e) => setNote(e.target.value)}
+          rows={2}
+          placeholder="Например: ссылка обновлена, промо активно до 30.09"
+          className="mt-0.5 w-full rounded-lg border border-border bg-background px-3 py-1.5 text-sm outline-none focus:ring-2 focus:ring-primary/40"
+        />
+      </label>
+      {dirty && (
+        <button
+          onClick={saveFields}
+          disabled={saving}
+          className="w-full rounded-lg bg-foreground px-3 py-1.5 text-[11px] font-bold uppercase tracking-wider text-background disabled:opacity-60"
+        >
+          Сохранить ссылку и комментарий
+        </button>
+      )}
     </div>
   );
 }
