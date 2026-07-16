@@ -108,6 +108,7 @@ const emptyBank: BankDetails = {
   sbpPhone: "",
 };
 
+type CityPayout = { city: string; amount: number };
 type Offer = {
   id: string;
   tag: string;
@@ -127,7 +128,9 @@ type Offer = {
   denied: string[];
   landing: string;
   image?: string;
+  cityPayouts: CityPayout[];
 };
+
 
 type LinkRequestStatus =
   | "in_progress"
