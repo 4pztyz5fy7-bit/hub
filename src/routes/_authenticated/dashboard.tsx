@@ -177,6 +177,7 @@ function normalizeStatus(raw: unknown): LinkRequestStatus {
 type Conversion = {
   id: string;
   time: string;
+  createdAt: string; // ISO
   offerId: string;
   offerName: string;
   amount: number;
@@ -261,13 +262,12 @@ function bankDest(b: BankDetails) {
 // All offers, conversions, payouts and notifications are loaded from the DB
 // inside DashboardPage. No static seed lists here.
 
-const chartBars = [40, 62, 55, 85, 45, 95, 70];
 const weekLabels = ["Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Вс"];
 
 const statsPeriods = [
-  { id: "7d" as const, label: "7 дней", mult: 1 },
-  { id: "30d" as const, label: "30 дней", mult: 3.8 },
-  { id: "90d" as const, label: "90 дней", mult: 11.2 },
+  { id: "7d" as const, label: "7 дней", days: 7 },
+  { id: "30d" as const, label: "30 дней", days: 30 },
+  { id: "90d" as const, label: "90 дней", days: 90 },
 ];
 
 /* ============================= Levels =================================== */
@@ -662,6 +662,7 @@ function DashboardPage() {
       setConversions((convRes.data ?? []).map((r: any): Conversion => ({
         id: String(r.id).slice(0, 8),
         time: timeOf(r.created_at),
+        createdAt: r.created_at,
         offerId: r.offer_id ?? "",
         offerName: r.offer_name,
         amount: Number(r.amount),
@@ -980,6 +981,7 @@ function DashboardPage() {
             available={available}
             bank={bank}
             conversions={conversions}
+            requests={requests}
             offers={offers}
             onOpenBank={openBank}
             onGoOffers={() => setActive("offers")}
@@ -1007,7 +1009,7 @@ function DashboardPage() {
           />
         )}
         {active === "stats" && (
-          <StatsTab conversions={conversions} offers={offers} />
+          <StatsTab conversions={conversions} offers={offers} requests={requests} />
         )}
         {active === "payouts" && (
           <PayoutsTab
@@ -1139,12 +1141,51 @@ function DashboardPage() {
 
 /* ================================ Info ================================= */
 
-const kpis = [
-  { label: "Доход сегодня", value: "8 240 ₽", delta: "+12%", positive: true },
-  { label: "Конверсии", value: "42", delta: "+6", positive: true },
-  { label: "EPC", value: "84,2 ₽", delta: "+2,1%", positive: true },
-  { label: "CR", value: "3,8%", delta: "−0,2%", positive: false },
-];
+type Kpi = { label: string; value: string; delta: string; positive: boolean };
+
+/** Weekly income series (Mon..Sun of current ISO week). */
+function weekIncomeSeries(conversions: Conversion[]): { series: number[]; total: number; prevTotal: number } {
+  const now = new Date();
+  const day = (now.getDay() + 6) % 7; // 0 = Mon
+  const monday = new Date(now.getFullYear(), now.getMonth(), now.getDate() - day);
+  const prevMonday = new Date(monday);
+  prevMonday.setDate(prevMonday.getDate() - 7);
+  const nextMonday = new Date(monday);
+  nextMonday.setDate(nextMonday.getDate() + 7);
+
+  const series = [0, 0, 0, 0, 0, 0, 0];
+  let total = 0;
+  let prevTotal = 0;
+  for (const c of conversions) {
+    if (c.status !== "ok") continue;
+    const d = new Date(c.createdAt);
+    if (isNaN(d.getTime())) continue;
+    if (d >= monday && d < nextMonday) {
+      const idx = (d.getDay() + 6) % 7;
+      series[idx] += c.amount;
+      total += c.amount;
+    } else if (d >= prevMonday && d < monday) {
+      prevTotal += c.amount;
+    }
+  }
+  return { series, total, prevTotal };
+}
+
+function sumToday(conversions: Conversion[]): { income: number; count: number } {
+  const today = new Date();
+  const y = today.getFullYear(), m = today.getMonth(), d = today.getDate();
+  let income = 0, count = 0;
+  for (const c of conversions) {
+    if (c.status !== "ok") continue;
+    const dt = new Date(c.createdAt);
+    if (dt.getFullYear() === y && dt.getMonth() === m && dt.getDate() === d) {
+      income += c.amount;
+      count += 1;
+    }
+  }
+  return { income, count };
+}
+
 
 function InfoTab({
   balance,
@@ -1152,6 +1193,7 @@ function InfoTab({
   bank,
   conversions,
   offers,
+  requests,
   onOpenBank,
   onGoOffers,
   onGoConversions,
@@ -1163,6 +1205,7 @@ function InfoTab({
   bank: BankDetails | null;
   conversions: Conversion[];
   offers: Offer[];
+  requests: LinkRequest[];
   onOpenBank: () => void;
   onGoOffers: () => void;
   onGoConversions: () => void;
@@ -1172,6 +1215,23 @@ function InfoTab({
   const [copied, setCopied] = useState(false);
   const [activityTab, setActivityTab] = useState<"offers" | "conv">("offers");
   const level = useMemo(() => getLevel(balance), [balance]);
+
+  const week = useMemo(() => weekIncomeSeries(conversions), [conversions]);
+  const today = useMemo(() => sumToday(conversions), [conversions]);
+  const totalOrders = useMemo(
+    () => requests.reduce((s, r) => s + (r.ordersCount || 0), 0),
+    [requests],
+  );
+  const paidCount = useMemo(() => requests.filter((r) => r.status === "paid").length, [requests]);
+  const weekDelta = week.prevTotal > 0
+    ? Math.round(((week.total - week.prevTotal) / week.prevTotal) * 100)
+    : week.total > 0 ? 100 : 0;
+  const kpis: Kpi[] = [
+    { label: "Доход сегодня", value: `${fmt(today.income)} ₽`, delta: today.count > 0 ? `+${today.count} конв.` : "0", positive: today.income > 0 },
+    { label: "Конверсии", value: fmt(today.count), delta: `Σ ${fmt(conversions.filter((c) => c.status === "ok").length)}`, positive: today.count > 0 },
+    { label: "Заказы", value: fmt(totalOrders), delta: `Σ заявок ${fmt(requests.length)}`, positive: totalOrders > 0 },
+    { label: "Оплачено", value: fmt(paidCount), delta: paidCount > 0 ? "заявок" : "—", positive: paidCount > 0 },
+  ];
   const refLink = "kvant.io/p/user772/ref";
   const copy = async () => {
     try {
@@ -1194,8 +1254,8 @@ function InfoTab({
               <span className="text-[10px] font-bold uppercase tracking-[0.14em] opacity-60">
                 Общий баланс
               </span>
-              <span className="rounded-full bg-white/10 px-2 py-0.5 font-mono text-[10px] font-medium text-[color:var(--success)]">
-                +12,4% • 7дн
+              <span className={`rounded-full bg-white/10 px-2 py-0.5 font-mono text-[10px] font-medium ${weekDelta >= 0 ? "text-[color:var(--success)]" : "text-destructive"}`}>
+                {weekDelta >= 0 ? "+" : ""}{weekDelta}% • 7дн
               </span>
             </div>
             <div className="mt-2 flex items-baseline gap-1.5">
@@ -1299,34 +1359,37 @@ function InfoTab({
               <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-muted-foreground">
                 Доход за неделю
               </p>
-              <p className="mt-0.5 font-mono text-sm font-bold tabular-nums">54 200 ₽</p>
+              <p className="mt-0.5 font-mono text-sm font-bold tabular-nums">{fmt(week.total)} ₽</p>
             </div>
-            <span className="flex items-center gap-1 rounded-full bg-[color:var(--success)]/10 px-2 py-1 font-mono text-[10px] font-medium text-[color:var(--success)]">
-              <TrendingUp className="size-3" /> +18%
+            <span className={`flex items-center gap-1 rounded-full px-2 py-1 font-mono text-[10px] font-medium ${weekDelta >= 0 ? "bg-[color:var(--success)]/10 text-[color:var(--success)]" : "bg-destructive/10 text-destructive"}`}>
+              <TrendingUp className="size-3" /> {weekDelta >= 0 ? "+" : ""}{weekDelta}%
             </span>
           </div>
           <div className="flex h-20 items-end gap-1.5">
-            {chartBars.map((h, i) => (
-              <div
-                key={i}
-                className={`flex-1 rounded-t-sm transition-colors ${
-                  i === 5 ? "bg-primary" : "bg-secondary"
-                }`}
-                style={{ height: `${h}%` }}
-              />
-            ))}
+            {(() => {
+              const max = Math.max(...week.series, 1);
+              const todayIdx = (new Date().getDay() + 6) % 7;
+              return week.series.map((h, i) => (
+                <div
+                  key={i}
+                  className={`flex-1 rounded-t-sm transition-colors ${i === todayIdx ? "bg-primary" : "bg-secondary"}`}
+                  style={{ height: `${Math.max(6, (h / max) * 100)}%` }}
+                />
+              ));
+            })()}
           </div>
           <div className="mt-2 flex gap-1.5">
-            {weekLabels.map((l, i) => (
-              <span
-                key={l}
-                className={`flex-1 text-center font-mono text-[9px] uppercase ${
-                  i === 5 ? "font-bold text-primary" : "text-muted-foreground"
-                }`}
-              >
-                {l}
-              </span>
-            ))}
+            {weekLabels.map((l, i) => {
+              const todayIdx = (new Date().getDay() + 6) % 7;
+              return (
+                <span
+                  key={l}
+                  className={`flex-1 text-center font-mono text-[9px] uppercase ${i === todayIdx ? "font-bold text-primary" : "text-muted-foreground"}`}
+                >
+                  {l}
+                </span>
+              );
+            })}
           </div>
         </div>
       </section>
@@ -1492,7 +1555,7 @@ function InfoTab({
   );
 }
 
-function KpiCell({ k }: { k: (typeof kpis)[number] }) {
+function KpiCell({ k }: { k: Kpi }) {
   return (
     <div className="bg-card p-3">
       <p className="mb-1 text-[10px] font-medium uppercase text-muted-foreground">{k.label}</p>
@@ -2013,26 +2076,61 @@ function RequestTimeline({ status, createdAt, ordersCount = 0 }: { status: LinkR
 /* ================================ Stats ================================ */
 
 
-function StatsTab({ conversions, offers }: { conversions: Conversion[]; offers: Offer[] }) {
+function StatsTab({ conversions, offers, requests }: { conversions: Conversion[]; offers: Offer[]; requests: LinkRequest[] }) {
   const [period, setPeriod] = useState<(typeof statsPeriods)[number]["id"]>("7d");
-  const mult = statsPeriods.find((p) => p.id === period)!.mult;
+  const days = statsPeriods.find((p) => p.id === period)!.days;
 
-  const baseIncome = 54200;
-  const baseClicks = 1284;
-  const baseConversions = conversions.length;
-  const baseEpc = 84.2;
+  const cutoff = useMemo(() => {
+    const d = new Date();
+    d.setDate(d.getDate() - (days - 1));
+    d.setHours(0, 0, 0, 0);
+    return d;
+  }, [days]);
 
-  const income = Math.round(baseIncome * mult);
-  const clicks = Math.round(baseClicks * mult);
-  const convs = Math.round(baseConversions * mult);
-  const epc = (baseEpc * (0.9 + Math.random() * 0.2)).toFixed(1);
+  const scoped = useMemo(
+    () => conversions.filter((c) => {
+      const d = new Date(c.createdAt);
+      return !isNaN(d.getTime()) && d >= cutoff;
+    }),
+    [conversions, cutoff],
+  );
 
-  const bars = chartBars.map((h) => Math.round(h * (0.8 + Math.random() * 0.4)));
-  const maxBar = Math.max(...bars);
+  const income = scoped.filter((c) => c.status === "ok").reduce((s, c) => s + c.amount, 0);
+  const convs = scoped.filter((c) => c.status === "ok").length;
+  const totalOrders = useMemo(() => requests.reduce((s, r) => s + (r.ordersCount || 0), 0), [requests]);
+  const epc = convs > 0 ? (income / convs).toFixed(0) : "0";
+
+  // Bars: bucket scoped income into up to 7 evenly-spaced buckets, оканчивая сегодняшним днём.
+  const bucketCount = Math.min(7, days);
+  const bars = useMemo(() => {
+    const arr = new Array(bucketCount).fill(0) as number[];
+    const bucketSize = Math.max(1, Math.ceil(days / bucketCount));
+    const now = new Date();
+    now.setHours(23, 59, 59, 999);
+    for (const c of scoped) {
+      if (c.status !== "ok") continue;
+      const d = new Date(c.createdAt);
+      const diffDays = Math.floor((now.getTime() - d.getTime()) / 86400000);
+      const idx = bucketCount - 1 - Math.floor(diffDays / bucketSize);
+      if (idx >= 0 && idx < bucketCount) arr[idx] += c.amount;
+    }
+    return arr;
+  }, [scoped, days, bucketCount]);
+  const maxBar = Math.max(...bars, 1);
+  const barLabels = useMemo(() => {
+    const arr: string[] = [];
+    const bucketSize = Math.max(1, Math.ceil(days / bucketCount));
+    for (let i = bucketCount - 1; i >= 0; i--) {
+      const d = new Date();
+      d.setDate(d.getDate() - i * bucketSize);
+      arr.push(bucketSize === 1 ? weekLabels[(d.getDay() + 6) % 7] : `${d.getDate()}.${String(d.getMonth() + 1).padStart(2, "0")}`);
+    }
+    return arr;
+  }, [days, bucketCount]);
 
   const byOffer = useMemo(() => {
     const m = new Map<string, { offer: Offer; conv: number; income: number }>();
-    conversions.forEach((c) => {
+    scoped.forEach((c) => {
       if (c.status === "rejected") return;
       const off: Offer = offers.find((o) => o.id === c.offerId) ?? {
         id: c.offerId,
@@ -2057,10 +2155,8 @@ function StatsTab({ conversions, offers }: { conversions: Conversion[]; offers: 
       cur.income += c.amount;
       m.set(c.offerId, cur);
     });
-    return [...m.values()]
-      .map((x) => ({ ...x, conv: Math.round(x.conv * mult), income: Math.round(x.income * mult) }))
-      .sort((a, b) => b.income - a.income);
-  }, [conversions, offers, mult]);
+    return [...m.values()].sort((a, b) => b.income - a.income);
+  }, [scoped, offers]);
 
   return (
     <>
@@ -2086,8 +2182,8 @@ function StatsTab({ conversions, offers }: { conversions: Conversion[]; offers: 
         <div className="grid grid-cols-2 gap-px overflow-hidden rounded-lg border border-border bg-border">
           <KpiRow label="Доход" value={`${fmt(income)} ₽`} accent />
           <KpiRow label="Конверсии" value={fmt(convs)} />
-          <KpiRow label="Клики" value={fmt(clicks)} />
-          <KpiRow label="EPC" value={`${epc} ₽`} />
+          <KpiRow label="Заказы" value={fmt(totalOrders)} />
+          <KpiRow label="Средний чек" value={`${fmt(Number(epc))} ₽`} />
         </div>
       </section>
 
@@ -2107,19 +2203,19 @@ function StatsTab({ conversions, offers }: { conversions: Conversion[]; offers: 
               <div key={i} className="flex flex-1 flex-col items-center gap-1">
                 <div
                   className={`w-full rounded-t-sm ${
-                    h === maxBar ? "bg-primary" : "bg-secondary"
+                    h === maxBar && h > 0 ? "bg-primary" : "bg-secondary"
                   }`}
-                  style={{ height: `${(h / maxBar) * 100}%` }}
+                  style={{ height: `${Math.max(4, (h / maxBar) * 100)}%` }}
                 />
               </div>
             ))}
           </div>
           <div className="flex gap-1.5">
-            {weekLabels.map((l, i) => (
+            {barLabels.map((l, i) => (
               <span
-                key={l}
+                key={`${l}-${i}`}
                 className={`flex-1 text-center font-mono text-[9px] uppercase ${
-                  bars[i] === maxBar ? "font-bold text-primary" : "text-muted-foreground"
+                  bars[i] === maxBar && bars[i] > 0 ? "font-bold text-primary" : "text-muted-foreground"
                 }`}
               >
                 {l}
