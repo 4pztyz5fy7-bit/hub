@@ -213,7 +213,7 @@ function OverviewTab() {
   const [s, setS] = useState<{
     users: number; admins: number; offers: number; offersActive: number;
     payoutsPending: number; payoutsPendingSum: number; payoutsPaidSum: number;
-    reqNew: number; convToday: number; convTotal: number; revenueTotal: number;
+    convToday: number; convTotal: number; revenueTotal: number;
   } | null>(null);
   const [loading, setLoading] = useState(true);
 
