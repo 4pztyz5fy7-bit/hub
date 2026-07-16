@@ -267,57 +267,65 @@ function RevokeAdmin({ show }: { show: (s: string) => void }) {
 function GrantAdmin({ show }: { show: (s: string) => void }) {
   const [email, setEmail] = useState("");
   const run = async () => {
-    const { data: p } = await supabase.from("profiles").select("id").eq("email", email).maybeSingle();
-    if (!p) { show("Не найден"); return; }
-    const { error } = await supabase.from("user_roles").insert({ user_id: p.id, role: "admin" });
-    show(error ? error.message : "admin назначен");
+    if (!email) { show("Укажите email"); return; }
+    const { data: p, error: e0 } = await supabase.from("profiles").select("id").eq("email", email.trim()).maybeSingle();
+    if (e0) { show(`Ошибка: ${e0.message}`); return; }
+    if (!p) { show("Пользователь не найден"); return; }
+    const { error } = await supabase.from("user_roles").upsert({ user_id: p.id, role: "admin" }, { onConflict: "user_id,role" });
+    show(error ? `Ошибка: ${error.message}` : "admin назначен");
   };
   return <div className="flex gap-2"><Input value={email} onChange={(e) => setEmail(e.target.value)} placeholder="email" /><Btn tone="primary" onClick={run}>Назначить</Btn></div>;
 }
 function Broadcast({ target, show }: { target: "all"|"admins"; show: (s: string) => void }) {
   const [title, setTitle] = useState(""); const [body, setBody] = useState("");
   const run = async () => {
-    if (!title || !body) return;
+    if (!title || !body) { show("Заполните заголовок и текст"); return; }
     let ids: string[] = [];
     if (target === "admins") {
-      const { data } = await supabase.from("user_roles").select("user_id").eq("role", "admin");
+      const { data, error } = await supabase.from("user_roles").select("user_id").eq("role", "admin");
+      if (error) { show(`Ошибка: ${error.message}`); return; }
       ids = (data ?? []).map((r) => r.user_id);
     } else {
-      const { data } = await supabase.from("profiles").select("id");
+      const { data, error } = await supabase.from("profiles").select("id");
+      if (error) { show(`Ошибка: ${error.message}`); return; }
       ids = (data ?? []).map((r) => r.id);
     }
     const rows = ids.map((user_id) => ({ user_id, kind: "system", title, body }));
     if (!rows.length) { show("Нет получателей"); return; }
     const { error } = await supabase.from("notifications").insert(rows as never);
-    show(error ? error.message : `Отправлено: ${rows.length}`);
+    show(error ? `Ошибка: ${error.message}` : `Отправлено: ${rows.length}`);
   };
   return <div className="space-y-2"><Input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Заголовок" /><Textarea rows={3} value={body} onChange={(e) => setBody(e.target.value)} placeholder="Сообщение" /><Btn tone="primary" onClick={run}>Отправить ({target})</Btn></div>;
 }
 function BroadcastPending({ show }: { show: (s: string) => void }) {
   const [title, setTitle] = useState("Ваша выплата в обработке"); const [body, setBody] = useState("Мы работаем над вашим запросом.");
   const run = async () => {
-    const { data } = await supabase.from("payout_requests").select("user_id").eq("status", "pending");
+    const { data, error: e0 } = await supabase.from("payout_requests").select("user_id").eq("status", "pending");
+    if (e0) { show(`Ошибка: ${e0.message}`); return; }
     const ids = Array.from(new Set((data ?? []).map((r) => r.user_id)));
     if (!ids.length) { show("Нет получателей"); return; }
     const rows = ids.map((user_id) => ({ user_id, kind: "payout", title, body }));
     const { error } = await supabase.from("notifications").insert(rows as never);
-    show(error ? error.message : `Отправлено: ${rows.length}`);
+    show(error ? `Ошибка: ${error.message}` : `Отправлено: ${rows.length}`);
   };
   return <div className="space-y-2"><Input value={title} onChange={(e) => setTitle(e.target.value)} /><Textarea rows={2} value={body} onChange={(e) => setBody(e.target.value)} /><Btn tone="primary" onClick={run}>Отправить</Btn></div>;
 }
 function TestNotif({ show }: { show: (s: string) => void }) {
   const run = async () => {
-    const { data: u } = await supabase.auth.getUser(); if (!u.user) return;
+    const { data: u } = await supabase.auth.getUser();
+    if (!u.user) { show("Нет сессии"); return; }
     const { error } = await supabase.from("notifications").insert({ user_id: u.user.id, kind: "system", title: "Тест", body: `Проверка в ${new Date().toLocaleTimeString()}` });
-    show(error ? error.message : "Отправлено");
+    show(error ? `Ошибка: ${error.message}` : "Отправлено");
   };
   return <Btn tone="primary" onClick={run}>Отправить</Btn>;
 }
 function TestConversion({ show }: { show: (s: string) => void }) {
   const [uid, setUid] = useState(""); const [name, setName] = useState("Тест-оффер"); const [amt, setAmt] = useState("2500");
   const run = async () => {
+    if (!uid) { show("Укажите user_id"); return; }
+    if (num(amt) <= 0) { show("Сумма должна быть > 0"); return; }
     const { error } = await supabase.from("conversions").insert({ user_id: uid, offer_name: name, amount: num(amt), status: "pending" });
-    show(error ? error.message : "Создано");
+    show(error ? `Ошибка: ${error.message}` : "Создано");
   };
   return <div className="grid grid-cols-3 gap-2"><Input value={uid} onChange={(e) => setUid(e.target.value)} placeholder="user_id" /><Input value={name} onChange={(e) => setName(e.target.value)} /><Input value={amt} onChange={(e) => setAmt(e.target.value)} /><Btn tone="primary" onClick={run}>Создать</Btn></div>;
 }
