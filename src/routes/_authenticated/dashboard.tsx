@@ -663,6 +663,7 @@ function DashboardPage() {
       setConversions((convRes.data ?? []).map((r: any): Conversion => ({
         id: String(r.id).slice(0, 8),
         time: timeOf(r.created_at),
+        createdAt: r.created_at,
         offerId: r.offer_id ?? "",
         offerName: r.offer_name,
         amount: Number(r.amount),
