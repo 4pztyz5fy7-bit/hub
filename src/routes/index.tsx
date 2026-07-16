@@ -398,10 +398,10 @@ function LandingPage() {
         <div className="mx-auto max-w-6xl px-4">
           <div className="grid grid-cols-2 gap-6 text-center md:grid-cols-4">
             {[
-              { v: "₽184", l: "средний EPC по топ-5" },
-              { v: "4 дня", l: "до первого плюса" },
-              { v: "78%", l: "retention через год" },
-              { v: "2 мин 14 с", l: "средний ответ поддержки" },
+              { v: stats ? `₽${formatCount(stats.avgEpc)}` : "—", l: "средний EPC по топ-офферам" },
+              { v: stats ? formatCount(stats.offersCount) : "—", l: "активных офферов" },
+              { v: stats ? formatCount(stats.completedConversions) : "—", l: "подтверждённых конверсий" },
+              { v: stats ? formatRub(stats.totalPaid) : "—", l: "выплачено партнёрам" },
             ].map((s) => (
               <div key={s.l}>
                 <div className="bg-gradient-to-br from-primary to-primary/50 bg-clip-text text-3xl font-black text-transparent md:text-4xl">{s.v}</div>
