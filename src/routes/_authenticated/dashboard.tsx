@@ -714,6 +714,7 @@ function DashboardPage() {
       status: data.status,
     };
     setRequests((prev) => [req, ...prev]);
+    setLinkedOffers((s) => new Set(s).add(offer.id));
     pushNotif({
       kind: "offer",
       title: "Заявка отправлена",
