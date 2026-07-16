@@ -3068,6 +3068,27 @@ function OfferDetailSheet({
             <MetaCell Icon={ShieldCheck} label="Статус" value={offer.landing ? "Ссылка готова" : "Скоро"} />
           </div>
 
+          {/* City payouts */}
+          {offer.cityPayouts.length > 0 && (
+            <section>
+              <h4 className="mb-2 flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+                <Globe className="size-3" /> Выплата по городам
+              </h4>
+              <div className="grid grid-cols-2 gap-1.5">
+                {offer.cityPayouts.map((c, i) => (
+                  <div key={i} className="flex items-center justify-between rounded-lg border border-border bg-secondary/40 px-2.5 py-1.5">
+                    <span className="truncate text-[12px] font-medium">{c.city}</span>
+                    <span className="font-mono text-[12px] font-bold tabular-nums">
+                      {c.amount.toLocaleString("ru-RU")} ₽
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </section>
+          )}
+
+
+
           {/* Description */}
           <section>
             <h4 className="mb-1.5 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
