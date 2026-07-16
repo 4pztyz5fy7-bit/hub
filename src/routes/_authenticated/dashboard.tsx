@@ -1844,6 +1844,7 @@ function StatsTab({ conversions, offers, requests }: { conversions: Conversion[]
         allowed: [],
         denied: [],
         landing: "",
+        cityPayouts: [],
       };
       const cur = m.get(c.offerId) ?? { offer: off, conv: 0, income: 0 };
       cur.conv += 1;
