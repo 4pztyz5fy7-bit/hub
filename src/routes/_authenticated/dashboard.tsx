@@ -1726,11 +1726,11 @@ function OffersTab({
                   >
                     {isCopied ? (
                       <>
-                        <Check className="size-3" /> Отправлено
+                        <Check className="size-3" /> Скопировано
                       </>
                     ) : (
                       <>
-                        <Link2 className="size-3" /> Заявка
+                        <Copy className="size-3" /> Ссылка
                       </>
                     )}
                   </button>
