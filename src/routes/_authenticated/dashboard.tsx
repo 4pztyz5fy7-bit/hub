@@ -1395,6 +1395,11 @@ function OffersTab({
   const [q, setQ] = useState("");
   const [cat, setCat] = useState<string>("Все");
   const [sort, setSort] = useState<"epc" | "cr" | "new">("epc");
+  const categoriesAll = useMemo<string[]>(
+    () => ["Все", ...Array.from(new Set(offers.map((o) => o.category).filter(Boolean)))],
+    [offers],
+  );
+
 
   const filtered = useMemo(() => {
     const s = q.trim().toLowerCase();
