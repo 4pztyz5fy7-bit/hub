@@ -42,7 +42,7 @@ type LinkStatus =
 type LinkRow = {
   id: string; user_id: string; offer_id: string | null; offer_name: string;
   offer_tag: string | null; source: string | null; sub: string | null;
-  link: string | null; note: string | null; orders_count: number | null;
+  link: string | null; note: string | null; orders_count: number;
   status: LinkStatus; created_at: string;
 };
 type Conversion = {
