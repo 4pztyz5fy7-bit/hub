@@ -5,8 +5,9 @@ import {
   Shield, Users, Package, Wallet, ClipboardList, Loader2, ArrowLeft,
   Check, X, Plus, Pencil, Trash2, LogOut, LayoutDashboard, Bell,
   BarChart3, Search, Download, Copy, RefreshCw, Send, Filter, MoreHorizontal,
-  TrendingUp, DollarSign, UserCheck, Activity, ChevronRight, Eye, Ban,
+  TrendingUp, DollarSign, UserCheck, Activity, ChevronRight, Eye, Ban, Wrench,
 } from "lucide-react";
+import { AdminToolsTab } from "@/components/admin/tools-tab";
 
 export const Route = createFileRoute("/_authenticated/admin")({
   head: () => ({ meta: [{ title: "Админ-панель — КВАНТ" }] }),
