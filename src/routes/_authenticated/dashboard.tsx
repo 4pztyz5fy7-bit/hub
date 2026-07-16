@@ -877,8 +877,8 @@ function DashboardPage() {
             copiedOffer={copiedOffer}
             onCopyLink={copyOfferLink}
             onOpenDetail={(o) => setOfferDetail(o)}
-            requestsCount={requests.length}
-            onOpenAdmin={() => setAdminOpen(true)}
+            requestsCount={isAdmin ? requests.length : 0}
+            onOpenAdmin={isAdmin ? () => setAdminOpen(true) : undefined}
             level={levelInfo.current}
           />
         )}
