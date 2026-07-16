@@ -262,13 +262,12 @@ function bankDest(b: BankDetails) {
 // All offers, conversions, payouts and notifications are loaded from the DB
 // inside DashboardPage. No static seed lists here.
 
-const chartBars = [40, 62, 55, 85, 45, 95, 70];
 const weekLabels = ["Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Вс"];
 
 const statsPeriods = [
-  { id: "7d" as const, label: "7 дней", mult: 1 },
-  { id: "30d" as const, label: "30 дней", mult: 3.8 },
-  { id: "90d" as const, label: "90 дней", mult: 11.2 },
+  { id: "7d" as const, label: "7 дней", days: 7 },
+  { id: "30d" as const, label: "30 дней", days: 30 },
+  { id: "90d" as const, label: "90 дней", days: 90 },
 ];
 
 /* ============================= Levels =================================== */
