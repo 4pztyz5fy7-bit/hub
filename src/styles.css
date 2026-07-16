@@ -84,3 +84,25 @@
   from { transform: translateX(0); }
   to { transform: translateX(-50%); }
 }
+
+/* Smooth global transitions */
+@layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+  a, button, [role="button"], input, select, textarea, summary,
+  .transition-all, [data-state], [data-slot] {
+    transition-property: color, background-color, border-color, fill, stroke,
+      opacity, box-shadow, transform, filter, backdrop-filter;
+    transition-duration: 200ms;
+    transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      transition-duration: 0.01ms !important;
+      animation-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+}
+
