@@ -22,6 +22,8 @@ type Profile = {
   telegram: string | null; created_at: string;
 };
 type RoleRow = { user_id: string; role: "admin" | "user" };
+type PayoutKind = "exact" | "up_to" | "from" | "range";
+type CityPayout = { city: string; amount: number };
 type Offer = {
   id: string; name: string; tag: string; category: string | null;
   advertiser: string | null; geo: string | null; payout: string;
@@ -29,8 +31,13 @@ type Offer = {
   landing: string | null; description: string | null; requirements: string | null;
   allowed: string[]; denied: string[]; active: boolean; is_new: boolean;
   image_url: string | null;
+  payout_kind: PayoutKind;
+  payout_min: number | null;
+  payout_max: number | null;
+  city_payouts: CityPayout[];
   created_at: string;
 };
+
 type PayoutRow = {
   id: string; user_id: string; amount: number; method: string;
   destination: string | null; status: "pending" | "processing" | "paid" | "rejected";
