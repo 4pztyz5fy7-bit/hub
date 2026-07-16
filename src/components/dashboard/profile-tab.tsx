@@ -121,7 +121,7 @@ export function ProfileTab({
       if (data) {
         setP(data as ProfileData);
         setDraft(data as ProfileData);
-        setPrefs({ ...DEFAULT_PREFS, ...((data as any).settings ?? {}) });
+        setPrefsLocal({ ...DEFAULT_PREFS, ...((data as any).settings ?? {}) });
       }
       setLoading(false);
     })();
