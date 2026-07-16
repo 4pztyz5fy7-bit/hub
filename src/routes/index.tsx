@@ -1,5 +1,5 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { z } from "zod";
 import {
@@ -7,6 +7,17 @@ import {
   X, ArrowRight, Wallet, BarChart3, Headphones, Star, Check, Menu, Sparkles,
   Clock, Users, Target, Gift, MessageCircle, CreditCard, Globe, Award,
 } from "lucide-react";
+import { getLandingStats, type LandingStats } from "@/lib/landing-stats.functions";
+
+function formatRub(n: number): string {
+  if (n >= 1_000_000_000) return `₽${(n / 1_000_000_000).toFixed(n >= 10_000_000_000 ? 0 : 1)} млрд`;
+  if (n >= 1_000_000) return `₽${(n / 1_000_000).toFixed(n >= 10_000_000 ? 0 : 1)} млн`;
+  if (n >= 1_000) return `₽${(n / 1_000).toFixed(0)} тыс`;
+  return `₽${Math.round(n)}`;
+}
+function formatCount(n: number): string {
+  return new Intl.NumberFormat("ru-RU").format(n);
+}
 
 
 
@@ -36,6 +47,8 @@ function LandingPage() {
   const [initialMode, setInitialMode] = useState<Mode>("login");
   const [menuOpen, setMenuOpen] = useState(false);
 
+  const [stats, setStats] = useState<LandingStats | null>(null);
+
   useEffect(() => {
     let cancelled = false;
     supabase.auth.getSession().then(({ data }) => {
@@ -47,7 +60,19 @@ function LandingPage() {
     return () => { cancelled = true; sub.subscription.unsubscribe(); };
   }, [navigate]);
 
+  useEffect(() => {
+    let cancelled = false;
+    getLandingStats().then((s) => { if (!cancelled) setStats(s); }).catch(() => {});
+    return () => { cancelled = true; };
+  }, []);
+
   const openAuth = (m: Mode) => { setInitialMode(m); setAuthOpen(true); setMenuOpen(false); };
+
+  const tickerItems = useMemo(() => {
+    const items = stats?.ticker ?? [];
+    if (items.length === 0) return [];
+    return items.concat(items).map((t, i) => ({ ...t, key: i }));
+  }, [stats]);
 
   return (
     <div className="min-h-screen bg-background text-foreground">
@@ -108,14 +133,14 @@ function LandingPage() {
                 <span className="absolute inset-0 animate-ping rounded-full bg-primary opacity-75" />
                 <span className="relative inline-flex size-2 rounded-full bg-primary" />
               </span>
-              1 247 партнёров онлайн прямо сейчас
+              {stats ? `${formatCount(stats.partners)} партнёров в сети` : "Партнёрская сеть КВАНТ"}
             </div>
             <h1 className="mt-5 text-4xl font-black leading-[1.05] tracking-tight sm:text-5xl md:text-[64px]">
               Зарабатывайте на рекомендациях с{" "}
               <span className="bg-gradient-to-br from-primary via-primary to-primary/50 bg-clip-text text-transparent">КВАНТ</span>
             </h1>
             <p className="mx-auto mt-5 max-w-2xl text-base leading-relaxed text-muted-foreground md:text-lg">
-              40+ проверенных офферов, живая статистика в реальном времени и выплаты <span className="font-bold text-foreground">от 1 часа</span>. За последний год партнёры вывели <span className="font-bold text-foreground">₽1.2 млрд</span> — присоединяйтесь.
+              {stats && stats.offersCount > 0 ? `${stats.offersCount} проверенных офферов` : "Проверенные офферы"}, живая статистика в реальном времени и выплаты <span className="font-bold text-foreground">от 1 часа</span>.{stats && stats.totalPaid > 0 ? <> Партнёры вывели <span className="font-bold text-foreground">{formatRub(stats.totalPaid)}</span> — присоединяйтесь.</> : " Присоединяйтесь."}
             </p>
             <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
               <button onClick={() => openAuth("register")} className="group inline-flex w-full items-center justify-center gap-2 rounded-xl bg-primary px-6 py-3.5 text-sm font-bold text-primary-foreground shadow-lg shadow-primary/25 transition hover:bg-primary/90 hover:shadow-xl hover:shadow-primary/40 sm:w-auto">
@@ -143,41 +168,32 @@ function LandingPage() {
               <span className="ml-auto text-[11px] text-muted-foreground">обновление в реальном времени</span>
             </div>
             <div className="relative overflow-hidden">
-              <div className="flex animate-[marquee_40s_linear_infinite] gap-8 whitespace-nowrap py-3 px-4 text-sm">
-                {[
-                  { who: "Артём К.", city: "Казань", offer: "Тинькофф Инвест", sum: "+₽3 200" },
-                  { who: "Мария О.", city: "Минск", offer: "Skillbox PRO", sum: "+₽4 500" },
-                  { who: "Дмитрий В.", city: "СПб", offer: "Альфа Дебет", sum: "+₽2 500" },
-                  { who: "Илья Р.", city: "Алматы", offer: "Aviasales", sum: "+₽1 800" },
-                  { who: "Ольга П.", city: "Москва", offer: "GeekBrains", sum: "+₽6 700" },
-                  { who: "Никита М.", city: "Киев", offer: "Ostrovok B2B", sum: "+₽2 100" },
-                  { who: "Софья Л.", city: "Ереван", offer: "Тинькофф Кредит", sum: "+₽5 400" },
-                  { who: "Пётр Ш.", city: "Тбилиси", offer: "Netology", sum: "+₽3 900" },
-                ].concat([
-                  { who: "Артём К.", city: "Казань", offer: "Тинькофф Инвест", sum: "+₽3 200" },
-                  { who: "Мария О.", city: "Минск", offer: "Skillbox PRO", sum: "+₽4 500" },
-                  { who: "Дмитрий В.", city: "СПб", offer: "Альфа Дебет", sum: "+₽2 500" },
-                  { who: "Илья Р.", city: "Алматы", offer: "Aviasales", sum: "+₽1 800" },
-                ]).map((t, i) => (
-                  <span key={i} className="inline-flex items-center gap-2 text-muted-foreground">
-                    <span className="font-bold text-foreground">{t.who}</span>
-                    <span className="text-[11px] uppercase tracking-wider">{t.city}</span>
-                    <span>→</span>
-                    <span>{t.offer}</span>
-                    <span className="rounded-md bg-emerald-500/15 px-2 py-0.5 text-xs font-bold text-emerald-500">{t.sum}</span>
-                  </span>
-                ))}
-              </div>
+              {tickerItems.length > 0 ? (
+                <div className="flex animate-[marquee_40s_linear_infinite] gap-8 whitespace-nowrap py-3 px-4 text-sm">
+                  {tickerItems.map((t) => (
+                    <span key={t.key} className="inline-flex items-center gap-2 text-muted-foreground">
+                      <span className="font-bold text-foreground">{t.who}</span>
+                      <span>→</span>
+                      <span>{t.offer}</span>
+                      <span className="rounded-md bg-emerald-500/15 px-2 py-0.5 text-xs font-bold text-emerald-500">+{formatRub(t.amount)}</span>
+                    </span>
+                  ))}
+                </div>
+              ) : (
+                <div className="px-4 py-4 text-center text-xs text-muted-foreground">
+                  Первые конверсии появятся здесь, как только партнёры начнут работу.
+                </div>
+              )}
             </div>
           </div>
 
           {/* Big stats */}
           <div className="mt-8 grid grid-cols-2 gap-3 md:grid-cols-4">
             {[
-              { v: "12 000+", l: "активных партнёров", Icon: Users },
-              { v: "₽1.2 млрд", l: "выплачено за год", Icon: Wallet },
-              { v: "1 час", l: "минимальная выплата", Icon: Clock },
-              { v: "4.9 / 5", l: "оценка поддержки", Icon: Star },
+              { v: stats ? formatCount(stats.partners) : "—", l: "партнёров в сети", Icon: Users },
+              { v: stats ? formatRub(stats.totalPaid) : "—", l: "выплачено партнёрам", Icon: Wallet },
+              { v: stats ? formatCount(stats.completedConversions) : "—", l: "подтверждённых конверсий", Icon: TrendingUp },
+              { v: stats ? formatCount(stats.offersCount) : "—", l: "активных офферов", Icon: Rocket },
             ].map((s) => (
               <div key={s.l} className="rounded-2xl border border-border bg-card/60 p-4 backdrop-blur">
                 <s.Icon className="size-4 text-primary" />
@@ -196,49 +212,48 @@ function LandingPage() {
             <div className="max-w-2xl">
               <div className="text-[11px] font-bold uppercase tracking-widest text-primary">Каталог</div>
               <h2 className="mt-2 text-3xl font-black md:text-4xl">Топовые офферы недели</h2>
-              <p className="mt-3 text-muted-foreground">40+ рекламодателей: финтех, EdTech, travel, SaaS. Эксклюзивные ставки — недоступны напрямую.</p>
+              <p className="mt-3 text-muted-foreground">{stats ? `${stats.offersCount} рекламодателей` : "Рекламодатели"}: финтех, EdTech, travel, SaaS. Эксклюзивные ставки — недоступны напрямую.</p>
             </div>
             <button onClick={() => openAuth("register")} className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-card px-3.5 py-2 text-sm font-bold hover:bg-secondary">
               Смотреть все <ArrowRight className="size-4" />
             </button>
           </div>
-          <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {[
-              { name: "Тинькофф Инвестиции", cat: "Финансы", pay: "до ₽3 200", cr: "8.4%", epc: "₽268", hot: true },
-              { name: "Skillbox PRO", cat: "Образование", pay: "до 40%", cr: "5.1%", epc: "₽192" },
-              { name: "Aviasales Business", cat: "Travel", pay: "до ₽1 800", cr: "3.7%", epc: "₽66" },
-              { name: "Альфа-Банк Дебет", cat: "Финансы", pay: "до ₽2 500", cr: "6.9%", epc: "₽172", hot: true },
-              { name: "GeekBrains", cat: "Образование", pay: "до 35%", cr: "4.8%", epc: "₽168" },
-              { name: "Ostrovok B2B", cat: "Travel", pay: "до ₽2 100", cr: "3.2%", epc: "₽67" },
-            ].map((o) => (
-              <div key={o.name} className="group relative flex flex-col rounded-2xl border border-border bg-card p-5 transition hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-lg hover:shadow-primary/5">
-                {o.hot && (
-                  <span className="absolute -top-2 right-4 inline-flex items-center gap-1 rounded-full bg-primary px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-primary-foreground">
-                    <Zap className="size-3" /> Hot
-                  </span>
-                )}
-                <div className="flex items-center justify-between">
-                  <span className="rounded-full bg-secondary px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">{o.cat}</span>
-                  <Star className="size-4 text-primary" />
+          {stats && stats.offers.length === 0 ? (
+            <div className="mt-10 rounded-2xl border border-dashed border-border bg-card/50 p-10 text-center text-sm text-muted-foreground">
+              Пока нет активных офферов. Загляните чуть позже.
+            </div>
+          ) : (
+            <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              {(stats?.offers ?? []).map((o) => (
+                <div key={o.id} className="group relative flex flex-col rounded-2xl border border-border bg-card p-5 transition hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-lg hover:shadow-primary/5">
+                  {o.is_new && (
+                    <span className="absolute -top-2 right-4 inline-flex items-center gap-1 rounded-full bg-primary px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-primary-foreground">
+                      <Zap className="size-3" /> New
+                    </span>
+                  )}
+                  <div className="flex items-center justify-between">
+                    <span className="rounded-full bg-secondary px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">{o.category ?? "Оффер"}</span>
+                    <Star className="size-4 text-primary" />
+                  </div>
+                  <h3 className="mt-3 text-base font-bold">{o.name}</h3>
+                  <div className="mt-4 grid flex-1 grid-cols-3 gap-3 border-t border-border pt-4">
+                    <div>
+                      <div className="text-[10px] uppercase tracking-wider text-muted-foreground">Выплата</div>
+                      <div className="mt-0.5 text-sm font-bold text-primary">{o.payout}</div>
+                    </div>
+                    <div>
+                      <div className="text-[10px] uppercase tracking-wider text-muted-foreground">CR</div>
+                      <div className="mt-0.5 text-sm font-bold">{o.cr > 0 ? `${o.cr}%` : "—"}</div>
+                    </div>
+                    <div>
+                      <div className="text-[10px] uppercase tracking-wider text-muted-foreground">EPC</div>
+                      <div className="mt-0.5 text-sm font-bold">{o.epc > 0 ? `₽${o.epc}` : "—"}</div>
+                    </div>
+                  </div>
                 </div>
-                <h3 className="mt-3 text-base font-bold">{o.name}</h3>
-                <div className="mt-4 grid flex-1 grid-cols-3 gap-3 border-t border-border pt-4">
-                  <div>
-                    <div className="text-[10px] uppercase tracking-wider text-muted-foreground">Выплата</div>
-                    <div className="mt-0.5 text-sm font-bold text-primary">{o.pay}</div>
-                  </div>
-                  <div>
-                    <div className="text-[10px] uppercase tracking-wider text-muted-foreground">CR</div>
-                    <div className="mt-0.5 text-sm font-bold">{o.cr}</div>
-                  </div>
-                  <div>
-                    <div className="text-[10px] uppercase tracking-wider text-muted-foreground">EPC</div>
-                    <div className="mt-0.5 text-sm font-bold">{o.epc}</div>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          )}
         </div>
       </section>
 
@@ -383,10 +398,10 @@ function LandingPage() {
         <div className="mx-auto max-w-6xl px-4">
           <div className="grid grid-cols-2 gap-6 text-center md:grid-cols-4">
             {[
-              { v: "₽184", l: "средний EPC по топ-5" },
-              { v: "4 дня", l: "до первого плюса" },
-              { v: "78%", l: "retention через год" },
-              { v: "2 мин 14 с", l: "средний ответ поддержки" },
+              { v: stats ? `₽${formatCount(stats.avgEpc)}` : "—", l: "средний EPC по топ-офферам" },
+              { v: stats ? formatCount(stats.offersCount) : "—", l: "активных офферов" },
+              { v: stats ? formatCount(stats.completedConversions) : "—", l: "подтверждённых конверсий" },
+              { v: stats ? formatRub(stats.totalPaid) : "—", l: "выплачено партнёрам" },
             ].map((s) => (
               <div key={s.l}>
                 <div className="bg-gradient-to-br from-primary to-primary/50 bg-clip-text text-3xl font-black text-transparent md:text-4xl">{s.v}</div>
