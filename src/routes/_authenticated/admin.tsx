@@ -48,24 +48,85 @@ type Conversion = {
 function AdminPage() {
   const navigate = useNavigate();
   const [checking, setChecking] = useState(true);
+  const [accessError, setAccessError] = useState<string | null>(null);
   const [tab, setTab] = useState<TabId>("overview");
 
-  // ADMIN GUARD: silently redirect non-admins to /dashboard so they never land here by accident.
-  useEffect(() => {
-    (async () => {
-      const { data: u } = await supabase.auth.getUser();
-      if (!u.user) { navigate({ to: "/" }); return; }
-      const { data } = await supabase
-        .from("user_roles").select("role")
-        .eq("user_id", u.user.id).eq("role", "admin").maybeSingle();
-      if (!data) { navigate({ to: "/dashboard", replace: true }); return; }
+  // ADMIN GUARD: надёжная проверка сессии и роли.
+  // - Ждём валидную сессию с access_token (учитываем гонку с onAuthStateChange).
+  // - Сначала пробуем is_admin() RPC — она SECURITY DEFINER и не зависит от видимости строк.
+  // - При временных сбоях (сеть, 5xx, отсутствие токена) — ретраи с backoff, БЕЗ редиректа.
+  // - Редирект на /dashboard только при подтверждённом «не админ».
+  const runCheck = useCallback(async () => {
+    setChecking(true);
+    setAccessError(null);
+
+    // 1) Дождаться сессии (до ~4 сек), затем при необходимости обновить токен.
+    let session = (await supabase.auth.getSession()).data.session;
+    for (let i = 0; !session && i < 8; i++) {
+      await new Promise((r) => setTimeout(r, 500));
+      session = (await supabase.auth.getSession()).data.session;
+    }
+    if (!session) {
+      try { await supabase.auth.refreshSession(); } catch {}
+      session = (await supabase.auth.getSession()).data.session;
+    }
+    if (!session?.access_token) {
+      navigate({ to: "/auth", replace: true });
+      return;
+    }
+
+    // 2) Валидируем пользователя на сервере авторизации.
+    const { data: u, error: uErr } = await supabase.auth.getUser();
+    if (uErr || !u.user) {
+      setAccessError("Не удалось проверить сессию. Попробуйте ещё раз.");
       setChecking(false);
-    })();
+      return;
+    }
+
+    // 3) Проверка роли с ретраями. Сначала RPC is_admin(), затем fallback на user_roles.
+    const attempt = async (): Promise<"admin" | "not_admin" | "transient"> => {
+      const rpc = await supabase.rpc("is_admin");
+      if (!rpc.error) return rpc.data === true ? "admin" : "not_admin";
+      const q = await supabase
+        .from("user_roles").select("role")
+        .eq("user_id", u.user!.id).eq("role", "admin").maybeSingle();
+      if (q.error) return "transient";
+      return q.data ? "admin" : "not_admin";
+    };
+
+    let verdict: "admin" | "not_admin" | "transient" = "transient";
+    for (let i = 0; i < 4; i++) {
+      verdict = await attempt();
+      if (verdict !== "transient") break;
+      await new Promise((r) => setTimeout(r, 400 * (i + 1)));
+    }
+
+    if (verdict === "admin") { setChecking(false); return; }
+    if (verdict === "not_admin") { navigate({ to: "/dashboard", replace: true }); return; }
+    setAccessError("Сервис ролей временно недоступен. Мы не выполнили редирект — повторите проверку.");
+    setChecking(false);
   }, [navigate]);
+
+  useEffect(() => { void runCheck(); }, [runCheck]);
 
   const signOut = async () => { await supabase.auth.signOut(); navigate({ to: "/" }); };
 
   if (checking) return <CenterLoader label="Проверка доступа" />;
+  if (accessError) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-background px-4">
+        <div className="max-w-sm rounded-2xl border border-border bg-card p-5 text-center">
+          <Shield className="mx-auto size-6 text-primary" />
+          <h1 className="mt-2 text-sm font-bold">Проверка доступа не завершена</h1>
+          <p className="mt-1 text-xs text-muted-foreground">{accessError}</p>
+          <div className="mt-4 flex gap-2">
+            <button onClick={() => void runCheck()} className="flex-1 rounded-lg bg-primary px-3 py-2 text-xs font-bold text-primary-foreground">Повторить</button>
+            <button onClick={() => navigate({ to: "/dashboard" })} className="flex-1 rounded-lg border border-border px-3 py-2 text-xs font-bold">В кабинет</button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   const tabs: { id: TabId; label: string; Icon: typeof Users }[] = [
     { id: "overview", label: "Обзор", Icon: LayoutDashboard },
