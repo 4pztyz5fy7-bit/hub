@@ -1883,7 +1883,8 @@ function UserRequestsTab({
           const isCopied = copied === r.id;
           const created = new Date(r.createdAt);
           const dateStr = isNaN(created.getTime()) ? r.createdAt : created.toLocaleString("ru-RU", { day: "2-digit", month: "2-digit", year: "2-digit", hour: "2-digit", minute: "2-digit" });
-          const linkReady = Boolean(r.link);
+          const isClosed = r.status === "finished" || r.status === "paid";
+          const linkReady = Boolean(r.link) && !isClosed;
 
           return (
             <div key={r.id} className="rounded-xl border border-border bg-card">
@@ -1935,7 +1936,7 @@ function UserRequestsTab({
                       </div>
                     ) : (
                       <div className="rounded-lg border border-dashed border-border p-2 text-[11px] text-muted-foreground">
-                        Ссылка недоступна.
+                        {isClosed ? "Заявка завершена — ссылка больше недоступна." : "Ссылка недоступна."}
                       </div>
                     )}
                   </div>
