@@ -28,6 +28,7 @@ type Offer = {
   epc: number; cr: number; hold: string | null; goal: string | null;
   landing: string | null; description: string | null; requirements: string | null;
   allowed: string[]; denied: string[]; active: boolean; is_new: boolean;
+  image_url: string | null;
   created_at: string;
 };
 type PayoutRow = {
@@ -537,6 +538,9 @@ function OffersTab() {
           <div className="mb-2 flex items-start justify-between gap-2">
             <div className="flex items-start gap-2 min-w-0">
               <input type="checkbox" checked={selected.has(o.id)} onChange={() => toggleSel(o.id)} className="mt-1" />
+              {o.image_url && (
+                <img src={o.image_url} alt="" className="size-10 shrink-0 rounded-md border border-border object-cover" />
+              )}
               <div className="min-w-0">
                 <p className="truncate text-sm font-bold">{o.name}</p>
                 <p className="mt-0.5 text-[11px] uppercase tracking-wider text-muted-foreground">{o.tag} · {o.advertiser || "—"} · {o.geo || "—"}</p>
@@ -589,6 +593,7 @@ function OfferEditor({ offer, onClose, onSaved }: { offer: Offer | null; onClose
     denied: (offer?.denied ?? []).join(", "),
     active: offer?.active ?? true,
     is_new: offer?.is_new ?? false,
+    image_url: offer?.image_url ?? "",
   });
   const [saving, setSaving] = useState(false);
   const [err, setErr] = useState<string | null>(null);
@@ -620,6 +625,7 @@ function OfferEditor({ offer, onClose, onSaved }: { offer: Offer | null; onClose
       denied: splitList(form.denied),
       active: form.active,
       is_new: form.is_new,
+      image_url: form.image_url ? form.image_url : null,
     };
     const { error } = offer
       ? await supabase.from("offers").update(payload).eq("id", offer.id)
@@ -648,6 +654,60 @@ function OfferEditor({ offer, onClose, onSaved }: { offer: Offer | null; onClose
         <div className="space-y-3">
           {!offer && field("id", "ID (латиница, опционально)", "auto из названия")}
           {field("name", "Название")}
+          <label className="block">
+            <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Изображение оффера</span>
+            <div className="mt-1 flex items-start gap-3">
+              <div className="grid size-20 shrink-0 place-items-center overflow-hidden rounded-lg border border-border bg-background">
+                {form.image_url ? (
+                  <img src={form.image_url} alt="preview" className="size-full object-cover" />
+                ) : (
+                  <span className="text-[9px] uppercase text-muted-foreground">нет</span>
+                )}
+              </div>
+              <div className="flex-1 space-y-1">
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={async (e) => {
+                    const file = e.target.files?.[0];
+                    if (!file) return;
+                    if (file.size > 3 * 1024 * 1024) { setErr("Файл больше 3 МБ"); return; }
+                    const dataUrl = await new Promise<string>((resolve, reject) => {
+                      const reader = new FileReader();
+                      reader.onload = () => resolve(String(reader.result));
+                      reader.onerror = () => reject(reader.error);
+                      reader.readAsDataURL(file);
+                    });
+                    // downscale to max 512px webp/jpeg to keep row small
+                    const img = new Image();
+                    img.onload = () => {
+                      const max = 512;
+                      const scale = Math.min(1, max / Math.max(img.width, img.height));
+                      const w = Math.round(img.width * scale);
+                      const h = Math.round(img.height * scale);
+                      const canvas = document.createElement("canvas");
+                      canvas.width = w; canvas.height = h;
+                      const ctx = canvas.getContext("2d");
+                      if (!ctx) { setForm((f) => ({ ...f, image_url: dataUrl })); return; }
+                      ctx.drawImage(img, 0, 0, w, h);
+                      const out = canvas.toDataURL("image/webp", 0.85);
+                      setForm((f) => ({ ...f, image_url: out }));
+                    };
+                    img.onerror = () => setForm((f) => ({ ...f, image_url: dataUrl }));
+                    img.src = dataUrl;
+                  }}
+                  className="block w-full text-[11px] file:mr-2 file:rounded-md file:border-0 file:bg-accent file:px-2 file:py-1 file:text-[11px] file:font-bold"
+                />
+                {form.image_url && (
+                  <button type="button" onClick={() => setForm((f) => ({ ...f, image_url: "" }))}
+                    className="text-[11px] font-bold text-destructive hover:underline">
+                    Удалить изображение
+                  </button>
+                )}
+                <p className="text-[10px] text-muted-foreground">До 3 МБ. Хранится внутри проекта (в БД, как data URL).</p>
+              </div>
+            </div>
+          </label>
           <div className="grid grid-cols-2 gap-3">
             {field("tag", "Тег", "Финансы / Edu / Travel")}
             {field("category", "Категория", "Кредиты, курсы…")}

@@ -100,6 +100,7 @@ type Offer = {
   allowed: string[];
   denied: string[];
   landing: string;
+  image?: string;
 };
 
 type LinkRequestStatus = "new" | "review" | "approved" | "rejected";
@@ -534,6 +535,7 @@ function DashboardPage() {
         allowed: Array.isArray(r.allowed) ? r.allowed : [],
         denied: Array.isArray(r.denied) ? r.denied : [],
         landing: r.landing ?? "",
+        image: r.image_url ?? undefined,
       })));
 
       const pBank = (profileRes.data as { bank?: BankDetails | null } | null)?.bank;
@@ -1544,7 +1546,11 @@ function OffersTab({
                 onClick={() => onOpenDetail(o)}
                 className="flex w-full items-start gap-3 text-left"
               >
-                <OfferTag tag={o.tag} />
+                {o.image ? (
+                  <img src={o.image} alt="" className="size-10 shrink-0 rounded-md border border-border object-cover" />
+                ) : (
+                  <OfferTag tag={o.tag} />
+                )}
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-2">
                     <h4 className="truncate text-xs font-bold leading-none">{o.name}</h4>
@@ -2850,6 +2856,9 @@ function OfferDetailSheet({
 
         {/* Scrollable body */}
         <div className="flex-1 space-y-5 overflow-y-auto px-4 py-4">
+          {offer.image && (
+            <img src={offer.image} alt={offer.name} className="h-40 w-full rounded-xl border border-border object-cover" />
+          )}
           {/* Payout hero */}
           <div className="rounded-xl border border-border bg-gradient-to-br from-secondary/60 to-transparent p-4">
             <div className="flex items-baseline justify-between gap-2">

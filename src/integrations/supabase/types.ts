@@ -156,6 +156,7 @@ export type Database = {
           goal: string | null
           hold: string | null
           id: string
+          image_url: string | null
           is_new: boolean
           landing: string | null
           name: string
@@ -178,6 +179,7 @@ export type Database = {
           goal?: string | null
           hold?: string | null
           id: string
+          image_url?: string | null
           is_new?: boolean
           landing?: string | null
           name: string
@@ -200,6 +202,7 @@ export type Database = {
           goal?: string | null
           hold?: string | null
           id?: string
+          image_url?: string | null
           is_new?: boolean
           landing?: string | null
           name?: string
