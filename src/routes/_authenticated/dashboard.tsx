@@ -153,6 +153,27 @@ type LinkRequest = {
   note?: string;
 };
 
+/** Map legacy statuses to the new pipeline so both old and fresh rows render. */
+function normalizeStatus(raw: unknown): LinkRequestStatus {
+  const v = String(raw ?? "").toLowerCase();
+  switch (v) {
+    case "in_progress":
+    case "completed":
+    case "finished":
+    case "paid":
+      return v as LinkRequestStatus;
+    case "new":
+    case "review":
+      return "in_progress";
+    case "approved":
+      return "finished";
+    case "rejected":
+      return "in_progress";
+    default:
+      return "in_progress";
+  }
+}
+
 type Conversion = {
   id: string;
   time: string;
