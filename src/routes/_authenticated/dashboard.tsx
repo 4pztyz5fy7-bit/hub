@@ -3408,10 +3408,14 @@ function MetaCell({ Icon, label, value }: { Icon: LucideIcon; label: string; val
 
 function RequestStatusPill({ status }: { status: LinkRequestStatus }) {
   const map: Record<LinkRequestStatus, { label: string; cls: string; Icon: LucideIcon }> = {
-    new: { label: "Новая", cls: "bg-primary/10 text-primary", Icon: Sparkles },
-    review: { label: "На модерации", cls: "bg-[color:var(--warning)]/10 text-[color:var(--warning)]", Icon: Clock },
-    approved: { label: "Одобрено", cls: "bg-[color:var(--success)]/10 text-[color:var(--success)]", Icon: CheckCircle2 },
-    rejected: { label: "Отклонено", cls: "bg-destructive/10 text-destructive", Icon: XCircle },
+    in_progress: { label: "В работе", cls: "bg-[color:var(--warning)]/10 text-[color:var(--warning)]", Icon: Clock },
+    completed: { label: "Выполнено", cls: "bg-primary/10 text-primary", Icon: ThumbsUp },
+    finished: { label: "Завершено", cls: "bg-[color:var(--success)]/10 text-[color:var(--success)]", Icon: CheckCircle2 },
+    paid: { label: "Оплачено", cls: "bg-primary/15 text-primary", Icon: Sparkles },
+    new: { label: "В работе", cls: "bg-[color:var(--warning)]/10 text-[color:var(--warning)]", Icon: Clock },
+    review: { label: "В работе", cls: "bg-[color:var(--warning)]/10 text-[color:var(--warning)]", Icon: Clock },
+    approved: { label: "Завершено", cls: "bg-[color:var(--success)]/10 text-[color:var(--success)]", Icon: CheckCircle2 },
+    rejected: { label: "В работе", cls: "bg-[color:var(--warning)]/10 text-[color:var(--warning)]", Icon: XCircle },
   };
   const s = map[status];
   return (
