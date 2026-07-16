@@ -1912,7 +1912,7 @@ function UserRequestsTab({
 
               {isOpen && (
                 <div className="space-y-3 border-t border-border px-3 py-3">
-                  <RequestTimeline status={r.status} createdAt={r.createdAt} note={r.note} />
+                  <RequestTimeline status={r.status} createdAt={r.createdAt} note={r.note} ordersCount={r.ordersCount} />
 
                   {r.note && (
                     <div className="rounded-lg border border-border bg-background p-2.5 text-[11.5px] text-foreground/90">
