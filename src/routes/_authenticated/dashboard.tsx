@@ -847,18 +847,20 @@ function DashboardPage() {
               )}
             </button>
           )}
-          <button
-            aria-label="Уведомления"
-            onClick={() => setNotifOpen(true)}
-            className="relative flex size-8 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
-          >
-            <Bell className="size-4" />
-            {unreadCount > 0 && (
-              <span className="absolute -right-0.5 -top-0.5 grid min-w-[16px] place-items-center rounded-full bg-primary px-1 font-mono text-[9px] font-bold leading-none text-primary-foreground">
-                {unreadCount}
-              </span>
-            )}
-          </button>
+          {prefs.notify_push && (
+            <button
+              aria-label="Уведомления"
+              onClick={() => setNotifOpen(true)}
+              className="relative flex size-8 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+            >
+              <Bell className="size-4" />
+              {unreadCount > 0 && (
+                <span className="absolute -right-0.5 -top-0.5 grid min-w-[16px] place-items-center rounded-full bg-primary px-1 font-mono text-[9px] font-bold leading-none text-primary-foreground">
+                  {unreadCount}
+                </span>
+              )}
+            </button>
+          )}
           <button
             onClick={() => setLevelsOpen(true)}
             aria-label="Открыть уровни"
@@ -879,15 +881,23 @@ function DashboardPage() {
             </Link>
           )}
           <button
-            onClick={handleSignOut}
-            aria-label="Выйти"
-            className="flex size-8 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+            onClick={() => setActive("profile")}
+            aria-label="Профиль"
+            className={`grid size-8 place-items-center overflow-hidden rounded-full border font-mono text-[10px] font-semibold transition-all active:scale-95 ${
+              active === "profile" ? "border-primary ring-2 ring-primary/40" : "border-border bg-secondary hover:border-primary/60"
+            }`}
           >
-            <LogOut className="size-4" />
+            {userAvatar ? (
+              <img
+                src={userAvatar}
+                alt=""
+                className="size-full object-cover"
+                onError={(e) => ((e.currentTarget.style.display = "none"))}
+              />
+            ) : (
+              <span>{getInitials(userName)}</span>
+            )}
           </button>
-          <div className="grid size-8 place-items-center rounded-full border border-border bg-secondary font-mono text-[10px] font-semibold">
-            МК
-          </div>
         </div>
       </header>
 
