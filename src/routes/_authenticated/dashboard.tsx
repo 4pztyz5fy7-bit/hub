@@ -769,18 +769,20 @@ function DashboardPage() {
           <span className="text-sm font-bold uppercase tracking-tight">КВАНТ</span>
         </div>
         <div className="flex items-center gap-3">
-          <button
-            aria-label="Заявки на модерации"
-            onClick={() => setAdminOpen(true)}
-            className="relative flex size-8 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
-          >
-            <ClipboardList className="size-4" />
-            {requests.filter((r) => r.status === "new" || r.status === "review").length > 0 && (
-              <span className="absolute -right-0.5 -top-0.5 grid min-w-[16px] place-items-center rounded-full bg-[color:var(--warning)] px-1 font-mono text-[9px] font-bold leading-none text-background">
-                {requests.filter((r) => r.status === "new" || r.status === "review").length}
-              </span>
-            )}
-          </button>
+          {isAdmin && (
+            <button
+              aria-label="Заявки на модерации"
+              onClick={() => setAdminOpen(true)}
+              className="relative flex size-8 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+            >
+              <ClipboardList className="size-4" />
+              {requests.filter((r) => r.status === "new" || r.status === "review").length > 0 && (
+                <span className="absolute -right-0.5 -top-0.5 grid min-w-[16px] place-items-center rounded-full bg-[color:var(--warning)] px-1 font-mono text-[9px] font-bold leading-none text-background">
+                  {requests.filter((r) => r.status === "new" || r.status === "review").length}
+                </span>
+              )}
+            </button>
+          )}
           <button
             aria-label="Уведомления"
             onClick={() => setNotifOpen(true)}
@@ -875,8 +877,8 @@ function DashboardPage() {
             copiedOffer={copiedOffer}
             onCopyLink={copyOfferLink}
             onOpenDetail={(o) => setOfferDetail(o)}
-            requestsCount={requests.length}
-            onOpenAdmin={() => setAdminOpen(true)}
+            requestsCount={isAdmin ? requests.length : 0}
+            onOpenAdmin={isAdmin ? () => setAdminOpen(true) : undefined}
             level={levelInfo.current}
           />
         )}
@@ -1389,7 +1391,7 @@ function OffersTab({
   onCopyLink: (o: Offer, source?: string) => void;
   onOpenDetail: (o: Offer) => void;
   requestsCount: number;
-  onOpenAdmin: () => void;
+  onOpenAdmin?: () => void;
   level: Level;
 }) {
   const [q, setQ] = useState("");
@@ -1433,26 +1435,28 @@ function OffersTab({
             </p>
           </div>
         )}
-        <button
-          onClick={onOpenAdmin}
-          className="mb-3 flex w-full items-center justify-between gap-3 rounded-md border border-border bg-secondary/40 px-3 py-2 text-left transition-colors hover:border-foreground/20"
-        >
-          <div className="flex items-center gap-2">
-            <div className="grid size-7 place-items-center rounded-md bg-primary/10 text-primary">
-              <ClipboardList className="size-3.5" />
+        {onOpenAdmin && (
+          <button
+            onClick={onOpenAdmin}
+            className="mb-3 flex w-full items-center justify-between gap-3 rounded-md border border-border bg-secondary/40 px-3 py-2 text-left transition-colors hover:border-foreground/20"
+          >
+            <div className="flex items-center gap-2">
+              <div className="grid size-7 place-items-center rounded-md bg-primary/10 text-primary">
+                <ClipboardList className="size-3.5" />
+              </div>
+              <div>
+                <p className="text-[11px] font-bold leading-none">Заявки на модерации</p>
+                <p className="mt-1 text-[9px] uppercase tracking-wider text-muted-foreground">
+                  Только для администратора
+                </p>
+              </div>
             </div>
-            <div>
-              <p className="text-[11px] font-bold leading-none">Мои заявки на ссылки</p>
-              <p className="mt-1 text-[9px] uppercase tracking-wider text-muted-foreground">
-                Модерация ссылок админом
-              </p>
+            <div className="flex items-center gap-2">
+              <span className="font-mono text-[11px] font-bold tabular-nums">{requestsCount}</span>
+              <ChevronRight className="size-3.5 text-muted-foreground" />
             </div>
-          </div>
-          <div className="flex items-center gap-2">
-            <span className="font-mono text-[11px] font-bold tabular-nums">{requestsCount}</span>
-            <ChevronRight className="size-3.5 text-muted-foreground" />
-          </div>
-        </button>
+          </button>
+        )}
         <div className="flex items-center gap-2 rounded-md border border-border bg-card px-3 py-2">
           <Search className="size-3.5 text-muted-foreground" />
           <input
