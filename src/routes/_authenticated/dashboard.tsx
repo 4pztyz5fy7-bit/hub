@@ -1141,12 +1141,51 @@ function DashboardPage() {
 
 /* ================================ Info ================================= */
 
-const kpis = [
-  { label: "Доход сегодня", value: "8 240 ₽", delta: "+12%", positive: true },
-  { label: "Конверсии", value: "42", delta: "+6", positive: true },
-  { label: "EPC", value: "84,2 ₽", delta: "+2,1%", positive: true },
-  { label: "CR", value: "3,8%", delta: "−0,2%", positive: false },
-];
+type Kpi = { label: string; value: string; delta: string; positive: boolean };
+
+/** Weekly income series (Mon..Sun of current ISO week). */
+function weekIncomeSeries(conversions: Conversion[]): { series: number[]; total: number; prevTotal: number } {
+  const now = new Date();
+  const day = (now.getDay() + 6) % 7; // 0 = Mon
+  const monday = new Date(now.getFullYear(), now.getMonth(), now.getDate() - day);
+  const prevMonday = new Date(monday);
+  prevMonday.setDate(prevMonday.getDate() - 7);
+  const nextMonday = new Date(monday);
+  nextMonday.setDate(nextMonday.getDate() + 7);
+
+  const series = [0, 0, 0, 0, 0, 0, 0];
+  let total = 0;
+  let prevTotal = 0;
+  for (const c of conversions) {
+    if (c.status !== "ok") continue;
+    const d = new Date(c.createdAt);
+    if (isNaN(d.getTime())) continue;
+    if (d >= monday && d < nextMonday) {
+      const idx = (d.getDay() + 6) % 7;
+      series[idx] += c.amount;
+      total += c.amount;
+    } else if (d >= prevMonday && d < monday) {
+      prevTotal += c.amount;
+    }
+  }
+  return { series, total, prevTotal };
+}
+
+function sumToday(conversions: Conversion[]): { income: number; count: number } {
+  const today = new Date();
+  const y = today.getFullYear(), m = today.getMonth(), d = today.getDate();
+  let income = 0, count = 0;
+  for (const c of conversions) {
+    if (c.status !== "ok") continue;
+    const dt = new Date(c.createdAt);
+    if (dt.getFullYear() === y && dt.getMonth() === m && dt.getDate() === d) {
+      income += c.amount;
+      count += 1;
+    }
+  }
+  return { income, count };
+}
+
 
 function InfoTab({
   balance,
