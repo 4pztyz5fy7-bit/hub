@@ -1193,6 +1193,7 @@ function InfoTab({
   bank,
   conversions,
   offers,
+  requests,
   onOpenBank,
   onGoOffers,
   onGoConversions,
@@ -1204,6 +1205,7 @@ function InfoTab({
   bank: BankDetails | null;
   conversions: Conversion[];
   offers: Offer[];
+  requests: LinkRequest[];
   onOpenBank: () => void;
   onGoOffers: () => void;
   onGoConversions: () => void;
@@ -1213,6 +1215,23 @@ function InfoTab({
   const [copied, setCopied] = useState(false);
   const [activityTab, setActivityTab] = useState<"offers" | "conv">("offers");
   const level = useMemo(() => getLevel(balance), [balance]);
+
+  const week = useMemo(() => weekIncomeSeries(conversions), [conversions]);
+  const today = useMemo(() => sumToday(conversions), [conversions]);
+  const totalOrders = useMemo(
+    () => requests.reduce((s, r) => s + (r.ordersCount || 0), 0),
+    [requests],
+  );
+  const paidCount = useMemo(() => requests.filter((r) => r.status === "paid").length, [requests]);
+  const weekDelta = week.prevTotal > 0
+    ? Math.round(((week.total - week.prevTotal) / week.prevTotal) * 100)
+    : week.total > 0 ? 100 : 0;
+  const kpis: Kpi[] = [
+    { label: "Доход сегодня", value: `${fmt(today.income)} ₽`, delta: today.count > 0 ? `+${today.count} конв.` : "0", positive: today.income > 0 },
+    { label: "Конверсии", value: fmt(today.count), delta: `Σ ${fmt(conversions.filter((c) => c.status === "ok").length)}`, positive: today.count > 0 },
+    { label: "Заказы", value: fmt(totalOrders), delta: `Σ заявок ${fmt(requests.length)}`, positive: totalOrders > 0 },
+    { label: "Оплачено", value: fmt(paidCount), delta: paidCount > 0 ? "заявок" : "—", positive: paidCount > 0 },
+  ];
   const refLink = "kvant.io/p/user772/ref";
   const copy = async () => {
     try {
