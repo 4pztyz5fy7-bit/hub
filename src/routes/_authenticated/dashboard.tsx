@@ -535,6 +535,7 @@ function DashboardPage() {
         allowed: Array.isArray(r.allowed) ? r.allowed : [],
         denied: Array.isArray(r.denied) ? r.denied : [],
         landing: r.landing ?? "",
+        image: r.image_url ?? undefined,
       })));
 
       const pBank = (profileRes.data as { bank?: BankDetails | null } | null)?.bank;
