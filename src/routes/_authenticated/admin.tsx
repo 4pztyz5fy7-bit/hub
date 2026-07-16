@@ -468,7 +468,7 @@ function OffersTab() {
   const load = useCallback(async () => {
     setLoading(true);
     const { data } = await supabase.from("offers").select("*").order("created_at", { ascending: false });
-    setRows((data ?? []) as Offer[]);
+    setRows(((data ?? []) as unknown) as Offer[]);
     setLoading(false); setSelected(new Set());
   }, []);
   useEffect(() => { load(); }, [load]);
