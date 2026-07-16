@@ -27,16 +27,16 @@ import {
   BadgeCheck,
 } from "lucide-react";
 
-type Prefs = {
-  notify_email?: boolean;
-  notify_push?: boolean;
-  notify_marketing?: boolean;
-  notify_payouts?: boolean;
-  notify_offers?: boolean;
-  theme?: "system" | "dark" | "light";
-  language?: "ru" | "en";
-  compact?: boolean;
-  showBalance?: boolean;
+export type Prefs = {
+  notify_email: boolean;
+  notify_push: boolean;
+  notify_marketing: boolean;
+  notify_payouts: boolean;
+  notify_offers: boolean;
+  theme: "system" | "dark" | "light";
+  language: "ru" | "en";
+  compact: boolean;
+  showBalance: boolean;
 };
 
 type ProfileData = {
@@ -49,11 +49,11 @@ type ProfileData = {
   bio: string | null;
   city: string | null;
   website: string | null;
-  settings: Prefs | null;
+  settings: Partial<Prefs> | null;
   created_at: string;
 };
 
-const DEFAULT_PREFS: Required<Prefs> = {
+const DEFAULT_PREFS: Prefs = {
   notify_email: true,
   notify_push: true,
   notify_marketing: false,
@@ -69,10 +69,16 @@ export function ProfileTab({
   userId,
   isAdmin,
   onSignOut,
+  prefs: prefsProp,
+  onPrefsChange,
+  onProfileChange,
 }: {
   userId: string | null;
   isAdmin: boolean;
   onSignOut: () => void;
+  prefs?: Prefs;
+  onPrefsChange?: (p: Prefs) => void;
+  onProfileChange?: (name: string, avatar: string | null) => void;
 }) {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -81,7 +87,19 @@ export function ProfileTab({
 
   const [p, setP] = useState<ProfileData | null>(null);
   const [draft, setDraft] = useState<Partial<ProfileData>>({});
-  const [prefs, setPrefs] = useState<Required<Prefs>>(DEFAULT_PREFS);
+  const [prefs, setPrefsLocal] = useState<Prefs>(prefsProp ?? DEFAULT_PREFS);
+  const setPrefs = (updater: Prefs | ((s: Prefs) => Prefs)) => {
+    setPrefsLocal((s) => {
+      const next = typeof updater === "function" ? (updater as (s: Prefs) => Prefs)(s) : updater;
+      onPrefsChange?.(next);
+      return next;
+    });
+  };
+  // Keep local in sync if parent updates prefs externally
+  useEffect(() => {
+    if (prefsProp) setPrefsLocal(prefsProp);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [prefsProp]);
 
   const [pwOpen, setPwOpen] = useState(false);
   const [pwNew, setPwNew] = useState("");
@@ -103,7 +121,7 @@ export function ProfileTab({
       if (data) {
         setP(data as ProfileData);
         setDraft(data as ProfileData);
-        setPrefs({ ...DEFAULT_PREFS, ...((data as any).settings ?? {}) });
+        setPrefsLocal({ ...DEFAULT_PREFS, ...((data as any).settings ?? {}) });
       }
       setLoading(false);
     })();
@@ -145,6 +163,8 @@ export function ProfileTab({
       return;
     }
     setP((prev) => (prev ? { ...prev, ...(payload as any) } : prev));
+    onProfileChange?.(payload.display_name ?? "", payload.avatar_url);
+    onPrefsChange?.(prefs);
     setSaved(true);
     setTimeout(() => setSaved(false), 1600);
   };
@@ -152,7 +172,7 @@ export function ProfileTab({
   const reset = () => {
     if (!p) return;
     setDraft(p);
-    setPrefs({ ...DEFAULT_PREFS, ...(p.settings ?? {}) });
+    setPrefsLocal({ ...DEFAULT_PREFS, ...(p.settings ?? {}) });
   };
 
   const copy = async (v: string | null) => {

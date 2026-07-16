@@ -62,6 +62,30 @@ export const Route = createFileRoute("/_authenticated/dashboard")({
 
 type Tab = "info" | "offers" | "requests" | "stats" | "payouts" | "tools" | "profile";
 
+export type UserPrefs = {
+  notify_email: boolean;
+  notify_push: boolean;
+  notify_marketing: boolean;
+  notify_payouts: boolean;
+  notify_offers: boolean;
+  theme: "system" | "dark" | "light";
+  language: "ru" | "en";
+  compact: boolean;
+  showBalance: boolean;
+};
+
+export const DEFAULT_PREFS: UserPrefs = {
+  notify_email: true,
+  notify_push: true,
+  notify_marketing: false,
+  notify_payouts: true,
+  notify_offers: true,
+  theme: "dark",
+  language: "ru",
+  compact: false,
+  showBalance: true,
+};
+
 type BankDetails = {
   method: "card" | "account" | "sbp";
   holder: string;
@@ -461,6 +485,11 @@ const MONTHS_RU = ["янв","фев","мар","апр","мая","июн","июл
 const pad2 = (n: number) => String(n).padStart(2, "0");
 const timeOf = (iso: string) => { const d = new Date(iso); return `${pad2(d.getHours())}:${pad2(d.getMinutes())}`; };
 const dateShortOf = (iso: string) => { const d = new Date(iso); return `${d.getDate()} ${MONTHS_RU[d.getMonth()]}`; };
+const getInitials = (name: string) => {
+  const n = (name || "").trim();
+  if (!n) return "?";
+  return n.split(/\s+/).slice(0, 2).map((s) => s[0]?.toUpperCase() ?? "").join("") || "?";
+};
 
 function DashboardPage() {
   const [active, setActive] = useState<Tab>("info");
@@ -474,6 +503,32 @@ function DashboardPage() {
   const [bank, setBank] = useState<BankDetails | null>(null);
   const [linkedOffers, setLinkedOffers] = useState<Set<string>>(new Set());
   const [dataReady, setDataReady] = useState(false);
+  const [userName, setUserName] = useState<string>("");
+  const [userAvatar, setUserAvatar] = useState<string | null>(null);
+  const [prefs, setPrefs] = useState<UserPrefs>(DEFAULT_PREFS);
+
+  // Apply theme
+  useEffect(() => {
+    const root = document.documentElement;
+    const apply = (mode: "dark" | "light") => {
+      root.classList.toggle("dark", mode === "dark");
+      root.style.colorScheme = mode;
+    };
+    if (prefs.theme === "system") {
+      const mq = window.matchMedia("(prefers-color-scheme: dark)");
+      apply(mq.matches ? "dark" : "light");
+      const handler = (e: MediaQueryListEvent) => apply(e.matches ? "dark" : "light");
+      mq.addEventListener("change", handler);
+      return () => mq.removeEventListener("change", handler);
+    }
+    apply(prefs.theme);
+  }, [prefs.theme]);
+
+  // Apply language
+  useEffect(() => {
+    document.documentElement.lang = prefs.language;
+  }, [prefs.language]);
+
 
   // Earnings derived from real conversions and payouts
   const balance = useMemo(
@@ -514,7 +569,7 @@ function DashboardPage() {
       const [role, offersRes, profileRes, payoutsRes, reqsRes, convRes, notifRes] = await Promise.all([
         supabase.from("user_roles").select("role").eq("user_id", uid).eq("role", "admin").maybeSingle(),
         supabase.from("offers").select("*").eq("active", true).order("created_at", { ascending: false }),
-        supabase.from("profiles").select("bank").eq("id", uid).maybeSingle(),
+        supabase.from("profiles").select("bank,display_name,avatar_url,email,settings").eq("id", uid).maybeSingle(),
         supabase.from("payout_requests").select("*").eq("user_id", uid).order("created_at", { ascending: false }),
         supabase.from("link_requests").select("*").eq("user_id", uid).order("created_at", { ascending: false }),
         supabase.from("conversions").select("*").eq("user_id", uid).order("created_at", { ascending: false }),
@@ -540,8 +595,11 @@ function DashboardPage() {
         image: r.image_url ?? undefined,
       })));
 
-      const pBank = (profileRes.data as { bank?: BankDetails | null } | null)?.bank;
-      if (pBank) setBank(pBank);
+      const pRow = profileRes.data as { bank?: BankDetails | null; display_name?: string | null; avatar_url?: string | null; email?: string | null; settings?: Partial<UserPrefs> | null } | null;
+      if (pRow?.bank) setBank(pRow.bank);
+      setUserName(pRow?.display_name || pRow?.email || u.user.email || "");
+      setUserAvatar(pRow?.avatar_url ?? null);
+      if (pRow?.settings) setPrefs((s) => ({ ...s, ...(pRow.settings as Partial<UserPrefs>) }));
 
       setPayouts((payoutsRes.data ?? []).map((r: any): Payout => ({
         id: String(r.id).slice(0, 8).toUpperCase(),
@@ -794,18 +852,20 @@ function DashboardPage() {
               )}
             </button>
           )}
-          <button
-            aria-label="Уведомления"
-            onClick={() => setNotifOpen(true)}
-            className="relative flex size-8 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
-          >
-            <Bell className="size-4" />
-            {unreadCount > 0 && (
-              <span className="absolute -right-0.5 -top-0.5 grid min-w-[16px] place-items-center rounded-full bg-primary px-1 font-mono text-[9px] font-bold leading-none text-primary-foreground">
-                {unreadCount}
-              </span>
-            )}
-          </button>
+          {prefs.notify_push && (
+            <button
+              aria-label="Уведомления"
+              onClick={() => setNotifOpen(true)}
+              className="relative flex size-8 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+            >
+              <Bell className="size-4" />
+              {unreadCount > 0 && (
+                <span className="absolute -right-0.5 -top-0.5 grid min-w-[16px] place-items-center rounded-full bg-primary px-1 font-mono text-[9px] font-bold leading-none text-primary-foreground">
+                  {unreadCount}
+                </span>
+              )}
+            </button>
+          )}
           <button
             onClick={() => setLevelsOpen(true)}
             aria-label="Открыть уровни"
@@ -826,15 +886,23 @@ function DashboardPage() {
             </Link>
           )}
           <button
-            onClick={handleSignOut}
-            aria-label="Выйти"
-            className="flex size-8 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+            onClick={() => setActive("profile")}
+            aria-label="Профиль"
+            className={`grid size-8 place-items-center overflow-hidden rounded-full border font-mono text-[10px] font-semibold transition-all active:scale-95 ${
+              active === "profile" ? "border-primary ring-2 ring-primary/40" : "border-border bg-secondary hover:border-primary/60"
+            }`}
           >
-            <LogOut className="size-4" />
+            {userAvatar ? (
+              <img
+                src={userAvatar}
+                alt=""
+                className="size-full object-cover"
+                onError={(e) => ((e.currentTarget.style.display = "none"))}
+              />
+            ) : (
+              <span>{getInitials(userName)}</span>
+            )}
           </button>
-          <div className="grid size-8 place-items-center rounded-full border border-border bg-secondary font-mono text-[10px] font-semibold">
-            МК
-          </div>
         </div>
       </header>
 
@@ -918,7 +986,15 @@ function DashboardPage() {
           />
         )}
         {active === "profile" && (
-          <ProfileTab userId={userId} isAdmin={isAdmin} onSignOut={handleSignOut} />
+          <ProfileTab
+            userId={userId}
+            isAdmin={isAdmin}
+            onSignOut={handleSignOut}
+            prefs={prefs}
+            onPrefsChange={setPrefs}
+            onProfileChange={(name, avatar) => { setUserName(name); setUserAvatar(avatar); }}
+          />
+
         )}
       </main>
 
@@ -1003,7 +1079,7 @@ function DashboardPage() {
             { id: "stats", label: "Стата", Icon: BarChart3 },
             { id: "payouts", label: "Выплаты", Icon: Wallet },
             { id: "tools", label: "Инстр.", Icon: ClipboardList },
-            { id: "profile", label: "Профиль", Icon: UserCircle },
+            
           ] as const
         ).map(({ id, label, Icon }) => (
           <button
