@@ -590,8 +590,11 @@ function DashboardPage() {
         image: r.image_url ?? undefined,
       })));
 
-      const pBank = (profileRes.data as { bank?: BankDetails | null } | null)?.bank;
-      if (pBank) setBank(pBank);
+      const pRow = profileRes.data as { bank?: BankDetails | null; display_name?: string | null; avatar_url?: string | null; email?: string | null; settings?: Partial<UserPrefs> | null } | null;
+      if (pRow?.bank) setBank(pRow.bank);
+      setUserName(pRow?.display_name || pRow?.email || u.user.email || "");
+      setUserAvatar(pRow?.avatar_url ?? null);
+      if (pRow?.settings) setPrefs((s) => ({ ...s, ...(pRow.settings as Partial<UserPrefs>) }));
 
       setPayouts((payoutsRes.data ?? []).map((r: any): Payout => ({
         id: String(r.id).slice(0, 8).toUpperCase(),
