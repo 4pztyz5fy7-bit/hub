@@ -89,189 +89,130 @@ function LandingPage() {
         )}
       </header>
 
-      {/* HERO */}
-      <section id="top" className="relative overflow-hidden">
-        <div aria-hidden className="pointer-events-none absolute inset-0 -z-10">
-          <div className="absolute left-1/2 top-[-120px] size-[520px] -translate-x-1/2 rounded-full bg-primary/20 blur-3xl" />
+      {/* LIVING LONGREAD */}
+      <main id="top" className="relative overflow-hidden">
+        <div aria-hidden className="pointer-events-none absolute inset-x-0 top-[-160px] -z-10 h-[600px]">
+          <div className="absolute left-1/2 top-0 size-[560px] -translate-x-1/2 rounded-full bg-primary/20 blur-3xl" />
+          <div className="absolute left-[10%] top-40 size-[280px] rounded-full bg-primary/10 blur-3xl" />
+          <div className="absolute right-[5%] top-72 size-[320px] rounded-full bg-primary/15 blur-3xl" />
         </div>
-        <div className="mx-auto max-w-6xl px-4 pb-16 pt-14 md:pb-24 md:pt-20">
-          <div className="mx-auto max-w-3xl text-center">
-            <div className="mx-auto inline-flex items-center gap-2 rounded-full border border-border bg-secondary/40 px-3 py-1 text-[11px] font-bold uppercase tracking-widest text-muted-foreground">
-              <span className="size-1.5 rounded-full bg-primary" /> Партнёрская платформа №1 в СНГ
-            </div>
-            <h1 className="mt-5 text-4xl font-black leading-tight tracking-tight sm:text-5xl md:text-6xl">
-              Зарабатывайте на рекомендациях с <span className="text-primary">КВАНТ</span>
-            </h1>
-            <p className="mx-auto mt-5 max-w-2xl text-base leading-relaxed text-muted-foreground md:text-lg">
-              40+ проверенных офферов, прозрачная статистика в реальном времени и выплаты от 1 часа. Всё, что нужно, чтобы монетизировать трафик.
-            </p>
-            <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
-              <button onClick={() => openAuth("register")} className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-primary px-5 py-3 text-sm font-bold text-primary-foreground hover:bg-primary/90 sm:w-auto">
-                Создать аккаунт <ArrowRight className="size-4" />
-              </button>
-              <button onClick={() => openAuth("login")} className="inline-flex w-full items-center justify-center rounded-xl border border-border bg-card px-5 py-3 text-sm font-bold hover:bg-secondary sm:w-auto">
-                У меня уже есть аккаунт
-              </button>
-            </div>
-            <div className="mt-10 grid grid-cols-3 gap-4 border-t border-border pt-8 text-center">
-              {[
-                { v: "12 000+", l: "активных партнёров" },
-                { v: "₽1.2 млрд", l: "выплачено за год" },
-                { v: "1 час", l: "минимальная выплата" },
-              ].map((s) => (
-                <div key={s.l}>
-                  <div className="text-lg font-black sm:text-2xl">{s.v}</div>
-                  <div className="mt-1 text-[10px] uppercase tracking-wider text-muted-foreground sm:text-xs">{s.l}</div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      </section>
 
-      {/* FEATURES */}
-      <section id="features" className="border-t border-border/60 bg-secondary/20 py-16 md:py-24">
-        <div className="mx-auto max-w-6xl px-4">
-          <div className="max-w-2xl">
-            <h2 className="text-3xl font-black md:text-4xl">Всё в одном кабинете</h2>
-            <p className="mt-3 text-muted-foreground">Инструменты, которые действительно нужны партнёру. Без лишнего.</p>
+        <article className="mx-auto max-w-3xl px-5 pb-24 pt-14 md:pt-20 text-[17px] leading-[1.85] text-foreground/90">
+          <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-border bg-secondary/40 px-3 py-1 text-[11px] font-bold uppercase tracking-widest text-muted-foreground">
+            <span className="size-1.5 animate-pulse rounded-full bg-primary" /> Живая партнёрская платформа №1 в СНГ
           </div>
-          <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+
+          <h1 className="text-4xl font-black leading-[1.05] tracking-tight sm:text-5xl md:text-[64px]">
+            Зарабатывайте на рекомендациях с <span className="bg-gradient-to-br from-primary to-primary/60 bg-clip-text text-transparent">КВАНТ</span> — платформой, где каждая ссылка превращается в поток дохода.
+          </h1>
+
+          <p className="mt-8">
+            Пока вы читаете этот абзац, где-то в системе уже прошло <span className="font-bold text-primary">17 новых конверсий</span>, партнёр из Казани получил выплату за 47 минут, а новичок из Минска запустил свой первый оффер и <em className="not-italic font-semibold text-foreground">заработал ₽2 340 за первый день</em>. КВАНТ — это не «ещё одна CPA-сеть», а живой организм из <span className="font-bold">12 000+ активных партнёров</span>, <span className="font-bold">40+ проверенных офферов</span> и команды, которая знает каждого своего вебмастера в лицо. За последний год мы <span className="font-bold text-primary">выплатили ₽1.2 миллиарда</span> — и планируем удвоить эту цифру.
+          </p>
+
+          <p className="mt-6">
+            Всё начинается с одного клика:{" "}
+            <button onClick={() => openAuth("register")} className="mx-0.5 inline-flex items-center gap-1 rounded-md bg-primary px-2 py-0.5 align-baseline text-[15px] font-bold text-primary-foreground hover:bg-primary/90">
+              создайте аккаунт <ArrowRight className="size-3.5" />
+            </button>{" "}
+            (это займёт меньше минуты, честно), подтвердите email, зайдите в кабинет — и вы уже внутри. Никаких многодневных модераций, унизительных анкет и «мы вам перезвоним». Мы не любим бюрократию так же, как и вы.
+          </p>
+
+          <p className="mt-6">
+            Внутри вас встречают <span className="font-bold">офферы</span>: «Тинькофф Инвестиции» с выплатой <span className="font-bold text-primary">до ₽3 200</span> за лид и CR&nbsp;8.4%, «Альфа-Банк Дебет» — <span className="font-bold text-primary">₽2 500</span> при 6.9%, «Skillbox PRO» с ревшарой <span className="font-bold text-primary">до 40%</span>, «Aviasales Business», «Ostrovok B2B», «GeekBrains», и ещё десятки — от финтеха и EdTech до travel и SaaS. Каждый оффер приходит с эксклюзивными условиями, которые нельзя получить напрямую у рекламодателя.
+          </p>
+
+          <div className="my-10 rounded-2xl border-l-4 border-primary bg-secondary/30 px-6 py-5 text-[15px] italic text-muted-foreground">
+            «Раньше я лил на 3 сетки параллельно, чтобы выжать нормальный EPC. С КВАНТом одной хватает — офферы жирнее, холды короче, менеджер отвечает быстрее, чем я успеваю задать второй вопрос.»
+            <div className="mt-3 not-italic text-[12px] font-bold uppercase tracking-wider text-foreground">— Артём, арбитражник, ~₽800k/мес</div>
+          </div>
+
+          <p>
+            Выбрали оффер? Копируете партнёрскую ссылку — и запускаете трафик откуда угодно: контекст, таргет, SEO, Telegram-каналы, YouTube, e-mail, push, in-app, даже офлайн через QR-коды. Мы не диктуем источники, мы <em className="not-italic font-semibold text-foreground">даём инструменты</em>: <span className="font-bold">живую статистику</span> с EPC, CR, холдами и когортами, которая обновляется в реальном времени (не «раз в сутки в лучшем случае»), <span className="font-bold">субаккаунты</span> для команд, <span className="font-bold">API</span> для интеграций, <span className="font-bold">постбэки S2S</span>, автоматическую <span className="font-bold">капу</span> и антифрод, который защищает вас, а не наоборот.
+          </p>
+
+          <div className="my-12 grid grid-cols-3 gap-2 rounded-3xl border border-border bg-card/50 p-6 text-center backdrop-blur">
             {[
-              { Icon: Rocket, title: "40+ офферов", desc: "Финансы, EdTech, travel, финтех — с эксклюзивными условиями." },
-              { Icon: BarChart3, title: "Живая статистика", desc: "EPC, CR, holds и когорты — всё обновляется в реальном времени." },
-              { Icon: Wallet, title: "Быстрые выплаты", desc: "От 72 часов на старте до 1 часа на уровне «Платина»." },
-              { Icon: TrendingUp, title: "Уровни и бонусы", desc: "Повышенные ставки, ускоренные холды и приоритет модерации." },
-              { Icon: Headphones, title: "Личный менеджер", desc: "С уровня «Золото» — помощь по офферам и креативам 24/7." },
-              { Icon: ShieldCheck, title: "Честные правила", desc: "Прозрачная антифрод-политика, без блокировок задним числом." },
-            ].map((f) => (
-              <div key={f.title} className="rounded-2xl border border-border bg-card p-5 transition hover:border-primary/40 hover:shadow-sm">
-                <div className="grid size-10 place-items-center rounded-xl bg-primary/10 text-primary">
-                  <f.Icon className="size-5" />
-                </div>
-                <h3 className="mt-4 text-base font-bold">{f.title}</h3>
-                <p className="mt-1.5 text-sm text-muted-foreground">{f.desc}</p>
+              { v: "12 000+", l: "активных партнёров" },
+              { v: "₽1.2 млрд", l: "выплачено за год" },
+              { v: "1 час", l: "минимальная выплата" },
+            ].map((s) => (
+              <div key={s.l}>
+                <div className="bg-gradient-to-br from-primary to-primary/50 bg-clip-text text-2xl font-black text-transparent sm:text-3xl">{s.v}</div>
+                <div className="mt-1.5 text-[10px] uppercase tracking-wider text-muted-foreground sm:text-[11px]">{s.l}</div>
               </div>
             ))}
           </div>
-        </div>
-      </section>
 
-      {/* OFFERS PREVIEW */}
-      <section id="offers" className="py-16 md:py-24">
-        <div className="mx-auto max-w-6xl px-4">
-          <div className="flex flex-wrap items-end justify-between gap-4">
-            <div className="max-w-2xl">
-              <h2 className="text-3xl font-black md:text-4xl">Топовые офферы недели</h2>
-              <p className="mt-3 text-muted-foreground">Только проверенные рекламодатели. Полный каталог — в кабинете.</p>
-            </div>
-            <button onClick={() => openAuth("register")} className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-card px-3.5 py-2 text-sm font-bold hover:bg-secondary">
-              Смотреть все <ArrowRight className="size-4" />
+          <p>
+            А теперь про то, ради чего всё это — <span className="font-bold text-primary">выплаты</span>. Мы держим слово: <span className="font-bold">от 72 часов на старте</span>, <span className="font-bold">от 24 часов на «Серебре»</span>, <span className="font-bold">от 6 часов на «Золоте»</span> и <span className="font-bold text-primary">от 1 часа на «Платине»</span>. Минималка — <span className="font-bold">₽1 000</span>. Способы: карта РФ, USDT (TRC-20/ERC-20), СБП, банковский перевод для ИП и юрлиц, WMZ, Payoneer. Никаких «выплата задерживается, потому что у нас пятница».
+          </p>
+
+          <p className="mt-6">
+            Уровни партнёра — это не декоративные бейджи «для мотивации», а <em className="not-italic font-semibold text-foreground">реальные привилегии</em>, которые применяются автоматически: повышенные ставки (+5% на «Серебре», +10% на «Золоте», +15% на «Платине»), укороченные холды, приоритет в модерации креативов, эксклюзивные офферы, которые не видны публично, и — начиная с «Золота» — <span className="font-bold">личный менеджер 24/7</span>, который знает ваши источники, ваш стиль и ваш KPI. На «Платине» подключается ещё и медиабаинг-консалтинг, разбор кейсов с командой, кастомные посадочные страницы и приглашения на закрытые ивенты.
+          </p>
+
+          <p className="mt-6">
+            «А если я новичок?» — самый частый вопрос. Ответ: <span className="font-bold text-primary">это не проблема</span>. У нас есть база знаний с гайдами по каждому офферу, разбор связок, чат поддержки, куда можно писать хоть в три ночи, и «менеджер новичка» на первые 30 дней. Мы <em className="not-italic font-semibold text-foreground">хотим, чтобы вы зарабатывали</em> — потому что мы зарабатываем только тогда, когда зарабатываете вы. Простая экономика, никакой магии.
+          </p>
+
+          <p className="mt-6">
+            «А правила честные?» — да, и мы этим особенно гордимся. Прозрачная антифрод-политика с публичным регламентом, никаких блокировок задним числом, никаких «мы решили пересмотреть условия по вашему трафику за прошлый месяц». Спор? Идёт в открытый тикет с логами, скриншотами и разбором конверсий. Ошиблись мы — извинимся и компенсируем. Ошиблись вы — объясним, где и почему.
+          </p>
+
+          <div className="my-10 rounded-2xl border border-border bg-secondary/30 p-6">
+            <div className="text-[11px] font-bold uppercase tracking-widest text-primary">Что говорят цифры</div>
+            <p className="mt-3 text-[15px] leading-relaxed text-muted-foreground">
+              Средний EPC по топ-5 офферам сети — <span className="font-bold text-foreground">₽184</span>. Средний срок выхода нового партнёра в плюс — <span className="font-bold text-foreground">4 дня</span>. Retention партнёров через год — <span className="font-bold text-foreground">78%</span>. Средняя оценка поддержки — <span className="font-bold text-foreground">4.9 / 5</span> (13 400 оценок). Пропущенных выплат за 2025 год — <span className="font-bold text-foreground">0</span>.
+            </p>
+          </div>
+
+          <p>
+            Можно ещё долго рассказывать: про кастомные лендинги, про сплит-тестирование креативов внутри платформы, про то, как мы за 40 минут подняли новый оффер под запрос конкретного вебмастера, про закрытый Telegram-чат для «Платины», где обсуждают связки на миллион, про ежемесячные конкурсы с призами вроде MacBook Pro и поездок в Дубай, про то, что <span className="font-bold">поддержка отвечает в среднем за 2 минуты 14 секунд</span> — но лучше один раз попробовать.
+          </p>
+
+          <p className="mt-8 text-xl font-bold leading-snug text-foreground">
+            Регистрация занимает меньше минуты. Первый оффер можно запустить сразу. Первая выплата — уже сегодня.
+          </p>
+
+          <div className="mt-8 flex flex-col gap-3 sm:flex-row">
+            <button onClick={() => openAuth("register")} className="group inline-flex flex-1 items-center justify-center gap-2 rounded-xl bg-primary px-5 py-3.5 text-sm font-bold text-primary-foreground shadow-lg shadow-primary/20 transition hover:bg-primary/90 hover:shadow-primary/40">
+              Создать аккаунт <ArrowRight className="size-4 transition group-hover:translate-x-0.5" />
+            </button>
+            <button onClick={() => openAuth("login")} className="inline-flex flex-1 items-center justify-center rounded-xl border border-border bg-card px-5 py-3.5 text-sm font-bold hover:bg-secondary">
+              У меня уже есть аккаунт
             </button>
           </div>
-          <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {[
-              { name: "Тинькофф Инвестиции", cat: "Финансы", pay: "до ₽3 200", cr: "8.4%" },
-              { name: "Skillbox PRO", cat: "Образование", pay: "до 40%", cr: "5.1%" },
-              { name: "Aviasales Business", cat: "Travel", pay: "до ₽1 800", cr: "3.7%" },
-              { name: "Альфа-Банк Дебет", cat: "Финансы", pay: "до ₽2 500", cr: "6.9%" },
-              { name: "GeekBrains", cat: "Образование", pay: "до 35%", cr: "4.8%" },
-              { name: "Ostrovok B2B", cat: "Travel", pay: "до ₽2 100", cr: "3.2%" },
-            ].map((o) => (
-              <div key={o.name} className="group flex flex-col rounded-2xl border border-border bg-card p-5">
-                <div className="flex items-center justify-between">
-                  <span className="rounded-full bg-secondary px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">{o.cat}</span>
-                  <Star className="size-4 text-primary" />
-                </div>
-                <h3 className="mt-3 text-base font-bold">{o.name}</h3>
-                <div className="mt-4 grid flex-1 grid-cols-2 gap-3 border-t border-border pt-4">
-                  <div>
-                    <div className="text-[10px] uppercase tracking-wider text-muted-foreground">Выплата</div>
-                    <div className="mt-0.5 text-sm font-bold">{o.pay}</div>
-                  </div>
-                  <div>
-                    <div className="text-[10px] uppercase tracking-wider text-muted-foreground">CR</div>
-                    <div className="mt-0.5 text-sm font-bold">{o.cr}</div>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
 
-      {/* HOW IT WORKS */}
-      <section id="how" className="border-t border-border/60 bg-secondary/20 py-16 md:py-24">
-        <div className="mx-auto max-w-6xl px-4">
-          <div className="max-w-2xl">
-            <h2 className="text-3xl font-black md:text-4xl">Как это работает</h2>
-            <p className="mt-3 text-muted-foreground">Три шага до первой выплаты.</p>
-          </div>
-          <div className="mt-10 grid gap-6 md:grid-cols-3">
-            {[
-              { n: "01", t: "Зарегистрируйтесь", d: "Email и пара кликов — без долгих анкет и модерации на входе." },
-              { n: "02", t: "Выберите оффер", d: "Скопируйте партнёрскую ссылку и запускайте трафик из любого источника." },
-              { n: "03", t: "Получайте выплаты", d: "Отслеживайте конверсии и выводите средства на карту или крипту." },
-            ].map((s) => (
-              <div key={s.n} className="rounded-2xl border border-border bg-card p-6">
-                <div className="text-4xl font-black text-primary/30">{s.n}</div>
-                <h3 className="mt-3 text-lg font-bold">{s.t}</h3>
-                <p className="mt-2 text-sm text-muted-foreground">{s.d}</p>
-              </div>
+          <ul className="mt-6 flex flex-wrap items-center gap-x-5 gap-y-2 text-xs text-muted-foreground">
+            {["Без вложений", "Без модерации на входе", "Поддержка 24/7", "Выплаты от 1 часа"].map((t) => (
+              <li key={t} className="inline-flex items-center gap-1.5"><Check className="size-3.5 text-primary" />{t}</li>
             ))}
-          </div>
-        </div>
-      </section>
+          </ul>
 
-      {/* FAQ */}
-      <section id="faq" className="py-16 md:py-24">
-        <div className="mx-auto max-w-3xl px-4">
-          <h2 className="text-center text-3xl font-black md:text-4xl">Частые вопросы</h2>
-          <div className="mt-10 space-y-3">
-            {[
-              { q: "Нужен ли опыт в арбитраже?", a: "Нет. Мы помогаем новичкам — есть база знаний, гайды по офферам и поддержка в чате." },
-              { q: "Как быстро приходят выплаты?", a: "От 72 часов на старте. С ростом уровня время сокращается до 1 часа." },
-              { q: "Есть ли минимальная сумма вывода?", a: "Да, 1 000 ₽. Способы вывода: карта РФ, USDT, банковский перевод для юрлиц." },
-              { q: "Можно ли лить с бурж-трафика?", a: "Да, но условия зависят от оффера — уточняйте у менеджера или в карточке оффера." },
-            ].map((f) => (
-              <details key={f.q} className="group rounded-xl border border-border bg-card p-4 [&_summary::-webkit-details-marker]:hidden">
-                <summary className="flex cursor-pointer items-center justify-between gap-3 text-sm font-bold">
-                  {f.q}
-                  <span className="grid size-6 shrink-0 place-items-center rounded-full bg-secondary text-muted-foreground transition group-open:rotate-45">+</span>
-                </summary>
-                <p className="mt-3 text-sm leading-relaxed text-muted-foreground">{f.a}</p>
-              </details>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* CTA */}
-      <section className="border-t border-border/60 py-16 md:py-24">
-        <div className="mx-auto max-w-4xl px-4">
-          <div className="relative overflow-hidden rounded-3xl border border-border bg-card p-8 text-center md:p-14">
-            <div aria-hidden className="pointer-events-none absolute inset-0 -z-10 opacity-60">
-              <div className="absolute -right-24 -top-24 size-72 rounded-full bg-primary/20 blur-3xl" />
-              <div className="absolute -bottom-24 -left-24 size-72 rounded-full bg-primary/10 blur-3xl" />
-            </div>
-            <h2 className="text-3xl font-black md:text-4xl">Готовы начать зарабатывать?</h2>
-            <p className="mx-auto mt-3 max-w-lg text-muted-foreground">Регистрация занимает меньше минуты. Первый оффер можно запустить сразу.</p>
-            <div className="mt-7 flex flex-col items-center justify-center gap-3 sm:flex-row">
-              <button onClick={() => openAuth("register")} className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-primary px-5 py-3 text-sm font-bold text-primary-foreground hover:bg-primary/90 sm:w-auto">
-                Создать аккаунт <ArrowRight className="size-4" />
-              </button>
-              <button onClick={() => openAuth("login")} className="inline-flex w-full items-center justify-center rounded-xl border border-border bg-background px-5 py-3 text-sm font-bold hover:bg-secondary sm:w-auto">
-                Войти в кабинет
-              </button>
-            </div>
-            <ul className="mt-6 flex flex-wrap items-center justify-center gap-x-5 gap-y-2 text-xs text-muted-foreground">
-              {["Без вложений", "Без модерации на входе", "Поддержка 24/7"].map((t) => (
-                <li key={t} className="inline-flex items-center gap-1.5"><Check className="size-3.5 text-primary" />{t}</li>
+          <div id="faq" className="mt-16 border-t border-border pt-10">
+            <div className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground">Ещё несколько вопросов, которые вы точно зададите</div>
+            <div className="mt-5 space-y-2">
+              {[
+                { q: "Нужен ли опыт в арбитраже?", a: "Нет. База знаний, гайды по офферам, менеджер новичка на первые 30 дней и живой чат поддержки — вы не останетесь один." },
+                { q: "Как быстро приходят выплаты?", a: "От 72 часов на старте, от 1 часа на «Платине». В прошлом месяце средний срок по всей сети составил 8 часов 12 минут." },
+                { q: "Есть ли минимальная сумма вывода?", a: "1 000 ₽. Способы: карта РФ, USDT (TRC-20/ERC-20), СБП, банковский перевод для ИП и юрлиц, WMZ, Payoneer." },
+                { q: "Можно ли лить с бурж-трафика?", a: "Да, но условия зависят от оффера — часть работает только по РФ/СНГ, часть открыта на бурж. Уточняйте в карточке оффера или у менеджера." },
+                { q: "Что с антифродом?", a: "Публичный регламент, никаких блокировок задним числом, все спорные ситуации разбираются с логами и скриншотами в открытом тикете." },
+              ].map((f) => (
+                <details key={f.q} className="group rounded-xl border border-border bg-card/60 p-4 [&_summary::-webkit-details-marker]:hidden">
+                  <summary className="flex cursor-pointer items-center justify-between gap-3 text-sm font-bold">
+                    {f.q}
+                    <span className="grid size-6 shrink-0 place-items-center rounded-full bg-secondary text-muted-foreground transition group-open:rotate-45">+</span>
+                  </summary>
+                  <p className="mt-3 text-sm leading-relaxed text-muted-foreground">{f.a}</p>
+                </details>
               ))}
-            </ul>
+            </div>
           </div>
-        </div>
-      </section>
+        </article>
+      </main>
+
 
       {/* FOOTER */}
       <footer className="border-t border-border/60 py-8">
