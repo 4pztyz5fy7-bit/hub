@@ -1005,7 +1005,7 @@ function DashboardPage() {
             available={available}
             bank={bank}
             conversions={conversions}
-            offers={offersData}
+            offers={offers}
             onOpenBank={openBank}
             onGoOffers={() => setActive("offers")}
             onGoConversions={() => setActive("stats")}
@@ -1015,7 +1015,7 @@ function DashboardPage() {
         )}
         {active === "offers" && (
           <OffersTab
-            offers={offersData}
+            offers={offers}
             linked={linkedOffers}
             copiedOffer={copiedOffer}
             onCopyLink={copyOfferLink}
@@ -1026,7 +1026,7 @@ function DashboardPage() {
           />
         )}
         {active === "stats" && (
-          <StatsTab conversions={conversions} offers={offersData} />
+          <StatsTab conversions={conversions} offers={offers} />
         )}
         {active === "payouts" && (
           <PayoutsTab
