@@ -133,14 +133,14 @@ function LandingPage() {
                 <span className="absolute inset-0 animate-ping rounded-full bg-primary opacity-75" />
                 <span className="relative inline-flex size-2 rounded-full bg-primary" />
               </span>
-              1 247 партнёров онлайн прямо сейчас
+              {stats ? `${formatCount(stats.partners)} партнёров в сети` : "Партнёрская сеть КВАНТ"}
             </div>
             <h1 className="mt-5 text-4xl font-black leading-[1.05] tracking-tight sm:text-5xl md:text-[64px]">
               Зарабатывайте на рекомендациях с{" "}
               <span className="bg-gradient-to-br from-primary via-primary to-primary/50 bg-clip-text text-transparent">КВАНТ</span>
             </h1>
             <p className="mx-auto mt-5 max-w-2xl text-base leading-relaxed text-muted-foreground md:text-lg">
-              40+ проверенных офферов, живая статистика в реальном времени и выплаты <span className="font-bold text-foreground">от 1 часа</span>. За последний год партнёры вывели <span className="font-bold text-foreground">₽1.2 млрд</span> — присоединяйтесь.
+              {stats && stats.offersCount > 0 ? `${stats.offersCount} проверенных офферов` : "Проверенные офферы"}, живая статистика в реальном времени и выплаты <span className="font-bold text-foreground">от 1 часа</span>.{stats && stats.totalPaid > 0 ? <> Партнёры вывели <span className="font-bold text-foreground">{formatRub(stats.totalPaid)}</span> — присоединяйтесь.</> : " Присоединяйтесь."}
             </p>
             <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
               <button onClick={() => openAuth("register")} className="group inline-flex w-full items-center justify-center gap-2 rounded-xl bg-primary px-6 py-3.5 text-sm font-bold text-primary-foreground shadow-lg shadow-primary/25 transition hover:bg-primary/90 hover:shadow-xl hover:shadow-primary/40 sm:w-auto">
