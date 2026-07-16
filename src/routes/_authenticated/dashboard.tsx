@@ -3435,7 +3435,7 @@ function AdminRequestsSheet({
   onClose,
 }: {
   requests: LinkRequest[];
-  onDecide: (id: string, status: "approved" | "rejected", note?: string) => void;
+  onDecide: (id: string, status: LinkRequestStatus, note?: string) => void;
   onClose: () => void;
 }) {
   const [filter, setFilter] = useState<"all" | LinkRequestStatus>("all");
