@@ -150,6 +150,7 @@ export type Database = {
           advertiser: string | null
           allowed: string[]
           category: string | null
+          city_payouts: Json
           cr: number
           created_at: string
           denied: string[]
@@ -164,6 +165,9 @@ export type Database = {
           landing: string | null
           name: string
           payout: string
+          payout_kind: string
+          payout_max: number | null
+          payout_min: number | null
           requirements: string | null
           tag: string
           updated_at: string
@@ -173,6 +177,7 @@ export type Database = {
           advertiser?: string | null
           allowed?: string[]
           category?: string | null
+          city_payouts?: Json
           cr?: number
           created_at?: string
           denied?: string[]
@@ -187,6 +192,9 @@ export type Database = {
           landing?: string | null
           name: string
           payout: string
+          payout_kind?: string
+          payout_max?: number | null
+          payout_min?: number | null
           requirements?: string | null
           tag: string
           updated_at?: string
@@ -196,6 +204,7 @@ export type Database = {
           advertiser?: string | null
           allowed?: string[]
           category?: string | null
+          city_payouts?: Json
           cr?: number
           created_at?: string
           denied?: string[]
@@ -210,6 +219,9 @@ export type Database = {
           landing?: string | null
           name?: string
           payout?: string
+          payout_kind?: string
+          payout_max?: number | null
+          payout_min?: number | null
           requirements?: string | null
           tag?: string
           updated_at?: string
