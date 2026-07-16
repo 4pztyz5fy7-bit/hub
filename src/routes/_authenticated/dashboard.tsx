@@ -1770,10 +1770,11 @@ function UserRequestsTab({
   const counts = useMemo(
     () => ({
       all: requests.length,
-      new: requests.filter((r) => r.status === "new").length,
-      review: requests.filter((r) => r.status === "review").length,
-      approved: requests.filter((r) => r.status === "approved").length,
-      rejected: requests.filter((r) => r.status === "rejected").length,
+      in_progress: requests.filter((r) => r.status === "in_progress").length,
+      completed: requests.filter((r) => r.status === "completed").length,
+      finished: requests.filter((r) => r.status === "finished").length,
+      paid: requests.filter((r) => r.status === "paid").length,
+      orders: requests.reduce((s, r) => s + (r.ordersCount || 0), 0),
     }),
     [requests],
   );
@@ -1794,18 +1795,23 @@ function UserRequestsTab({
   };
 
   const statusMeta: Record<LinkRequestStatus, { label: string; cls: string; Icon: LucideIcon }> = {
-    new: { label: "Новая", cls: "text-sky-500 border-sky-500/30 bg-sky-500/10", Icon: Clock },
-    review: { label: "На проверке", cls: "text-amber-500 border-amber-500/30 bg-amber-500/10", Icon: Search },
-    approved: { label: "Одобрена", cls: "text-emerald-500 border-emerald-500/30 bg-emerald-500/10", Icon: ThumbsUp },
-    rejected: { label: "Отклонена", cls: "text-destructive border-destructive/30 bg-destructive/10", Icon: ThumbsDown },
+    in_progress: { label: "В работе", cls: "text-amber-500 border-amber-500/30 bg-amber-500/10", Icon: Clock },
+    completed: { label: "Выполнено", cls: "text-sky-500 border-sky-500/30 bg-sky-500/10", Icon: ThumbsUp },
+    finished: { label: "Завершено", cls: "text-emerald-500 border-emerald-500/30 bg-emerald-500/10", Icon: CheckCircle2 },
+    paid: { label: "Оплачено", cls: "text-primary border-primary/30 bg-primary/10", Icon: Sparkles },
+    // legacy fallbacks (не показываются после normalizeStatus, оставлены на всякий случай)
+    new: { label: "В работе", cls: "text-amber-500 border-amber-500/30 bg-amber-500/10", Icon: Clock },
+    review: { label: "В работе", cls: "text-amber-500 border-amber-500/30 bg-amber-500/10", Icon: Search },
+    approved: { label: "Завершено", cls: "text-emerald-500 border-emerald-500/30 bg-emerald-500/10", Icon: CheckCircle2 },
+    rejected: { label: "В работе", cls: "text-amber-500 border-amber-500/30 bg-amber-500/10", Icon: Clock },
   };
 
   const chips: { id: "all" | LinkRequestStatus; label: string; n: number }[] = [
     { id: "all", label: "Все", n: counts.all },
-    { id: "new", label: "Новые", n: counts.new },
-    { id: "review", label: "Проверка", n: counts.review },
-    { id: "approved", label: "Одобрены", n: counts.approved },
-    { id: "rejected", label: "Отклонены", n: counts.rejected },
+    { id: "in_progress", label: "В работе", n: counts.in_progress },
+    { id: "completed", label: "Выполнено", n: counts.completed },
+    { id: "finished", label: "Завершено", n: counts.finished },
+    { id: "paid", label: "Оплачено", n: counts.paid },
   ];
 
   return (
