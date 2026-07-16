@@ -1552,7 +1552,7 @@ function InfoTab({
   );
 }
 
-function KpiCell({ k }: { k: (typeof kpis)[number] }) {
+function KpiCell({ k }: { k: Kpi }) {
   return (
     <div className="bg-card p-3">
       <p className="mb-1 text-[10px] font-medium uppercase text-muted-foreground">{k.label}</p>
