@@ -991,6 +991,7 @@ function DashboardPage() {
             { id: "offers", label: "Офферы", Icon: Package },
             { id: "stats", label: "Стата", Icon: BarChart3 },
             { id: "payouts", label: "Выплаты", Icon: Wallet },
+            { id: "tools", label: "Инстр.", Icon: Package },
           ] as const
         ).map(({ id, label, Icon }) => (
           <button
