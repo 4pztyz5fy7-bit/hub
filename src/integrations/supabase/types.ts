@@ -61,6 +61,7 @@ export type Database = {
           offer_id: string | null
           offer_name: string
           offer_tag: string | null
+          orders_count: number
           source: string | null
           status: Database["public"]["Enums"]["link_status"]
           sub: string | null
@@ -75,6 +76,7 @@ export type Database = {
           offer_id?: string | null
           offer_name: string
           offer_tag?: string | null
+          orders_count?: number
           source?: string | null
           status?: Database["public"]["Enums"]["link_status"]
           sub?: string | null
@@ -89,6 +91,7 @@ export type Database = {
           offer_id?: string | null
           offer_name?: string
           offer_tag?: string | null
+          orders_count?: number
           source?: string | null
           status?: Database["public"]["Enums"]["link_status"]
           sub?: string | null
@@ -331,7 +334,15 @@ export type Database = {
     }
     Enums: {
       app_role: "admin" | "user"
-      link_status: "new" | "review" | "approved" | "rejected"
+      link_status:
+        | "new"
+        | "review"
+        | "approved"
+        | "rejected"
+        | "in_progress"
+        | "completed"
+        | "finished"
+        | "paid"
       payout_status: "pending" | "processing" | "paid" | "rejected"
     }
     CompositeTypes: {
@@ -461,7 +472,16 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["admin", "user"],
-      link_status: ["new", "review", "approved", "rejected"],
+      link_status: [
+        "new",
+        "review",
+        "approved",
+        "rejected",
+        "in_progress",
+        "completed",
+        "finished",
+        "paid",
+      ],
       payout_status: ["pending", "processing", "paid", "rejected"],
     },
   },
