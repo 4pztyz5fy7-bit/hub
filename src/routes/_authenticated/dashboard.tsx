@@ -2,6 +2,7 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { ToolsTab } from "@/components/dashboard/tools-tab";
+import { ProfileTab } from "@/components/dashboard/profile-tab";
 import { LogOut } from "lucide-react";
 import {
   LayoutGrid,
@@ -47,6 +48,7 @@ import {
   Building2,
   ClipboardList,
   Inbox,
+  UserCircle,
   ThumbsUp,
   ThumbsDown,
   type LucideIcon,
@@ -58,7 +60,7 @@ export const Route = createFileRoute("/_authenticated/dashboard")({
 
 /* ================================ Types ================================ */
 
-type Tab = "info" | "offers" | "requests" | "stats" | "payouts" | "tools";
+type Tab = "info" | "offers" | "requests" | "stats" | "payouts" | "tools" | "profile";
 
 type BankDetails = {
   method: "card" | "account" | "sbp";
@@ -915,6 +917,9 @@ function DashboardPage() {
             offers={offers.map((o) => ({ id: o.id, name: o.name, landing: o.landing }))}
           />
         )}
+        {active === "profile" && (
+          <ProfileTab userId={userId} isAdmin={isAdmin} onSignOut={handleSignOut} />
+        )}
       </main>
 
       {/* Bank sheet */}
@@ -998,6 +1003,7 @@ function DashboardPage() {
             { id: "stats", label: "Стата", Icon: BarChart3 },
             { id: "payouts", label: "Выплаты", Icon: Wallet },
             { id: "tools", label: "Инстр.", Icon: ClipboardList },
+            { id: "profile", label: "Профиль", Icon: UserCircle },
           ] as const
         ).map(({ id, label, Icon }) => (
           <button
