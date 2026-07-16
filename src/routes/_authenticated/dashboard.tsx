@@ -177,6 +177,7 @@ function normalizeStatus(raw: unknown): LinkRequestStatus {
 type Conversion = {
   id: string;
   time: string;
+  createdAt: string; // ISO
   offerId: string;
   offerName: string;
   amount: number;
