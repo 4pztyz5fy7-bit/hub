@@ -505,15 +505,30 @@ function OffersTab() {
 
 function OfferEditor({ offer, onClose, onSaved }: { offer: Offer | null; onClose: () => void; onSaved: () => void }) {
   const [form, setForm] = useState({
-    id: offer?.id ?? "", name: offer?.name ?? "", tag: offer?.tag ?? "Финансы",
-    advertiser: offer?.advertiser ?? "", geo: offer?.geo ?? "RU",
-    payout: offer?.payout ?? "", epc: String(offer?.epc ?? 0),
-    hold: offer?.hold ?? "", goal: offer?.goal ?? "",
-    description: offer?.description ?? "", requirements: offer?.requirements ?? "",
+    id: offer?.id ?? "",
+    name: offer?.name ?? "",
+    tag: offer?.tag ?? "Финансы",
+    category: offer?.category ?? "",
+    advertiser: offer?.advertiser ?? "",
+    geo: offer?.geo ?? "RU",
+    payout: offer?.payout ?? "",
+    epc: String(offer?.epc ?? 0),
+    cr: String(offer?.cr ?? 0),
+    hold: offer?.hold ?? "",
+    goal: offer?.goal ?? "",
+    landing: offer?.landing ?? "",
+    description: offer?.description ?? "",
+    requirements: offer?.requirements ?? "",
+    allowed: (offer?.allowed ?? []).join(", "),
+    denied: (offer?.denied ?? []).join(", "),
     active: offer?.active ?? true,
+    is_new: offer?.is_new ?? false,
   });
   const [saving, setSaving] = useState(false);
   const [err, setErr] = useState<string | null>(null);
+
+  const splitList = (v: string) =>
+    v.split(",").map((s) => s.trim()).filter(Boolean);
 
   const save = async () => {
     setErr(null);
@@ -521,12 +536,24 @@ function OfferEditor({ offer, onClose, onSaved }: { offer: Offer | null; onClose
     if (!id || !form.name.trim() || !form.payout.trim()) { setErr("Заполните id/название/выплату"); return; }
     setSaving(true);
     const payload = {
-      id, name: form.name.trim(), tag: form.tag.trim(),
-      advertiser: form.advertiser.trim() || null, geo: form.geo.trim() || null,
-      payout: form.payout.trim(), epc: Number(form.epc) || 0,
-      hold: form.hold.trim() || null, goal: form.goal.trim() || null,
-      description: form.description.trim() || null, requirements: form.requirements.trim() || null,
+      id,
+      name: form.name.trim(),
+      tag: form.tag.trim(),
+      category: form.category.trim() || null,
+      advertiser: form.advertiser.trim() || null,
+      geo: form.geo.trim() || null,
+      payout: form.payout.trim(),
+      epc: Number(form.epc) || 0,
+      cr: Number(form.cr) || 0,
+      hold: form.hold.trim() || null,
+      goal: form.goal.trim() || null,
+      landing: form.landing.trim() || null,
+      description: form.description.trim() || null,
+      requirements: form.requirements.trim() || null,
+      allowed: splitList(form.allowed),
+      denied: splitList(form.denied),
       active: form.active,
+      is_new: form.is_new,
     };
     const { error } = offer
       ? await supabase.from("offers").update(payload).eq("id", offer.id)
@@ -555,29 +582,57 @@ function OfferEditor({ offer, onClose, onSaved }: { offer: Offer | null; onClose
         <div className="space-y-3">
           {!offer && field("id", "ID (латиница, опционально)", "auto из названия")}
           {field("name", "Название")}
-          {field("tag", "Категория", "Финансы / Образование / Travel")}
           <div className="grid grid-cols-2 gap-3">
-            {field("advertiser", "Рекламодатель")}
-            {field("geo", "ГЕО")}
+            {field("tag", "Тег", "Финансы / Edu / Travel")}
+            {field("category", "Категория", "Кредиты, курсы…")}
           </div>
           <div className="grid grid-cols-2 gap-3">
-            {field("payout", "Выплата", "3500 ₽ / 12%")}
+            {field("advertiser", "Рекламодатель")}
+            {field("geo", "ГЕО", "RU, KZ, BY")}
+          </div>
+          <div className="grid grid-cols-3 gap-3">
+            {field("payout", "Выплата", "3500 ₽")}
             {field("epc", "EPC")}
+            {field("cr", "CR, %")}
           </div>
           <div className="grid grid-cols-2 gap-3">
             {field("hold", "Hold", "14 дн.")}
             {field("goal", "Цель", "Одобренная заявка")}
           </div>
+          <label className="block">
+            <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Партнёрская ссылка (её копирует пользователь)</span>
+            <input type="url" value={form.landing} placeholder="https://track.example.com/?sub={sub}"
+              onChange={(e) => setForm((f) => ({ ...f, landing: e.target.value }))}
+              className="mt-0.5 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/40" />
+          </label>
           <label className="block"><span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Описание</span>
             <textarea value={form.description} onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))} rows={3}
               className="mt-0.5 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm" /></label>
           <label className="block"><span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Требования</span>
             <textarea value={form.requirements} onChange={(e) => setForm((f) => ({ ...f, requirements: e.target.value }))} rows={2}
               className="mt-0.5 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm" /></label>
-          <label className="flex items-center gap-2 text-sm">
-            <input type="checkbox" checked={form.active} onChange={(e) => setForm((f) => ({ ...f, active: e.target.checked }))} />
-            Активный оффер
+          <label className="block">
+            <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Разрешённый трафик (через запятую)</span>
+            <textarea value={form.allowed} onChange={(e) => setForm((f) => ({ ...f, allowed: e.target.value }))} rows={2}
+              placeholder="SEO, Telegram, Email"
+              className="mt-0.5 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm" />
           </label>
+          <label className="block">
+            <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Запрещённый трафик (через запятую)</span>
+            <textarea value={form.denied} onChange={(e) => setForm((f) => ({ ...f, denied: e.target.value }))} rows={2}
+              placeholder="Мотив, Brand bidding, Adult"
+              className="mt-0.5 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm" />
+          </label>
+          <div className="flex flex-wrap gap-4">
+            <label className="flex items-center gap-2 text-sm">
+              <input type="checkbox" checked={form.active} onChange={(e) => setForm((f) => ({ ...f, active: e.target.checked }))} />
+              Активный
+            </label>
+            <label className="flex items-center gap-2 text-sm">
+              <input type="checkbox" checked={form.is_new} onChange={(e) => setForm((f) => ({ ...f, is_new: e.target.checked }))} />
+              Метка NEW
+            </label>
+          </div>
           {err && <p className="rounded-lg border border-destructive/40 bg-destructive/10 px-3 py-2 text-[12px] text-destructive">{err}</p>}
           <button disabled={saving} onClick={save} className="w-full rounded-lg bg-primary px-4 py-2.5 text-sm font-bold text-primary-foreground disabled:opacity-60">
             {saving ? "Сохранение…" : "Сохранить"}
