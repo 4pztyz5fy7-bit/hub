@@ -1915,7 +1915,7 @@ function UserRequestsTab({
                   <RequestTimeline status={r.status} createdAt={r.createdAt} note={r.note} />
 
                   {r.note && (
-                    <div className={`rounded-lg border p-2.5 text-[11.5px] ${r.status === "rejected" ? "border-destructive/30 bg-destructive/10 text-destructive" : "border-border bg-background text-foreground/90"}`}>
+                    <div className="rounded-lg border border-border bg-background p-2.5 text-[11.5px] text-foreground/90">
                       <p className="mb-0.5 text-[9px] font-bold uppercase tracking-wider opacity-70">Комментарий администратора</p>
                       {r.note}
                     </div>
