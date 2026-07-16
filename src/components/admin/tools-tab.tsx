@@ -98,8 +98,8 @@ function BulkTools() {
       <Card title="3. Изменить выплату всем офферам категории" Icon={DollarSign}><BulkPayout show={show} /></Card>
       <Card title="4. Поставить NEW всем офферам категории" Icon={Star}><BulkIsNew value={true} label="Поставить NEW" show={show} /></Card>
       <Card title="5. Снять NEW со всех офферов" Icon={Star}><BulkIsNew value={false} label="Снять NEW" show={show} /></Card>
-      <Card title="6. Массовое одобрение заявок 'new'" Icon={ClipboardList}><BulkReq status="approved" from="new" label="Одобрить все new" tone="success" show={show} /></Card>
-      <Card title="7. Массовое отклонение 'new'" Icon={ClipboardList}><BulkReq status="rejected" from="new" label="Отклонить все new" tone="danger" show={show} /></Card>
+      <Card title="6. Массово перевести 'in_progress' → 'completed'" Icon={ClipboardList}><BulkReq status="completed" from="in_progress" label="Перевести все в completed" tone="success" show={show} /></Card>
+      <Card title="7. Массово перевести 'completed' → 'finished'" Icon={ClipboardList}><BulkReq status="finished" from="completed" label="Завершить все completed" tone="success" show={show} /></Card>
       <Card title="8. Перевести все pending выплаты в processing" Icon={Wallet}><BulkPayoutStatus from="pending" to="processing" show={show} /></Card>
       <Card title="9. Пометить processing→paid" Icon={Wallet}><BulkPayoutStatus from="processing" to="paid" tone="success" show={show} /></Card>
       <Card title="10. Клонировать оффер N раз" Icon={Copy}><CloneOffer show={show} /></Card>
@@ -110,9 +110,9 @@ function BulkOffersActive({ value, label, tone, show }: { value: boolean; label:
   const [tag, setTag] = useState("");
   const run = async () => {
     if (!tag || !confirm(`${label} все офферы с тегом "${tag}"?`)) return;
-    const { data } = await supabase.from("offers").update({ active: value }).eq("tag", tag).select("id");
-    const count = data?.length ?? 0;
-    show(`${label}: ${count ?? 0}`);
+    const { data, error } = await supabase.from("offers").update({ active: value }).eq("tag", tag).select("id");
+    if (error) { show(`Ошибка: ${error.message}`); return; }
+    show(`${label}: ${data?.length ?? 0}`);
   };
   return <div className="space-y-2"><Input value={tag} onChange={(e) => setTag(e.target.value)} placeholder="тег (напр. Финансы)" /><Btn tone={tone} onClick={run}>{label}</Btn></div>;
 }
@@ -120,7 +120,8 @@ function BulkPayout({ show }: { show: (s: string) => void }) {
   const [tag, setTag] = useState(""); const [p, setP] = useState("");
   const run = async () => {
     if (!tag || !p || !confirm(`Установить payout="${p}" всем офферам тега "${tag}"?`)) return;
-    const { data } = await supabase.from("offers").update({ payout: p }).eq("tag", tag).select("id");
+    const { data, error } = await supabase.from("offers").update({ payout: p }).eq("tag", tag).select("id");
+    if (error) { show(`Ошибка: ${error.message}`); return; }
     show(`Обновлено: ${data?.length ?? 0}`);
   };
   return <div className="grid grid-cols-2 gap-2"><Input value={tag} onChange={(e) => setTag(e.target.value)} placeholder="тег" /><Input value={p} onChange={(e) => setP(e.target.value)} placeholder="выплата" /><Btn tone="primary" onClick={run}>Применить</Btn></div>;
@@ -129,15 +130,17 @@ function BulkIsNew({ value, label, show }: { value: boolean; label: string; show
   const [tag, setTag] = useState("");
   const run = async () => {
     const q = supabase.from("offers").update({ is_new: value });
-    const { data } = tag ? await q.eq("tag", tag).select("id") : await q.neq("id", "").select("id");
+    const { data, error } = tag ? await q.eq("tag", tag).select("id") : await q.neq("id", "").select("id");
+    if (error) { show(`Ошибка: ${error.message}`); return; }
     show(`${label}: ${data?.length ?? 0}`);
   };
   return <div className="flex gap-2"><Input value={tag} onChange={(e) => setTag(e.target.value)} placeholder="тег (пусто = все)" /><Btn tone="primary" onClick={run}>{label}</Btn></div>;
 }
-function BulkReq({ status, from, label, tone, show }: { status: "approved"|"rejected"; from: "new"|"review"; label: string; tone: "success"|"danger"; show: (s: string) => void }) {
+function BulkReq({ status, from, label, tone, show }: { status: "approved"|"rejected"|"completed"|"finished"|"paid"; from: "new"|"review"|"in_progress"|"completed"|"finished"; label: string; tone: "success"|"danger"; show: (s: string) => void }) {
   const run = async () => {
     if (!confirm(`${label}?`)) return;
-    const { data } = await supabase.from("link_requests").update({ status }).eq("status", from).select("id");
+    const { data, error } = await supabase.from("link_requests").update({ status }).eq("status", from).select("id");
+    if (error) { show(`Ошибка: ${error.message}`); return; }
     show(`Обновлено: ${data?.length ?? 0}`);
   };
   return <Btn tone={tone} onClick={run}>{label}</Btn>;
@@ -145,7 +148,8 @@ function BulkReq({ status, from, label, tone, show }: { status: "approved"|"reje
 function BulkPayoutStatus({ from, to, tone = "primary", show }: { from: "pending"|"processing"; to: "processing"|"paid"; tone?: "primary"|"success"; show: (s: string) => void }) {
   const run = async () => {
     if (!confirm(`Перевести все ${from} → ${to}?`)) return;
-    const { data } = await supabase.from("payout_requests").update({ status: to }).eq("status", from).select("id");
+    const { data, error } = await supabase.from("payout_requests").update({ status: to }).eq("status", from).select("id");
+    if (error) { show(`Ошибка: ${error.message}`); return; }
     show(`Обновлено: ${data?.length ?? 0}`);
   };
   return <Btn tone={tone === "success" ? "success" : "primary"} onClick={run}>{from} → {to}</Btn>;
@@ -153,14 +157,19 @@ function BulkPayoutStatus({ from, to, tone = "primary", show }: { from: "pending
 function CloneOffer({ show }: { show: (s: string) => void }) {
   const [id, setId] = useState(""); const [n, setN] = useState("3");
   const run = async () => {
-    const { data: src } = await supabase.from("offers").select("*").eq("id", id).maybeSingle();
+    if (!id) { show("Укажите offer id"); return; }
+    const { data: src, error: e0 } = await supabase.from("offers").select("*").eq("id", id).maybeSingle();
+    if (e0) { show(`Ошибка: ${e0.message}`); return; }
     if (!src) { show("Оффер не найден"); return; }
-    const rows = Array.from({ length: Math.min(20, num(n)) }).map((_, i) => {
+    const count = Math.max(1, Math.min(20, num(n)));
+    const stamp = Date.now().toString(36);
+    const rand = () => Math.random().toString(36).slice(2, 5);
+    const rows = Array.from({ length: count }).map((_, i) => {
       const { id: _o, created_at: _c, updated_at: _u, ...rest } = src as Record<string, unknown>;
-      return { ...rest, id: `${id}-cl${Date.now().toString(36).slice(-3)}${i}`, name: `${src.name} (копия ${i + 1})` };
+      return { ...rest, id: `${id}-cl-${stamp}-${rand()}${i}`, name: `${src.name} (копия ${i + 1})`, is_new: true };
     });
     const { error } = await supabase.from("offers").insert(rows as never);
-    show(error ? error.message : `Создано: ${rows.length}`);
+    show(error ? `Ошибка: ${error.message}` : `Создано: ${rows.length}`);
   };
   return <div className="grid grid-cols-2 gap-2"><Input value={id} onChange={(e) => setId(e.target.value)} placeholder="offer id" /><Input value={n} onChange={(e) => setN(e.target.value)} placeholder="N копий" /><Btn tone="primary" onClick={run}>Клонировать</Btn></div>;
 }
@@ -210,8 +219,8 @@ function ModerationTools() {
   return (
     <div className="space-y-2">
       {t && <div className="rounded-md border border-primary/40 bg-primary/10 px-3 py-2 text-[11px] text-primary">{t}</div>}
-      <Card title="19. Одобрить заявки старше N дней" Icon={ClipboardList} defaultOpen><ApproveOld show={show} /></Card>
-      <Card title="20. Отклонить все заявки от пользователя" Icon={Ban}><RejectByUser show={show} /></Card>
+      <Card title="19. Завершить заявки 'completed' старше N дней" Icon={ClipboardList} defaultOpen><ApproveOld show={show} /></Card>
+      <Card title="20. Завершить заявки пользователя" Icon={Ban}><RejectByUser show={show} /></Card>
       <Card title="21. Заморозить пользователя (снять admin)" Icon={ShieldCheck}><RevokeAdmin show={show} /></Card>
       <Card title="22. Назначить admin по email" Icon={ShieldCheck}><GrantAdmin show={show} /></Card>
       <Card title="23. Broadcast всем пользователям" Icon={Send}><Broadcast target="all" show={show} /></Card>
@@ -227,82 +236,96 @@ function ApproveOld({ show }: { show: (s: string) => void }) {
   const [d, setD] = useState("3");
   const run = async () => {
     const iso = new Date(Date.now() - num(d) * 86400000).toISOString();
-    const { data } = await supabase.from("link_requests").update({ status: "approved" }).eq("status", "new").lt("created_at", iso).select("id");
-    show(`Одобрено: ${data?.length ?? 0}`);
+    const { data, error } = await supabase.from("link_requests").update({ status: "finished" }).eq("status", "completed").lt("created_at", iso).select("id");
+    if (error) { show(`Ошибка: ${error.message}`); return; }
+    show(`Завершено: ${data?.length ?? 0}`);
   };
-  return <div className="flex gap-2"><Input value={d} onChange={(e) => setD(e.target.value)} placeholder="дней" /><Btn tone="success" onClick={run}>Одобрить</Btn></div>;
+  return <div className="flex gap-2"><Input value={d} onChange={(e) => setD(e.target.value)} placeholder="дней" /><Btn tone="success" onClick={run}>Завершить</Btn></div>;
 }
 function RejectByUser({ show }: { show: (s: string) => void }) {
   const [u, setU] = useState("");
   const run = async () => {
-    const { data } = await supabase.from("link_requests").update({ status: "rejected" }).eq("user_id", u).in("status", ["new","review"]).select("id");
-    show(`Отклонено: ${data?.length ?? 0}`);
+    if (!u) { show("Укажите user_id"); return; }
+    const { data, error } = await supabase.from("link_requests").update({ status: "finished" }).eq("user_id", u).in("status", ["in_progress","completed","new","review"]).select("id");
+    if (error) { show(`Ошибка: ${error.message}`); return; }
+    show(`Завершено: ${data?.length ?? 0}`);
   };
-  return <div className="flex gap-2"><Input value={u} onChange={(e) => setU(e.target.value)} placeholder="user_id" /><Btn tone="danger" onClick={run}>Отклонить</Btn></div>;
+  return <div className="flex gap-2"><Input value={u} onChange={(e) => setU(e.target.value)} placeholder="user_id" /><Btn tone="danger" onClick={run}>Завершить</Btn></div>;
 }
 function RevokeAdmin({ show }: { show: (s: string) => void }) {
   const [u, setU] = useState("");
   const run = async () => {
+    if (!u) { show("Укажите user_id"); return; }
+    const { data: me } = await supabase.auth.getUser();
+    if (me.user && me.user.id === u) { show("Нельзя снять роль с себя"); return; }
     if (!confirm("Снять роль admin?")) return;
     const { error } = await supabase.from("user_roles").delete().eq("user_id", u).eq("role", "admin");
-    show(error ? error.message : "Готово");
+    show(error ? `Ошибка: ${error.message}` : "Готово");
   };
   return <div className="flex gap-2"><Input value={u} onChange={(e) => setU(e.target.value)} placeholder="user_id" /><Btn tone="danger" onClick={run}>Снять admin</Btn></div>;
 }
 function GrantAdmin({ show }: { show: (s: string) => void }) {
   const [email, setEmail] = useState("");
   const run = async () => {
-    const { data: p } = await supabase.from("profiles").select("id").eq("email", email).maybeSingle();
-    if (!p) { show("Не найден"); return; }
-    const { error } = await supabase.from("user_roles").insert({ user_id: p.id, role: "admin" });
-    show(error ? error.message : "admin назначен");
+    if (!email) { show("Укажите email"); return; }
+    const { data: p, error: e0 } = await supabase.from("profiles").select("id").eq("email", email.trim()).maybeSingle();
+    if (e0) { show(`Ошибка: ${e0.message}`); return; }
+    if (!p) { show("Пользователь не найден"); return; }
+    const { error } = await supabase.from("user_roles").upsert({ user_id: p.id, role: "admin" }, { onConflict: "user_id,role" });
+    show(error ? `Ошибка: ${error.message}` : "admin назначен");
   };
   return <div className="flex gap-2"><Input value={email} onChange={(e) => setEmail(e.target.value)} placeholder="email" /><Btn tone="primary" onClick={run}>Назначить</Btn></div>;
 }
 function Broadcast({ target, show }: { target: "all"|"admins"; show: (s: string) => void }) {
   const [title, setTitle] = useState(""); const [body, setBody] = useState("");
   const run = async () => {
-    if (!title || !body) return;
+    if (!title || !body) { show("Заполните заголовок и текст"); return; }
     let ids: string[] = [];
     if (target === "admins") {
-      const { data } = await supabase.from("user_roles").select("user_id").eq("role", "admin");
+      const { data, error } = await supabase.from("user_roles").select("user_id").eq("role", "admin");
+      if (error) { show(`Ошибка: ${error.message}`); return; }
       ids = (data ?? []).map((r) => r.user_id);
     } else {
-      const { data } = await supabase.from("profiles").select("id");
+      const { data, error } = await supabase.from("profiles").select("id");
+      if (error) { show(`Ошибка: ${error.message}`); return; }
       ids = (data ?? []).map((r) => r.id);
     }
     const rows = ids.map((user_id) => ({ user_id, kind: "system", title, body }));
     if (!rows.length) { show("Нет получателей"); return; }
     const { error } = await supabase.from("notifications").insert(rows as never);
-    show(error ? error.message : `Отправлено: ${rows.length}`);
+    show(error ? `Ошибка: ${error.message}` : `Отправлено: ${rows.length}`);
   };
   return <div className="space-y-2"><Input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Заголовок" /><Textarea rows={3} value={body} onChange={(e) => setBody(e.target.value)} placeholder="Сообщение" /><Btn tone="primary" onClick={run}>Отправить ({target})</Btn></div>;
 }
 function BroadcastPending({ show }: { show: (s: string) => void }) {
   const [title, setTitle] = useState("Ваша выплата в обработке"); const [body, setBody] = useState("Мы работаем над вашим запросом.");
   const run = async () => {
-    const { data } = await supabase.from("payout_requests").select("user_id").eq("status", "pending");
+    const { data, error: e0 } = await supabase.from("payout_requests").select("user_id").eq("status", "pending");
+    if (e0) { show(`Ошибка: ${e0.message}`); return; }
     const ids = Array.from(new Set((data ?? []).map((r) => r.user_id)));
     if (!ids.length) { show("Нет получателей"); return; }
     const rows = ids.map((user_id) => ({ user_id, kind: "payout", title, body }));
     const { error } = await supabase.from("notifications").insert(rows as never);
-    show(error ? error.message : `Отправлено: ${rows.length}`);
+    show(error ? `Ошибка: ${error.message}` : `Отправлено: ${rows.length}`);
   };
   return <div className="space-y-2"><Input value={title} onChange={(e) => setTitle(e.target.value)} /><Textarea rows={2} value={body} onChange={(e) => setBody(e.target.value)} /><Btn tone="primary" onClick={run}>Отправить</Btn></div>;
 }
 function TestNotif({ show }: { show: (s: string) => void }) {
   const run = async () => {
-    const { data: u } = await supabase.auth.getUser(); if (!u.user) return;
+    const { data: u } = await supabase.auth.getUser();
+    if (!u.user) { show("Нет сессии"); return; }
     const { error } = await supabase.from("notifications").insert({ user_id: u.user.id, kind: "system", title: "Тест", body: `Проверка в ${new Date().toLocaleTimeString()}` });
-    show(error ? error.message : "Отправлено");
+    show(error ? `Ошибка: ${error.message}` : "Отправлено");
   };
   return <Btn tone="primary" onClick={run}>Отправить</Btn>;
 }
 function TestConversion({ show }: { show: (s: string) => void }) {
   const [uid, setUid] = useState(""); const [name, setName] = useState("Тест-оффер"); const [amt, setAmt] = useState("2500");
   const run = async () => {
+    if (!uid) { show("Укажите user_id"); return; }
+    if (num(amt) <= 0) { show("Сумма должна быть > 0"); return; }
     const { error } = await supabase.from("conversions").insert({ user_id: uid, offer_name: name, amount: num(amt), status: "pending" });
-    show(error ? error.message : "Создано");
+    show(error ? `Ошибка: ${error.message}` : "Создано");
   };
   return <div className="grid grid-cols-3 gap-2"><Input value={uid} onChange={(e) => setUid(e.target.value)} placeholder="user_id" /><Input value={name} onChange={(e) => setName(e.target.value)} /><Input value={amt} onChange={(e) => setAmt(e.target.value)} /><Btn tone="primary" onClick={run}>Создать</Btn></div>;
 }
