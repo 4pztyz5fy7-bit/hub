@@ -128,7 +128,7 @@ export function ProfileTab({
     if (!userId || !dirty) return;
     setSaving(true);
     setErr(null);
-    const payload: Record<string, unknown> = {
+    const payload = {
       display_name: (draft.display_name ?? "").trim() || null,
       telegram: (draft.telegram ?? "").trim() || null,
       avatar_url: (draft.avatar_url ?? "").trim() || null,
@@ -138,7 +138,7 @@ export function ProfileTab({
       website: (draft.website ?? "").trim() || null,
       settings: prefs as any,
     };
-    const { error } = await supabase.from("profiles").update(payload).eq("id", userId);
+    const { error } = await supabase.from("profiles").update(payload as any).eq("id", userId);
     setSaving(false);
     if (error) {
       setErr(error.message);
