@@ -47,7 +47,7 @@ import {
   Target,
   Building2,
   ClipboardList,
-  Inbox,
+  
   UserCircle,
   ThumbsUp,
   ThumbsDown,
@@ -60,7 +60,7 @@ export const Route = createFileRoute("/_authenticated/dashboard")({
 
 /* ================================ Types ================================ */
 
-type Tab = "info" | "offers" | "requests" | "stats" | "payouts" | "tools" | "profile";
+type Tab = "info" | "offers" | "stats" | "payouts" | "tools" | "profile";
 
 export type UserPrefs = {
   notify_email: boolean;
@@ -584,7 +584,7 @@ function DashboardPage() {
   const [payoutOpen, setPayoutOpen] = useState(false);
   const [levelsOpen, setLevelsOpen] = useState(false);
   const [offerDetail, setOfferDetail] = useState<Offer | null>(null);
-  const [adminOpen, setAdminOpen] = useState(false);
+  
   const [isAdmin, setIsAdmin] = useState(false);
   const navigate = useNavigate();
 
@@ -831,10 +831,6 @@ function DashboardPage() {
   };
 
 
-  const decideRequest = (id: string, status: LinkRequestStatus, note?: string) => {
-    // Client-side only view; real moderation happens in /admin under admin RLS.
-    setRequests((prev) => prev.map((r) => (r.id === id ? { ...r, status, note } : r)));
-  };
 
   /* --------------------------- Payout flow ---------------------------- */
   const requestPayout = async (amount: number) => {
@@ -886,20 +882,6 @@ function DashboardPage() {
           <span className="text-sm font-bold uppercase tracking-tight">КВАНТ</span>
         </div>
         <div className="flex items-center gap-3">
-          {isAdmin && (
-            <button
-              aria-label="Заявки на модерации"
-              onClick={() => setAdminOpen(true)}
-              className="relative flex size-8 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
-            >
-              <ClipboardList className="size-4" />
-              {requests.filter((r) => r.status === "new" || r.status === "review").length > 0 && (
-                <span className="absolute -right-0.5 -top-0.5 grid min-w-[16px] place-items-center rounded-full bg-[color:var(--warning)] px-1 font-mono text-[9px] font-bold leading-none text-background">
-                  {requests.filter((r) => r.status === "new" || r.status === "review").length}
-                </span>
-              )}
-            </button>
-          )}
           {prefs.notify_push && (
             <button
               aria-label="Уведомления"
@@ -1005,15 +987,7 @@ function DashboardPage() {
             copiedOffer={copiedOffer}
             onCopyLink={copyOfferLink}
             onOpenDetail={(o) => setOfferDetail(o)}
-            requestsCount={isAdmin ? requests.length : 0}
-            onOpenAdmin={isAdmin ? () => setAdminOpen(true) : undefined}
             level={levelInfo.current}
-          />
-        )}
-        {active === "requests" && (
-          <UserRequestsTab
-            requests={requests}
-            onOpenOffers={() => setActive("offers")}
           />
         )}
         {active === "stats" && (
@@ -1098,19 +1072,9 @@ function DashboardPage() {
           offer={offerDetail}
           linked={linkedOffers.has(offerDetail.id)}
           copiedOffer={copiedOffer}
-          requests={requests.filter((r) => r.offerId === offerDetail.id)}
           onCopyLink={copyOfferLink}
           level={levelInfo.current}
           onClose={() => setOfferDetail(null)}
-        />
-      )}
-
-      {/* Admin (link requests) sheet */}
-      {adminOpen && (
-        <AdminRequestsSheet
-          requests={requests}
-          onDecide={decideRequest}
-          onClose={() => setAdminOpen(false)}
         />
       )}
 
@@ -1124,7 +1088,7 @@ function DashboardPage() {
           [
             { id: "info", label: "Инфо", Icon: LayoutGrid },
             { id: "offers", label: "Офферы", Icon: Package },
-            { id: "requests", label: "Заявки", Icon: Inbox },
+            
             { id: "stats", label: "Стата", Icon: BarChart3 },
             { id: "payouts", label: "Выплаты", Icon: Wallet },
             { id: "tools", label: "Инстр.", Icon: ClipboardList },
@@ -1597,8 +1561,6 @@ function OffersTab({
   copiedOffer,
   onCopyLink,
   onOpenDetail,
-  requestsCount,
-  onOpenAdmin,
   level,
 }: {
   offers: Offer[];
@@ -1606,8 +1568,6 @@ function OffersTab({
   copiedOffer: string | null;
   onCopyLink: (o: Offer, source?: string) => void;
   onOpenDetail: (o: Offer) => void;
-  requestsCount: number;
-  onOpenAdmin?: () => void;
   level: Level;
 }) {
   const [q, setQ] = useState("");
@@ -1650,28 +1610,6 @@ function OffersTab({
               Бонус уровня «{level.name}»: +{level.bonusPct}% ко всем ставкам применяется автоматически
             </p>
           </div>
-        )}
-        {onOpenAdmin && (
-          <button
-            onClick={onOpenAdmin}
-            className="mb-3 flex w-full items-center justify-between gap-3 rounded-md border border-border bg-secondary/40 px-3 py-2 text-left transition-colors hover:border-foreground/20"
-          >
-            <div className="flex items-center gap-2">
-              <div className="grid size-7 place-items-center rounded-md bg-primary/10 text-primary">
-                <ClipboardList className="size-3.5" />
-              </div>
-              <div>
-                <p className="text-[11px] font-bold leading-none">Заявки на модерации</p>
-                <p className="mt-1 text-[9px] uppercase tracking-wider text-muted-foreground">
-                  Только для администратора
-                </p>
-              </div>
-            </div>
-            <div className="flex items-center gap-2">
-              <span className="font-mono text-[11px] font-bold tabular-nums">{requestsCount}</span>
-              <ChevronRight className="size-3.5 text-muted-foreground" />
-            </div>
-          </button>
         )}
         <div className="flex items-center gap-2 rounded-md border border-border bg-card px-3 py-2">
           <Search className="size-3.5 text-muted-foreground" />
@@ -1824,262 +1762,8 @@ function Stat({ label, value }: { label: string; value: string }) {
   );
 }
 
-/* ============================ User Requests ============================ */
+/* ============================ Stats ============================ */
 
-function UserRequestsTab({
-  requests,
-  onOpenOffers,
-}: {
-  requests: LinkRequest[];
-  onOpenOffers: () => void;
-}) {
-  const [filter, setFilter] = useState<"all" | LinkRequestStatus>("all");
-  const [q, setQ] = useState("");
-  const [expanded, setExpanded] = useState<string | null>(null);
-  const [copied, setCopied] = useState<string | null>(null);
-
-  const counts = useMemo(
-    () => ({
-      all: requests.length,
-      in_progress: requests.filter((r) => r.status === "in_progress").length,
-      completed: requests.filter((r) => r.status === "completed").length,
-      finished: requests.filter((r) => r.status === "finished").length,
-      paid: requests.filter((r) => r.status === "paid").length,
-      orders: requests.reduce((s, r) => s + (r.ordersCount || 0), 0),
-    }),
-    [requests],
-  );
-
-  const filtered = useMemo(() => {
-    const query = q.trim().toLowerCase();
-    return requests.filter((r) => {
-      if (filter !== "all" && r.status !== filter) return false;
-      if (query && !(r.offerName.toLowerCase().includes(query) || (r.source ?? "").toLowerCase().includes(query) || (r.sub ?? "").toLowerCase().includes(query))) return false;
-      return true;
-    });
-  }, [requests, filter, q]);
-
-  const doCopy = async (id: string, text: string) => {
-    try { await navigator.clipboard.writeText(text); } catch { /* ignore */ }
-    setCopied(id);
-    setTimeout(() => setCopied((c) => (c === id ? null : c)), 1400);
-  };
-
-  const statusMeta: Record<LinkRequestStatus, { label: string; cls: string; Icon: LucideIcon }> = {
-    in_progress: { label: "В работе", cls: "text-amber-500 border-amber-500/30 bg-amber-500/10", Icon: Clock },
-    completed: { label: "Выполнено", cls: "text-sky-500 border-sky-500/30 bg-sky-500/10", Icon: ThumbsUp },
-    finished: { label: "Завершено", cls: "text-emerald-500 border-emerald-500/30 bg-emerald-500/10", Icon: CheckCircle2 },
-    paid: { label: "Оплачено", cls: "text-primary border-primary/30 bg-primary/10", Icon: Sparkles },
-    // legacy fallbacks (не показываются после normalizeStatus, оставлены на всякий случай)
-    new: { label: "В работе", cls: "text-amber-500 border-amber-500/30 bg-amber-500/10", Icon: Clock },
-    review: { label: "В работе", cls: "text-amber-500 border-amber-500/30 bg-amber-500/10", Icon: Search },
-    approved: { label: "Завершено", cls: "text-emerald-500 border-emerald-500/30 bg-emerald-500/10", Icon: CheckCircle2 },
-    rejected: { label: "В работе", cls: "text-amber-500 border-amber-500/30 bg-amber-500/10", Icon: Clock },
-  };
-
-  const chips: { id: "all" | LinkRequestStatus; label: string; n: number }[] = [
-    { id: "all", label: "Все", n: counts.all },
-    { id: "in_progress", label: "В работе", n: counts.in_progress },
-    { id: "completed", label: "Выполнено", n: counts.completed },
-    { id: "finished", label: "Завершено", n: counts.finished },
-    { id: "paid", label: "Оплачено", n: counts.paid },
-  ];
-
-  return (
-    <div className="space-y-3 pb-4">
-      <header className="animate-in-up">
-        <h2 className="text-lg font-bold leading-none">Мои заявки</h2>
-        <p className="mt-1 text-[11px] text-muted-foreground">
-          Полное отслеживание партнёрских ссылок: статус, история и итоговая ссылка от админа.
-        </p>
-      </header>
-
-      <div className="animate-in-up grid grid-cols-4 gap-2" style={{ animationDelay: "40ms" }}>
-        <MiniStat label="Всего" value={counts.all} />
-        <MiniStat label="В работе" value={counts.in_progress} tone="text-amber-500" />
-        <MiniStat label="Заказов" value={counts.orders} tone="text-sky-500" />
-        <MiniStat label="Оплачено" value={counts.paid} tone="text-primary" />
-      </div>
-
-      <div className="animate-in-up flex flex-wrap items-center gap-2" style={{ animationDelay: "60ms" }}>
-        <div className="relative flex-1 min-w-[160px]">
-          <Search className="pointer-events-none absolute left-2.5 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground" />
-          <input
-            value={q}
-            onChange={(e) => setQ(e.target.value)}
-            placeholder="Поиск: оффер, источник, sub"
-            className="w-full rounded-lg border border-border bg-background pl-8 pr-3 py-1.5 text-sm outline-none focus:ring-2 focus:ring-primary/40"
-          />
-        </div>
-      </div>
-
-      <div className="animate-in-up -mx-1 flex gap-1.5 overflow-x-auto px-1 pb-1" style={{ animationDelay: "80ms" }}>
-        {chips.map((c) => (
-          <button
-            key={c.id}
-            onClick={() => setFilter(c.id)}
-            className={`inline-flex shrink-0 items-center gap-1.5 rounded-full border px-3 py-1 text-[11px] font-bold uppercase tracking-wider transition-colors ${
-              filter === c.id
-                ? "border-foreground bg-foreground text-background"
-                : "border-border bg-card text-muted-foreground hover:text-foreground"
-            }`}
-          >
-            {c.label}
-            <span className={`rounded px-1 font-mono text-[10px] ${filter === c.id ? "bg-background/20" : "bg-accent"}`}>{c.n}</span>
-          </button>
-        ))}
-      </div>
-
-      {filtered.length === 0 && (
-        <div className="rounded-xl border border-dashed border-border p-6 text-center">
-          <Inbox className="mx-auto mb-2 size-6 text-muted-foreground" />
-          <p className="text-xs text-muted-foreground">
-            {requests.length === 0 ? "Заявок пока нет" : "Ничего не найдено"}
-          </p>
-          {requests.length === 0 && (
-            <button
-              onClick={onOpenOffers}
-              className="mt-3 inline-flex items-center gap-1 rounded-lg bg-foreground px-3 py-1.5 text-[11px] font-bold uppercase tracking-wider text-background"
-            >
-              <Package className="size-3" /> К офферам
-            </button>
-          )}
-        </div>
-      )}
-
-      <div className="animate-in-up space-y-2" style={{ animationDelay: "100ms" }}>
-        {filtered.map((r) => {
-          const meta = statusMeta[r.status];
-          const isOpen = expanded === r.id;
-          const isCopied = copied === r.id;
-          const created = new Date(r.createdAt);
-          const dateStr = isNaN(created.getTime()) ? r.createdAt : created.toLocaleString("ru-RU", { day: "2-digit", month: "2-digit", year: "2-digit", hour: "2-digit", minute: "2-digit" });
-          const isClosed = r.status === "finished" || r.status === "paid";
-          const linkReady = Boolean(r.link) && !isClosed;
-
-          return (
-            <div key={r.id} className="rounded-xl border border-border bg-card">
-              <button
-                type="button"
-                onClick={() => setExpanded((cur) => (cur === r.id ? null : r.id))}
-                className="flex w-full items-start justify-between gap-3 p-3 text-left"
-              >
-                <div className="min-w-0 flex-1">
-                  <div className="flex items-center gap-2">
-                    <OfferTag tag={r.offerTag} />
-                    <p className="truncate text-xs font-bold">{r.offerName}</p>
-                  </div>
-                  <p className="mt-1 text-[10px] uppercase tracking-wider text-muted-foreground">
-                    {r.source || "—"} · sub: <span className="font-mono">{r.sub || "—"}</span>
-                  </p>
-                  <p className="mt-0.5 font-mono text-[10px] text-muted-foreground">
-                    #{r.id.slice(0, 8).toUpperCase()} · {dateStr}
-                    {r.ordersCount > 0 && <> · <span className="text-sky-500">Заказов: {r.ordersCount}</span></>}
-                  </p>
-                </div>
-                <span className={`inline-flex shrink-0 items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider ${meta.cls}`}>
-                  <meta.Icon className="size-3" /> {meta.label}{r.status === "completed" && r.ordersCount > 0 ? ` · ${r.ordersCount}` : ""}
-                </span>
-              </button>
-
-              {isOpen && (
-                <div className="space-y-3 border-t border-border px-3 py-3">
-                  <RequestTimeline status={r.status} createdAt={r.createdAt} note={r.note} ordersCount={r.ordersCount} />
-
-                  {r.note && (
-                    <div className="rounded-lg border border-border bg-background p-2.5 text-[11.5px] text-foreground/90">
-                      <p className="mb-0.5 text-[9px] font-bold uppercase tracking-wider opacity-70">Комментарий администратора</p>
-                      {r.note}
-                    </div>
-                  )}
-
-                  <div>
-                    <p className="mb-1 text-[9px] font-bold uppercase tracking-wider text-muted-foreground">Партнёрская ссылка</p>
-                    {linkReady ? (
-                      <div className="flex items-center gap-2 rounded-lg border border-border bg-background p-2">
-                        <p className="min-w-0 flex-1 truncate font-mono text-[11px]">{r.link}</p>
-                        <button
-                          onClick={() => doCopy(r.id, r.link)}
-                          className={`inline-flex items-center gap-1 rounded-md px-2 py-1 text-[10px] font-bold uppercase tracking-wider ${isCopied ? "bg-[color:var(--success)]/15 text-[color:var(--success)]" : "bg-foreground text-background"}`}
-                        >
-                          {isCopied ? <><Check className="size-3" /> Ок</> : <><Copy className="size-3" /> Копировать</>}
-                        </button>
-                      </div>
-                    ) : (
-                      <div className="rounded-lg border border-dashed border-border p-2 text-[11px] text-muted-foreground">
-                        {isClosed ? "Заявка завершена — ссылка больше недоступна." : "Ссылка недоступна."}
-                      </div>
-                    )}
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-2 text-[11px]">
-                    <div className="rounded-lg border border-border bg-background p-2">
-                      <p className="text-[9px] font-bold uppercase tracking-wider text-muted-foreground">Источник</p>
-                      <p className="mt-0.5 font-bold">{r.source || "—"}</p>
-                    </div>
-                    <div className="rounded-lg border border-border bg-background p-2">
-                      <p className="text-[9px] font-bold uppercase tracking-wider text-muted-foreground">Sub</p>
-                      <p className="mt-0.5 font-mono">{r.sub || "—"}</p>
-                    </div>
-                  </div>
-                </div>
-              )}
-            </div>
-          );
-        })}
-      </div>
-    </div>
-  );
-}
-
-function MiniStat({ label, value, tone = "text-foreground" }: { label: string; value: number; tone?: string }) {
-  return (
-    <div className="rounded-lg border border-border bg-card p-2">
-      <p className={`font-mono text-base font-bold tabular-nums ${tone}`}>{value}</p>
-      <p className="mt-0.5 text-[9px] font-bold uppercase tracking-wider text-muted-foreground">{label}</p>
-    </div>
-  );
-}
-
-function RequestTimeline({ status, createdAt, ordersCount = 0 }: { status: LinkRequestStatus; createdAt: string; note?: string; ordersCount?: number }) {
-  const created = new Date(createdAt);
-  const createdLabel = isNaN(created.getTime()) ? createdAt : created.toLocaleString("ru-RU", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" });
-
-  const order: LinkRequestStatus[] = ["in_progress", "completed", "finished", "paid"];
-  const idx = Math.max(0, order.indexOf(status));
-  const stateFor = (i: number): "done" | "current" | "pending" => (i < idx ? "done" : i === idx ? "current" : "pending");
-
-  const steps: { key: string; label: string; sub?: string; state: "done" | "current" | "pending" }[] = [
-    { key: "created", label: "Создана", sub: createdLabel, state: "done" },
-    { key: "in_progress", label: "В работе", state: stateFor(0) },
-    { key: "completed", label: ordersCount > 0 ? `Выполнено · ${ordersCount} заказов` : "Выполнено", state: stateFor(1) },
-    { key: "finished", label: "Завершено", state: stateFor(2) },
-    { key: "paid", label: "Оплачено", state: stateFor(3) },
-  ];
-
-  return (
-    <ol className="space-y-2">
-      {steps.map((s, i) => {
-        const color =
-          s.state === "done" ? "bg-emerald-500 text-background"
-          : s.state === "current" ? "bg-amber-500 text-background"
-          : "bg-muted text-muted-foreground";
-        return (
-          <li key={s.key} className="flex items-start gap-2">
-            <div className="flex flex-col items-center">
-              <span className={`grid size-5 place-items-center rounded-full text-[10px] font-bold ${color}`}>{i + 1}</span>
-              {i < steps.length - 1 && <span className="mt-0.5 h-4 w-px bg-border" />}
-            </div>
-            <div className="min-w-0 flex-1">
-              <p className="text-[11.5px] font-bold leading-none">{s.label}</p>
-              {s.sub && <p className="mt-0.5 text-[10px] text-muted-foreground">{s.sub}</p>}
-            </div>
-          </li>
-        );
-      })}
-    </ol>
-  );
-}
 
 /* ================================ Stats ================================ */
 
@@ -3294,7 +2978,6 @@ function OfferDetailSheet({
   offer,
   linked,
   copiedOffer,
-  requests,
   onCopyLink,
   onClose,
   level,
@@ -3302,7 +2985,6 @@ function OfferDetailSheet({
   offer: Offer;
   linked: boolean;
   copiedOffer: string | null;
-  requests: LinkRequest[];
   onCopyLink: (o: Offer, source?: string) => void;
   onClose: () => void;
   level: Level;
@@ -3449,31 +3131,10 @@ function OfferDetailSheet({
               ))}
             </div>
             <p className="mt-2 text-[10px] text-muted-foreground">
-              Копирование ссылки автоматически создаёт заявку — админ ведёт её по этапам «в работе → выполнено → завершено → оплачено».
+              Копирование ссылки автоматически регистрирует заказ — администратор обрабатывает его в системе.
             </p>
           </section>
 
-          {/* My requests for this offer */}
-          {requests.length > 0 && (
-            <section>
-              <h4 className="mb-2 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
-                Мои заявки по офферу
-              </h4>
-              <div className="space-y-1.5">
-                {requests.map((r) => (
-                  <div key={r.id} className="flex items-center justify-between gap-2 rounded-md border border-border bg-card px-3 py-2">
-                    <div className="min-w-0">
-                      <p className="font-mono text-[11px] font-bold">{r.id}</p>
-                      <p className="truncate text-[10px] text-muted-foreground">
-                        {r.source} • {r.createdAt}
-                      </p>
-                    </div>
-                    <RequestStatusPill status={r.status} />
-                  </div>
-                ))}
-              </div>
-            </section>
-          )}
         </div>
 
         {/* Footer CTA */}
@@ -3513,159 +3174,3 @@ function MetaCell({ Icon, label, value }: { Icon: LucideIcon; label: string; val
   );
 }
 
-function RequestStatusPill({ status }: { status: LinkRequestStatus }) {
-  const map: Record<LinkRequestStatus, { label: string; cls: string; Icon: LucideIcon }> = {
-    in_progress: { label: "В работе", cls: "bg-[color:var(--warning)]/10 text-[color:var(--warning)]", Icon: Clock },
-    completed: { label: "Выполнено", cls: "bg-primary/10 text-primary", Icon: ThumbsUp },
-    finished: { label: "Завершено", cls: "bg-[color:var(--success)]/10 text-[color:var(--success)]", Icon: CheckCircle2 },
-    paid: { label: "Оплачено", cls: "bg-primary/15 text-primary", Icon: Sparkles },
-    new: { label: "В работе", cls: "bg-[color:var(--warning)]/10 text-[color:var(--warning)]", Icon: Clock },
-    review: { label: "В работе", cls: "bg-[color:var(--warning)]/10 text-[color:var(--warning)]", Icon: Clock },
-    approved: { label: "Завершено", cls: "bg-[color:var(--success)]/10 text-[color:var(--success)]", Icon: CheckCircle2 },
-    rejected: { label: "В работе", cls: "bg-[color:var(--warning)]/10 text-[color:var(--warning)]", Icon: XCircle },
-  };
-  const s = map[status];
-  return (
-    <span className={`flex shrink-0 items-center gap-1 rounded-full px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider ${s.cls}`}>
-      <s.Icon className="size-2.5" /> {s.label}
-    </span>
-  );
-}
-
-/* ========================= AdminRequestsSheet ========================== */
-
-function AdminRequestsSheet({
-  requests,
-  onDecide,
-  onClose,
-}: {
-  requests: LinkRequest[];
-  onDecide: (id: string, status: LinkRequestStatus, note?: string) => void;
-  onClose: () => void;
-}) {
-  const [filter, setFilter] = useState<"all" | LinkRequestStatus>("all");
-  const filtered = filter === "all" ? requests : requests.filter((r) => r.status === filter);
-  const counts = {
-    all: requests.length,
-    new: requests.filter((r) => r.status === "new").length,
-    review: requests.filter((r) => r.status === "review").length,
-    approved: requests.filter((r) => r.status === "approved").length,
-    rejected: requests.filter((r) => r.status === "rejected").length,
-  };
-
-  return (
-    <div className="fixed inset-0 z-50 flex items-end justify-center bg-foreground/40 backdrop-blur-sm sm:items-center">
-      <div className="animate-in-up flex max-h-[92vh] w-full max-w-[440px] flex-col overflow-hidden rounded-t-2xl border border-border bg-background sm:rounded-2xl">
-        <div className="flex items-start justify-between border-b border-border px-4 py-3">
-          <div>
-            <p className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
-              <ShieldCheck className="size-3" /> Панель администратора
-            </p>
-            <h3 className="mt-0.5 text-sm font-bold">Заявки на партнёрские ссылки</h3>
-            <p className="mt-0.5 font-mono text-[10px] text-muted-foreground">
-              {counts.new + counts.review} в очереди • {counts.approved} одобрено • {counts.rejected} отказ
-            </p>
-          </div>
-          <button
-            onClick={onClose}
-            aria-label="Закрыть"
-            className="grid size-8 shrink-0 place-items-center rounded-full text-muted-foreground hover:bg-accent"
-          >
-            <X className="size-4" />
-          </button>
-        </div>
-
-        <div className="flex gap-1 overflow-x-auto border-b border-border px-4 py-2">
-          {(
-            [
-              { id: "all" as const, label: "Все" },
-              { id: "new" as const, label: "Новые" },
-              { id: "review" as const, label: "На модерации" },
-              { id: "approved" as const, label: "Одобрено" },
-              { id: "rejected" as const, label: "Отказ" },
-            ]
-          ).map((t) => (
-            <button
-              key={t.id}
-              onClick={() => setFilter(t.id)}
-              className={`shrink-0 rounded-full px-3 py-1 text-[10px] font-bold uppercase tracking-wider transition-colors ${
-                filter === t.id
-                  ? "bg-foreground text-background"
-                  : "bg-secondary text-muted-foreground hover:text-foreground"
-              }`}
-            >
-              {t.label}
-              <span className="ml-1 font-mono opacity-70">{counts[t.id]}</span>
-            </button>
-          ))}
-        </div>
-
-        <div className="flex-1 overflow-y-auto">
-          {filtered.length === 0 ? (
-            <div className="flex flex-col items-center justify-center gap-2 py-16 text-center text-muted-foreground">
-              <Inbox className="size-8 opacity-40" />
-              <p className="text-xs">Заявок в этой категории нет</p>
-            </div>
-          ) : (
-            <ul className="divide-y divide-border">
-              {filtered.map((r) => (
-                <li key={r.id} className="space-y-2 px-4 py-3">
-                  <div className="flex items-start justify-between gap-2">
-                    <div className="min-w-0">
-                      <div className="flex items-center gap-2">
-                        <OfferTag tag={r.offerTag} />
-                        <p className="truncate text-xs font-bold">{r.offerName}</p>
-                      </div>
-                      <p className="mt-1 font-mono text-[10px] text-muted-foreground">
-                        {r.id} • {r.createdAt}
-                      </p>
-                    </div>
-                    <RequestStatusPill status={r.status} />
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-2 rounded-md border border-border bg-card p-2.5">
-                    <div>
-                      <p className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground">Источник</p>
-                      <p className="truncate text-[11px] font-bold">{r.source}</p>
-                    </div>
-                    <div>
-                      <p className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground">Sub</p>
-                      <p className="truncate font-mono text-[11px] font-bold">{r.sub}</p>
-                    </div>
-                    <div className="col-span-2 min-w-0">
-                      <p className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground">Ссылка</p>
-                      <p className="truncate font-mono text-[10.5px]">{r.link}</p>
-                    </div>
-                  </div>
-
-                  {r.note && (
-                    <p className="rounded bg-destructive/10 px-2 py-1 text-[10px] text-destructive">
-                      Причина отказа: {r.note}
-                    </p>
-                  )}
-
-                  {(r.status === "new" || r.status === "review") && (
-                    <div className="flex gap-2">
-                      <button
-                        onClick={() => onDecide(r.id, "approved")}
-                        className="flex flex-1 items-center justify-center gap-1 rounded-md bg-[color:var(--success)]/15 px-3 py-2 text-[11px] font-bold uppercase tracking-wider text-[color:var(--success)] active:scale-95"
-                      >
-                        <ThumbsUp className="size-3" /> Одобрить
-                      </button>
-                      <button
-                        onClick={() => onDecide(r.id, "rejected", "Не соответствует правилам")}
-                        className="flex flex-1 items-center justify-center gap-1 rounded-md bg-destructive/10 px-3 py-2 text-[11px] font-bold uppercase tracking-wider text-destructive active:scale-95"
-                      >
-                        <ThumbsDown className="size-3" /> Отклонить
-                      </button>
-                    </div>
-                  )}
-                </li>
-              ))}
-            </ul>
-          )}
-        </div>
-      </div>
-    </div>
-  );
-}
