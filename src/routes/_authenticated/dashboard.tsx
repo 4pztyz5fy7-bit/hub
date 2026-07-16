@@ -47,7 +47,7 @@ import {
   Target,
   Building2,
   ClipboardList,
-  Inbox,
+  
   UserCircle,
   ThumbsUp,
   ThumbsDown,
@@ -584,7 +584,7 @@ function DashboardPage() {
   const [payoutOpen, setPayoutOpen] = useState(false);
   const [levelsOpen, setLevelsOpen] = useState(false);
   const [offerDetail, setOfferDetail] = useState<Offer | null>(null);
-  const [adminOpen, setAdminOpen] = useState(false);
+  
   const [isAdmin, setIsAdmin] = useState(false);
   const navigate = useNavigate();
 
@@ -831,10 +831,6 @@ function DashboardPage() {
   };
 
 
-  const decideRequest = (id: string, status: LinkRequestStatus, note?: string) => {
-    // Client-side only view; real moderation happens in /admin under admin RLS.
-    setRequests((prev) => prev.map((r) => (r.id === id ? { ...r, status, note } : r)));
-  };
 
   /* --------------------------- Payout flow ---------------------------- */
   const requestPayout = async (amount: number) => {
