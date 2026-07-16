@@ -36,11 +36,14 @@ type PayoutRow = {
   destination: string | null; status: "pending" | "processing" | "paid" | "rejected";
   note: string | null; created_at: string;
 };
+type LinkStatus =
+  | "in_progress" | "completed" | "finished" | "paid"
+  | "new" | "review" | "approved" | "rejected"; // legacy values still exist in DB
 type LinkRow = {
   id: string; user_id: string; offer_id: string | null; offer_name: string;
   offer_tag: string | null; source: string | null; sub: string | null;
-  link: string | null; note: string | null;
-  status: "new" | "review" | "approved" | "rejected"; created_at: string;
+  link: string | null; note: string | null; orders_count: number | null;
+  status: LinkStatus; created_at: string;
 };
 type Conversion = {
   id: string; user_id: string; offer_id: string | null; offer_name: string;
