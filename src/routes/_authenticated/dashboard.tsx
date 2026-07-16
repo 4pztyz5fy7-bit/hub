@@ -1991,7 +1991,6 @@ function RequestTimeline({ status, createdAt, ordersCount = 0 }: { status: LinkR
         const color =
           s.state === "done" ? "bg-emerald-500 text-background"
           : s.state === "current" ? "bg-amber-500 text-background"
-          : s.state === "rejected" ? "bg-destructive text-background"
           : "bg-muted text-muted-foreground";
         return (
           <li key={s.key} className="flex items-start gap-2">
