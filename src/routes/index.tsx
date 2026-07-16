@@ -218,43 +218,42 @@ function LandingPage() {
               Смотреть все <ArrowRight className="size-4" />
             </button>
           </div>
-          <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {[
-              { name: "Тинькофф Инвестиции", cat: "Финансы", pay: "до ₽3 200", cr: "8.4%", epc: "₽268", hot: true },
-              { name: "Skillbox PRO", cat: "Образование", pay: "до 40%", cr: "5.1%", epc: "₽192" },
-              { name: "Aviasales Business", cat: "Travel", pay: "до ₽1 800", cr: "3.7%", epc: "₽66" },
-              { name: "Альфа-Банк Дебет", cat: "Финансы", pay: "до ₽2 500", cr: "6.9%", epc: "₽172", hot: true },
-              { name: "GeekBrains", cat: "Образование", pay: "до 35%", cr: "4.8%", epc: "₽168" },
-              { name: "Ostrovok B2B", cat: "Travel", pay: "до ₽2 100", cr: "3.2%", epc: "₽67" },
-            ].map((o) => (
-              <div key={o.name} className="group relative flex flex-col rounded-2xl border border-border bg-card p-5 transition hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-lg hover:shadow-primary/5">
-                {o.hot && (
-                  <span className="absolute -top-2 right-4 inline-flex items-center gap-1 rounded-full bg-primary px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-primary-foreground">
-                    <Zap className="size-3" /> Hot
-                  </span>
-                )}
-                <div className="flex items-center justify-between">
-                  <span className="rounded-full bg-secondary px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">{o.cat}</span>
-                  <Star className="size-4 text-primary" />
+          {stats && stats.offers.length === 0 ? (
+            <div className="mt-10 rounded-2xl border border-dashed border-border bg-card/50 p-10 text-center text-sm text-muted-foreground">
+              Пока нет активных офферов. Загляните чуть позже.
+            </div>
+          ) : (
+            <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              {(stats?.offers ?? []).map((o) => (
+                <div key={o.id} className="group relative flex flex-col rounded-2xl border border-border bg-card p-5 transition hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-lg hover:shadow-primary/5">
+                  {o.is_new && (
+                    <span className="absolute -top-2 right-4 inline-flex items-center gap-1 rounded-full bg-primary px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-primary-foreground">
+                      <Zap className="size-3" /> New
+                    </span>
+                  )}
+                  <div className="flex items-center justify-between">
+                    <span className="rounded-full bg-secondary px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">{o.category ?? "Оффер"}</span>
+                    <Star className="size-4 text-primary" />
+                  </div>
+                  <h3 className="mt-3 text-base font-bold">{o.name}</h3>
+                  <div className="mt-4 grid flex-1 grid-cols-3 gap-3 border-t border-border pt-4">
+                    <div>
+                      <div className="text-[10px] uppercase tracking-wider text-muted-foreground">Выплата</div>
+                      <div className="mt-0.5 text-sm font-bold text-primary">{o.payout}</div>
+                    </div>
+                    <div>
+                      <div className="text-[10px] uppercase tracking-wider text-muted-foreground">CR</div>
+                      <div className="mt-0.5 text-sm font-bold">{o.cr > 0 ? `${o.cr}%` : "—"}</div>
+                    </div>
+                    <div>
+                      <div className="text-[10px] uppercase tracking-wider text-muted-foreground">EPC</div>
+                      <div className="mt-0.5 text-sm font-bold">{o.epc > 0 ? `₽${o.epc}` : "—"}</div>
+                    </div>
+                  </div>
                 </div>
-                <h3 className="mt-3 text-base font-bold">{o.name}</h3>
-                <div className="mt-4 grid flex-1 grid-cols-3 gap-3 border-t border-border pt-4">
-                  <div>
-                    <div className="text-[10px] uppercase tracking-wider text-muted-foreground">Выплата</div>
-                    <div className="mt-0.5 text-sm font-bold text-primary">{o.pay}</div>
-                  </div>
-                  <div>
-                    <div className="text-[10px] uppercase tracking-wider text-muted-foreground">CR</div>
-                    <div className="mt-0.5 text-sm font-bold">{o.cr}</div>
-                  </div>
-                  <div>
-                    <div className="text-[10px] uppercase tracking-wider text-muted-foreground">EPC</div>
-                    <div className="mt-0.5 text-sm font-bold">{o.epc}</div>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          )}
         </div>
       </section>
 
