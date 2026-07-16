@@ -1546,7 +1546,11 @@ function OffersTab({
                 onClick={() => onOpenDetail(o)}
                 className="flex w-full items-start gap-3 text-left"
               >
-                <OfferTag tag={o.tag} />
+                {o.image ? (
+                  <img src={o.image} alt="" className="size-10 shrink-0 rounded-md border border-border object-cover" />
+                ) : (
+                  <OfferTag tag={o.tag} />
+                )}
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-2">
                     <h4 className="truncate text-xs font-bold leading-none">{o.name}</h4>
