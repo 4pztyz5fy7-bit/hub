@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as TermsRouteImport } from './routes/terms'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as PrivacyRouteImport } from './routes/privacy'
+import { Route as NewsRouteImport } from './routes/news'
 import { Route as LegalRouteImport } from './routes/legal'
 import { Route as CookiesRouteImport } from './routes/cookies'
 import { Route as BlockedRouteImport } from './routes/blocked'
@@ -33,6 +34,11 @@ const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
 const PrivacyRoute = PrivacyRouteImport.update({
   id: '/privacy',
   path: '/privacy',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const NewsRoute = NewsRouteImport.update({
+  id: '/news',
+  path: '/news',
   getParentRoute: () => rootRouteImport,
 } as any)
 const LegalRoute = LegalRouteImport.update({
@@ -75,6 +81,7 @@ export interface FileRoutesByFullPath {
   '/blocked': typeof BlockedRoute
   '/cookies': typeof CookiesRoute
   '/legal': typeof LegalRoute
+  '/news': typeof NewsRoute
   '/privacy': typeof PrivacyRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/terms': typeof TermsRoute
@@ -86,6 +93,7 @@ export interface FileRoutesByTo {
   '/blocked': typeof BlockedRoute
   '/cookies': typeof CookiesRoute
   '/legal': typeof LegalRoute
+  '/news': typeof NewsRoute
   '/privacy': typeof PrivacyRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/terms': typeof TermsRoute
@@ -99,6 +107,7 @@ export interface FileRoutesById {
   '/blocked': typeof BlockedRoute
   '/cookies': typeof CookiesRoute
   '/legal': typeof LegalRoute
+  '/news': typeof NewsRoute
   '/privacy': typeof PrivacyRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/terms': typeof TermsRoute
@@ -112,6 +121,7 @@ export interface FileRouteTypes {
     | '/blocked'
     | '/cookies'
     | '/legal'
+    | '/news'
     | '/privacy'
     | '/sitemap.xml'
     | '/terms'
@@ -123,6 +133,7 @@ export interface FileRouteTypes {
     | '/blocked'
     | '/cookies'
     | '/legal'
+    | '/news'
     | '/privacy'
     | '/sitemap.xml'
     | '/terms'
@@ -135,6 +146,7 @@ export interface FileRouteTypes {
     | '/blocked'
     | '/cookies'
     | '/legal'
+    | '/news'
     | '/privacy'
     | '/sitemap.xml'
     | '/terms'
@@ -148,6 +160,7 @@ export interface RootRouteChildren {
   BlockedRoute: typeof BlockedRoute
   CookiesRoute: typeof CookiesRoute
   LegalRoute: typeof LegalRoute
+  NewsRoute: typeof NewsRoute
   PrivacyRoute: typeof PrivacyRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   TermsRoute: typeof TermsRoute
@@ -174,6 +187,13 @@ declare module '@tanstack/react-router' {
       path: '/privacy'
       fullPath: '/privacy'
       preLoaderRoute: typeof PrivacyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/news': {
+      id: '/news'
+      path: '/news'
+      fullPath: '/news'
+      preLoaderRoute: typeof NewsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/legal': {
@@ -247,6 +267,7 @@ const rootRouteChildren: RootRouteChildren = {
   BlockedRoute: BlockedRoute,
   CookiesRoute: CookiesRoute,
   LegalRoute: LegalRoute,
+  NewsRoute: NewsRoute,
   PrivacyRoute: PrivacyRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
   TermsRoute: TermsRoute,
