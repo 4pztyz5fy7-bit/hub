@@ -1773,7 +1773,207 @@ function Stat({ label, value }: { label: string; value: string }) {
 /* ============================ Stats ============================ */
 
 
+/* ================================ Requests ================================ */
+
+const REQ_STATUS_META: Record<LinkRequestStatus, { label: string; tone: string; step: number }> = {
+  in_progress: { label: "В работе", tone: "bg-amber-500/15 text-amber-600 border-amber-500/30", step: 1 },
+  new:         { label: "В работе", tone: "bg-amber-500/15 text-amber-600 border-amber-500/30", step: 1 },
+  review:      { label: "В работе", tone: "bg-amber-500/15 text-amber-600 border-amber-500/30", step: 1 },
+  rejected:    { label: "В работе", tone: "bg-amber-500/15 text-amber-600 border-amber-500/30", step: 1 },
+  completed:   { label: "Выполнено", tone: "bg-sky-500/15 text-sky-600 border-sky-500/30", step: 2 },
+  approved:    { label: "Выполнено", tone: "bg-sky-500/15 text-sky-600 border-sky-500/30", step: 2 },
+  finished:    { label: "Завершено", tone: "bg-violet-500/15 text-violet-600 border-violet-500/30", step: 3 },
+  paid:        { label: "Оплачено", tone: "bg-emerald-500/15 text-emerald-600 border-emerald-500/30", step: 4 },
+};
+
+function RequestsTab({ requests }: { requests: LinkRequest[] }) {
+  const [q, setQ] = useState("");
+  const [filter, setFilter] = useState<"all" | "active" | "paid">("all");
+  const [copiedId, setCopiedId] = useState<string | null>(null);
+
+  const filtered = useMemo(() => {
+    const term = q.trim().toLowerCase();
+    return requests.filter((r) => {
+      const s = normalizeStatus(r.status);
+      if (filter === "active" && (s === "paid" || s === "finished")) return false;
+      if (filter === "paid" && s !== "paid") return false;
+      if (!term) return true;
+      return (
+        r.offerName.toLowerCase().includes(term) ||
+        r.offerTag.toLowerCase().includes(term) ||
+        (r.note ?? "").toLowerCase().includes(term)
+      );
+    });
+  }, [requests, q, filter]);
+
+  const stats = useMemo(() => {
+    const total = requests.length;
+    const active = requests.filter((r) => {
+      const s = normalizeStatus(r.status);
+      return s !== "paid" && s !== "finished";
+    }).length;
+    const orders = requests.reduce((s, r) => s + (r.ordersCount || 0), 0);
+    const paid = requests.filter((r) => normalizeStatus(r.status) === "paid").length;
+    return { total, active, orders, paid };
+  }, [requests]);
+
+  const copy = async (r: LinkRequest) => {
+    if (!r.link) return;
+    try {
+      await navigator.clipboard.writeText(r.link);
+      setCopiedId(r.id);
+      setTimeout(() => setCopiedId((c) => (c === r.id ? null : c)), 1500);
+    } catch {}
+  };
+
+  if (!requests.length) {
+    return (
+      <div className="rounded-3xl border border-border bg-secondary/30 p-8 text-center">
+        <Inbox className="mx-auto mb-3 size-10 text-muted-foreground" />
+        <h3 className="text-base font-bold">Заявок пока нет</h3>
+        <p className="mt-1 text-xs text-muted-foreground">
+          Скопируйте ссылку любого оффера, чтобы автоматически создать заявку.
+        </p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-4">
+      <div>
+        <h2 className="text-xl font-black tracking-tight">Мои заявки</h2>
+        <p className="mt-0.5 text-xs text-muted-foreground">Отслеживайте статус по каждому офферу</p>
+      </div>
+
+      <div className="grid grid-cols-4 gap-2">
+        {[
+          { label: "Всего", value: stats.total, tone: "text-foreground" },
+          { label: "Активных", value: stats.active, tone: "text-amber-600" },
+          { label: "Заказов", value: stats.orders, tone: "text-sky-600" },
+          { label: "Оплачено", value: stats.paid, tone: "text-emerald-600" },
+        ].map((s) => (
+          <div key={s.label} className="rounded-2xl border border-border bg-card p-2.5 text-center">
+            <p className={`text-lg font-black leading-none ${s.tone}`}>{s.value}</p>
+            <p className="mt-1 text-[9px] font-bold uppercase tracking-wider text-muted-foreground">{s.label}</p>
+          </div>
+        ))}
+      </div>
+
+      <div className="relative">
+        <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+        <input
+          value={q}
+          onChange={(e) => setQ(e.target.value)}
+          placeholder="Поиск по офферу или тегу"
+          className="w-full rounded-2xl border border-border bg-secondary/40 py-2.5 pl-9 pr-3 text-sm outline-none focus:border-primary"
+        />
+      </div>
+
+      <div className="flex gap-1.5 overflow-x-auto pb-1">
+        {[
+          { id: "all" as const, label: "Все" },
+          { id: "active" as const, label: "Активные" },
+          { id: "paid" as const, label: "Оплачено" },
+        ].map((f) => (
+          <button
+            key={f.id}
+            onClick={() => setFilter(f.id)}
+            className={`whitespace-nowrap rounded-full border px-3 py-1.5 text-xs font-bold uppercase tracking-wide transition ${
+              filter === f.id
+                ? "border-primary bg-primary text-primary-foreground"
+                : "border-border bg-secondary/40 text-muted-foreground hover:border-primary/50"
+            }`}
+          >
+            {f.label}
+          </button>
+        ))}
+      </div>
+
+      <div className="space-y-3">
+        {filtered.map((r) => {
+          const s = normalizeStatus(r.status);
+          const meta = REQ_STATUS_META[s];
+          const linkAvailable = !!r.link && s !== "finished" && s !== "paid";
+          return (
+            <div key={r.id} className="rounded-2xl border border-border bg-card p-3.5 shadow-sm">
+              <div className="flex items-start justify-between gap-2">
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-sm font-bold">{r.offerName}</p>
+                  <p className="mt-0.5 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+                    {r.offerTag} · {new Date(r.createdAt).toLocaleDateString("ru-RU")}
+                  </p>
+                </div>
+                <span className={`shrink-0 rounded-full border px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider ${meta.tone}`}>
+                  {meta.label}
+                </span>
+              </div>
+
+              <div className="mt-3 flex items-center gap-1">
+                {[1, 2, 3, 4].map((step) => (
+                  <div
+                    key={step}
+                    className={`h-1.5 flex-1 rounded-full ${
+                      step <= meta.step ? "bg-primary" : "bg-secondary"
+                    }`}
+                  />
+                ))}
+              </div>
+              <div className="mt-1.5 grid grid-cols-4 gap-1 text-center text-[9px] font-bold uppercase tracking-tighter text-muted-foreground">
+                <span className={meta.step >= 1 ? "text-primary" : ""}>В работе</span>
+                <span className={meta.step >= 2 ? "text-primary" : ""}>Выполнено</span>
+                <span className={meta.step >= 3 ? "text-primary" : ""}>Завершено</span>
+                <span className={meta.step >= 4 ? "text-primary" : ""}>Оплачено</span>
+              </div>
+
+              {r.ordersCount > 0 && (
+                <div className="mt-3 flex items-center gap-2 rounded-xl border border-border bg-secondary/40 px-3 py-2">
+                  <CheckCircle2 className="size-4 text-emerald-500" />
+                  <span className="text-xs font-bold">Выполнено заказов: {r.ordersCount}</span>
+                </div>
+              )}
+
+              {r.source && (
+                <p className="mt-2 text-[11px] text-muted-foreground">
+                  <span className="font-bold uppercase tracking-wider text-[9px]">Источник:</span> {r.source}
+                </p>
+              )}
+              {r.note && (
+                <div className="mt-2 rounded-xl border border-border bg-secondary/30 px-3 py-2 text-[11px] leading-relaxed">
+                  <span className="font-bold uppercase tracking-wider text-[9px] text-muted-foreground">Комментарий: </span>
+                  {r.note}
+                </div>
+              )}
+
+              {linkAvailable ? (
+                <button
+                  onClick={() => copy(r)}
+                  className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl border border-border bg-secondary/40 px-3 py-2 text-xs font-bold uppercase tracking-wider transition hover:border-primary hover:bg-primary/10"
+                >
+                  {copiedId === r.id ? <Check className="size-3.5 text-emerald-500" /> : <Copy className="size-3.5" />}
+                  {copiedId === r.id ? "Скопировано" : "Скопировать ссылку"}
+                </button>
+              ) : (s === "finished" || s === "paid") ? (
+                <div className="mt-3 flex items-center justify-center gap-2 rounded-xl border border-dashed border-border px-3 py-2 text-[11px] text-muted-foreground">
+                  <Lock className="size-3.5" />
+                  Заявка завершена — ссылка недоступна
+                </div>
+              ) : null}
+            </div>
+          );
+        })}
+        {!filtered.length && (
+          <div className="rounded-2xl border border-dashed border-border p-6 text-center text-xs text-muted-foreground">
+            По фильтрам ничего не найдено
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
 /* ================================ Stats ================================ */
+
+
 
 
 function StatsTab({ conversions, offers, requests }: { conversions: Conversion[]; offers: Offer[]; requests: LinkRequest[] }) {
