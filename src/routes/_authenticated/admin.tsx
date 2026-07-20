@@ -1211,34 +1211,22 @@ function RequestsTab() {
     if (!selected.size) return;
     const ids = Array.from(selected);
     if (status === "paid") {
-      const targets = rows.filter((r) => selected.has(r.id) && r.status !== "paid");
-      const offerIds = Array.from(new Set(targets.map((t) => t.offer_id).filter(Boolean))) as string[];
-      const offersMap = new Map<string, { payout: string; payout_min: number | null; payout_max: number | null }>();
-      if (offerIds.length) {
-        const { data: offs } = await supabase.from("offers").select("id, payout, payout_min, payout_max").in("id", offerIds);
-        (offs ?? []).forEach((o: any) => offersMap.set(o.id, o));
-      }
-      await supabase.from("link_requests").update({ status }).in("id", ids);
-      const convs: any[] = [];
-      const notes: any[] = [];
-      for (const t of targets) {
-        const off = t.offer_id ? offersMap.get(t.offer_id) : null;
-        const offerPer = off ? Number(String(off.payout ?? "").replace(/[^\d.]/g, "")) || Number(off.payout_max) || Number(off.payout_min) || 0 : 0;
-        const per = t.payout_override != null && t.payout_override > 0 ? Number(t.payout_override) : offerPer;
-        const amount = per;
-
-        if (amount > 0) {
-          convs.push({ user_id: t.user_id, offer_id: t.offer_id, offer_name: t.offer_name, amount, status: "ok" });
-          notes.push({ user_id: t.user_id, kind: "payout", title: "Начисление за оффер", body: `${t.offer_name}: начислено ${amount.toLocaleString("ru-RU")} ₽`, amount: String(amount), status: "paid" });
-        }
-      }
-      if (convs.length) await supabase.from("conversions").insert(convs);
-      if (notes.length) await supabase.from("notifications").insert(notes);
+      // Atomic + idempotent crediting via SECURITY DEFINER RPC
+      await Promise.all(
+        ids.map((id) =>
+          supabase.rpc("admin_set_link_request_status", {
+            _request_id: id,
+            _new_status: status,
+            _payout_override: null,
+          }),
+        ),
+      );
     } else {
       await supabase.from("link_requests").update({ status }).in("id", ids);
     }
     load();
   };
+
   const bulkDel = async () => { if (!selected.size || !confirm(`Удалить ${selected.size} заявок?`)) return; await supabase.from("link_requests").delete().in("id", Array.from(selected)); load(); };
   const toggleSel = (id: string) => setSelected((s) => { const n = new Set(s); n.has(id) ? n.delete(id) : n.add(id); return n; });
 
