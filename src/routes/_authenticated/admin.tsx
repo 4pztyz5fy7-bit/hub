@@ -154,21 +154,33 @@ function AdminPage() {
   useEffect(() => {
     if (checking || accessError) return;
     let cancelled = false;
+    let uid: string | null = null;
     const load = async () => {
-      const { data: u } = await supabase.auth.getUser();
-      if (!u.user || cancelled) return;
-      setMeId(u.user.id);
+      if (!uid) {
+        const { data: u } = await supabase.auth.getUser();
+        if (!u.user || cancelled) return;
+        uid = u.user.id;
+        setMeId(uid);
+      }
       const { count } = await supabase
         .from("notifications")
         .select("id", { count: "exact", head: true })
-        .eq("user_id", u.user.id)
+        .eq("user_id", uid)
         .eq("kind", "moderation")
         .eq("read", false);
       if (!cancelled) setModerationUnread(count ?? 0);
     };
     void load();
-    const t = setInterval(() => void load(), 30000);
-    return () => { cancelled = true; clearInterval(t); };
+    let ch: ReturnType<typeof supabase.channel> | null = null;
+    (async () => {
+      const { data: u } = await supabase.auth.getUser();
+      if (!u.user || cancelled) return;
+      ch = supabase
+        .channel(`mod-bell:${u.user.id}`)
+        .on("postgres_changes", { event: "*", schema: "public", table: "notifications", filter: `user_id=eq.${u.user.id}` }, () => void load())
+        .subscribe();
+    })();
+    return () => { cancelled = true; if (ch) void supabase.removeChannel(ch); };
   }, [checking, accessError, tab]);
 
   const signOut = async () => { await supabase.auth.signOut(); navigate({ to: "/" }); };
