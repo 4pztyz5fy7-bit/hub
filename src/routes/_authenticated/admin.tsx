@@ -1217,7 +1217,6 @@ function RequestsTab() {
           supabase.rpc("admin_set_link_request_status", {
             _request_id: id,
             _new_status: status,
-            _payout_override: null,
           }),
         ),
       );
