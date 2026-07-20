@@ -1291,6 +1291,8 @@ function InfoTab({
   onGoConversions,
   onRequestPayout,
   onOpenLevels,
+  showBalance,
+  onToggleBalance,
 }: {
   balance: number;
   available: number;
@@ -1303,6 +1305,8 @@ function InfoTab({
   onGoConversions: () => void;
   onRequestPayout: () => void;
   onOpenLevels: () => void;
+  showBalance: boolean;
+  onToggleBalance: () => void;
 }) {
   const [copied, setCopied] = useState(false);
   const [activityTab, setActivityTab] = useState<"offers" | "conv">("offers");
