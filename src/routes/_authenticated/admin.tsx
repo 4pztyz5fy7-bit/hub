@@ -1802,7 +1802,7 @@ function BroadcastTab() {
 /* =========================== MODERATION =========================== */
 type ModNotif = {
   id: string; user_id: string; title: string; body: string;
-  amount: string | null; status: string | null; read: boolean; created_at: string;
+  amount: string | null; actor_id: string | null; status: string | null; read: boolean; created_at: string;
 };
 type OffenderProfile = {
   id: string; email: string | null; display_name: string | null;
@@ -1823,7 +1823,7 @@ function ModerationTab({ meId, onCountChange }: { meId: string | null; onCountCh
     setLoading(true);
     const { data } = await supabase
       .from("notifications")
-      .select("id,user_id,title,body,amount,status,read,created_at")
+      .select("id,user_id,title,body,amount,actor_id,status,read,created_at")
       .eq("user_id", meId)
       .eq("kind", "moderation")
       .order("created_at", { ascending: false })
@@ -1837,8 +1837,9 @@ function ModerationTab({ meId, onCountChange }: { meId: string | null; onCountCh
   useEffect(() => { void load(); }, [load]);
   useRealtimeReload(["notifications"], () => void load(), "rt:moderation");
 
-  // Parse offender uuid from `amount` field or from body "Пользователь: name (uuid)"
+  // Prefer explicit actor_id; fall back to legacy body/amount parsing for old rows.
   const offenderIdOf = (n: ModNotif): string | null => {
+    if (n.actor_id) return n.actor_id;
     if (n.amount && /^[0-9a-f-]{36}$/i.test(n.amount)) return n.amount;
     const m = n.body?.match(/\(([0-9a-f-]{36})\)/i);
     return m ? m[1] : null;
