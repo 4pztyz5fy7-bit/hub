@@ -3984,24 +3984,32 @@ function OfferDetailSheet({
 
         {/* Footer CTA */}
         <div className="border-t border-border bg-background px-4 py-3">
-          <button
-            onClick={() => onCopyLink(offer, source)}
-            className={`flex w-full items-center justify-center gap-1.5 rounded-md px-4 py-2.5 text-[11px] font-bold uppercase tracking-wider transition-colors active:scale-95 ${
-              isCopied
-                ? "bg-[color:var(--success)]/15 text-[color:var(--success)]"
-                : "bg-foreground text-background"
-            }`}
-          >
-            {isCopied ? (
-              <>
-                <Check className="size-3.5" /> Ссылка скопирована
-              </>
-            ) : (
-              <>
-                <Copy className="size-3.5" /> {linked ? "Скопировать ссылку ещё раз" : "Скопировать ссылку"}
-              </>
-            )}
-          </button>
+          <div className="flex flex-col gap-2">
+            <button
+              onClick={() => onCopyLink(offer, source)}
+              className={`flex w-full items-center justify-center gap-1.5 rounded-md px-4 py-2.5 text-[11px] font-bold uppercase tracking-wider transition-colors active:scale-95 ${
+                isCopied
+                  ? "bg-[color:var(--success)]/15 text-[color:var(--success)]"
+                  : "bg-foreground text-background"
+              }`}
+            >
+              {isCopied ? (
+                <>
+                  <Check className="size-3.5" /> Ссылка скопирована
+                </>
+              ) : (
+                <>
+                  <Copy className="size-3.5" /> {linked ? "Скопировать ссылку ещё раз" : "Скопировать ссылку"}
+                </>
+              )}
+            </button>
+            <button
+              onClick={onClose}
+              className="flex w-full items-center justify-center gap-1.5 rounded-md border border-border bg-secondary px-4 py-2.5 text-[11px] font-bold uppercase tracking-wider text-muted-foreground transition-colors hover:bg-accent hover:text-foreground active:scale-95"
+            >
+              <X className="size-3.5" /> Закрыть
+            </button>
+          </div>
         </div>
       </div>
     </div>
