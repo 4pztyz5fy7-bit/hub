@@ -1443,53 +1443,46 @@ function RequestRowControls({ row, onReload }: { row: LinkRow; onReload: () => v
 
   const change = async (patch: Partial<Pick<LinkRow, "status" | "link" | "note" | "orders_count" | "payout_override">>) => {
     setSaving(true);
-    const becamePaid = patch.status === "paid" && row.status !== "paid";
-    await supabase.from("link_requests").update(patch).eq("id", row.id);
-    if (becamePaid) {
-      try {
-        const overrideVal = patch.payout_override !== undefined ? patch.payout_override : row.payout_override;
-        let perOrder = overrideVal != null && Number(overrideVal) > 0 ? Number(overrideVal) : 0;
-        let offerId: string | null = row.offer_id;
-        if (perOrder === 0 && row.offer_id) {
-          const { data: off } = await supabase
-            .from("offers")
-            .select("id, payout, payout_min, payout_max")
-            .eq("id", row.offer_id)
-            .maybeSingle();
-          if (off) {
-            offerId = off.id;
-            const num = Number(String(off.payout ?? "").replace(/[^\d.]/g, "")) || 0;
-            perOrder = num || Number(off.payout_max) || Number(off.payout_min) || 0;
-          }
-        }
-        const amount = perOrder;
-
-        if (amount > 0) {
-          await supabase.from("conversions").insert({
-            user_id: row.user_id,
-            offer_id: offerId,
-            offer_name: row.offer_name,
-            amount,
-            status: "ok",
-          });
-          await supabase.from("notifications").insert({
-            user_id: row.user_id,
-            kind: "payout",
-            title: "Начисление за оффер",
-            body: `${row.offer_name}: начислено ${amount.toLocaleString("ru-RU")} ₽`,
-            amount: String(amount),
-            status: "paid",
-          });
-        }
-      } catch (e) {
-        console.error("credit on paid failed", e);
+    try {
+      const statusChange = patch.status !== undefined && patch.status !== row.status;
+      // Fields that are not part of the status transition go through a plain update.
+      const otherPatch: Record<string, unknown> = {};
+      for (const [k, v] of Object.entries(patch)) {
+        if (k === "status") continue;
+        if (statusChange && k === "payout_override") continue; // sent via RPC below
+        otherPatch[k] = v;
       }
+      if (Object.keys(otherPatch).length) {
+        await supabase.from("link_requests").update(otherPatch).eq("id", row.id);
+      }
+      if (statusChange) {
+        const overrideVal =
+          patch.payout_override !== undefined ? patch.payout_override : row.payout_override;
+        const { error } = await supabase.rpc("admin_set_link_request_status", {
+          _request_id: row.id,
+          _new_status: patch.status!,
+          _payout_override:
+            overrideVal != null && Number(overrideVal) > 0 ? Number(overrideVal) : undefined,
+        });
+        if (error) throw error;
+      } else if (patch.payout_override !== undefined) {
+        // override without status change
+        await supabase
+          .from("link_requests")
+          .update({ payout_override: patch.payout_override })
+          .eq("id", row.id);
+      }
+    } catch (e) {
+      console.error("change failed", e);
+      alert("Не удалось сохранить изменения: " + ((e as Error).message ?? "unknown"));
+    } finally {
+      setSaving(false);
+      setSavedFlash(true);
+      setTimeout(() => setSavedFlash(false), 1200);
+      onReload();
     }
-    setSaving(false);
-    setSavedFlash(true);
-    setTimeout(() => setSavedFlash(false), 1200);
-    onReload();
   };
+
 
   const saveFields = async () => {
     await change({ link: link.trim() || null, note: note.trim() || null, orders_count: ordersNum, payout_override: priceNum });
