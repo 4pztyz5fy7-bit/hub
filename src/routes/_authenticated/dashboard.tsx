@@ -566,6 +566,11 @@ function DashboardPage() {
     document.documentElement.lang = prefs.language;
   }, [prefs.language]);
 
+  // Apply compact mode
+  useEffect(() => {
+    document.documentElement.dataset.compact = prefs.compact ? "1" : "0";
+  }, [prefs.compact]);
+
 
   // Earnings derived from real conversions and payouts.
   // Balance decreases only when a payout is actually approved (status = "paid").
