@@ -1016,6 +1016,7 @@ function DashboardPage() {
             offers={offers.map((o) => ({ id: o.id, name: o.name, landing: o.landing }))}
           />
         )}
+        {active === "requests" && <RequestsTab requests={requests} />}
         {active === "profile" && (
           <ProfileTab
             userId={userId}
