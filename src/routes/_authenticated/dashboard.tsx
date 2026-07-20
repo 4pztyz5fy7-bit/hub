@@ -52,6 +52,8 @@ import {
   UserCircle,
   ThumbsUp,
   ThumbsDown,
+  Eye,
+  EyeOff,
   type LucideIcon,
 } from "lucide-react";
 
