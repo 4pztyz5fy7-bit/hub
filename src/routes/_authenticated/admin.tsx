@@ -1446,11 +1446,10 @@ function RequestRowControls({ row, onReload }: { row: LinkRow; onReload: () => v
     try {
       const statusChange = patch.status !== undefined && patch.status !== row.status;
       // Fields that are not part of the status transition go through a plain update.
-      const otherPatch: Record<string, unknown> = {};
-      for (const [k, v] of Object.entries(patch)) {
-        if (k === "status") continue;
-        if (statusChange && k === "payout_override") continue; // sent via RPC below
-        otherPatch[k] = v;
+      const { status: _s, payout_override: _po, ...rest } = patch;
+      const otherPatch: Partial<LinkRow> = { ...rest };
+      if (!statusChange && patch.payout_override !== undefined) {
+        otherPatch.payout_override = patch.payout_override;
       }
       if (Object.keys(otherPatch).length) {
         await supabase.from("link_requests").update(otherPatch).eq("id", row.id);
