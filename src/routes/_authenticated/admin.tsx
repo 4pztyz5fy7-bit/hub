@@ -1564,20 +1564,24 @@ function DetailRow({ label, value, mono, onCopy, copied }: { label: string; valu
 function RequestRowControls({ row, onReload }: { row: LinkRow; onReload: () => void }) {
   const [link, setLink] = useState(row.link ?? "");
   const [note, setNote] = useState(row.note ?? "");
+  const [orders, setOrders] = useState<string>(String(row.orders_count ?? 0));
   const [price, setPrice] = useState<string>(row.payout_override != null ? String(row.payout_override) : "");
   const [saving, setSaving] = useState(false);
   const [savedFlash, setSavedFlash] = useState(false);
+  const ordersNum = Math.max(0, Number(orders) || 0);
   const priceNum = price.trim() === "" ? null : Math.max(0, Number(price) || 0);
   const dirty =
     link !== (row.link ?? "") ||
     note !== (row.note ?? "") ||
+    ordersNum !== (row.orders_count ?? 0) ||
     priceNum !== (row.payout_override ?? null);
 
   useEffect(() => {
     setLink(row.link ?? "");
     setNote(row.note ?? "");
+    setOrders(String(row.orders_count ?? 0));
     setPrice(row.payout_override != null ? String(row.payout_override) : "");
-  }, [row.id, row.link, row.note, row.payout_override]);
+  }, [row.id, row.link, row.note, row.orders_count, row.payout_override]);
 
   const change = async (patch: Partial<Pick<LinkRow, "status" | "link" | "note" | "orders_count" | "payout_override">>) => {
     setSaving(true);
@@ -1622,7 +1626,7 @@ function RequestRowControls({ row, onReload }: { row: LinkRow; onReload: () => v
 
 
   const saveFields = async () => {
-    await change({ link: link.trim() || null, note: note.trim() || null, payout_override: priceNum });
+    await change({ link: link.trim() || null, note: note.trim() || null, orders_count: ordersNum, payout_override: priceNum });
   };
 
   return (
@@ -1642,6 +1646,17 @@ function RequestRowControls({ row, onReload }: { row: LinkRow; onReload: () => v
         </select>
         {savedFlash && <span className="text-[10px] font-bold uppercase text-emerald-500">Сохранено</span>}
       </div>
+      <label className="block">
+        <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Выполнено заказов</span>
+        <input
+          type="number"
+          min={0}
+          value={orders}
+          onChange={(e) => setOrders(e.target.value.replace(/[^\d]/g, ""))}
+          placeholder="0"
+          className="mt-0.5 w-full rounded-lg border border-border bg-background px-3 py-1.5 text-sm outline-none focus:ring-2 focus:ring-primary/40"
+        />
+      </label>
       <label className="block">
         <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
           Сумма к начислению партнёру, ₽ <span className="normal-case text-muted-foreground/70">(фикс., пусто = как в оффере)</span>
