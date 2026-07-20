@@ -850,6 +850,32 @@ function DashboardPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [dataReady]);
 
+  // Preload already-unlocked achievement codes so we only toast the fresh ones
+  useEffect(() => {
+    if (!userId) return;
+    let cancelled = false;
+    (async () => {
+      const { data } = await supabase
+        .from("user_achievements")
+        .select("achievement_id, achievements(code)")
+        .eq("user_id", userId);
+      if (cancelled) return;
+      for (const row of (data ?? []) as any[]) {
+        const code = row?.achievements?.code;
+        if (code) awardedCodesRef.current.add(code);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [userId]);
+
+  // Check achievements whenever key metrics change (idempotent RPC)
+  useEffect(() => {
+    if (!userId || !dataReady) return;
+    void runAwardAchievements();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [userId, dataReady, gross, conversions.length, requests.length]);
+
+
   const handleSignOut = async () => {
     await supabase.auth.signOut();
     navigate({ to: "/" });
