@@ -612,7 +612,7 @@ function DashboardPage() {
       const [role, offersRes, profileRes, payoutsRes, reqsRes, convRes, notifRes] = await Promise.all([
         supabase.from("user_roles").select("role").eq("user_id", uid).eq("role", "admin").maybeSingle(),
         supabase.from("offers").select("*").eq("active", true).order("created_at", { ascending: false }),
-        supabase.from("profiles").select("bank,display_name,avatar_url,email,settings").eq("id", uid).maybeSingle(),
+        supabase.from("profiles").select("bank,display_name,avatar_url,email,settings,blocked,blocked_reason").eq("id", uid).maybeSingle(),
         supabase.from("payout_requests").select("*").eq("user_id", uid).order("created_at", { ascending: false }),
         supabase.from("link_requests").select("*").eq("user_id", uid).order("created_at", { ascending: false }),
         supabase.from("conversions").select("*").eq("user_id", uid).order("created_at", { ascending: false }),
@@ -620,7 +620,15 @@ function DashboardPage() {
       ]);
       if (cancelled) return;
 
-      setIsAdmin(Boolean(role.data));
+      const isAdminRow = Boolean(role.data);
+      setIsAdmin(isAdminRow);
+
+      // Block gate: sign out and route to /blocked (admins are never blocked out)
+      if (!isAdminRow && (profileRes.data as any)?.blocked === true) {
+        await supabase.auth.signOut();
+        navigate({ to: "/blocked", replace: true });
+        return;
+      }
 
       setOffers((offersRes.data ?? []).map((r: any): Offer => ({
         id: r.id, tag: r.tag, name: r.name,

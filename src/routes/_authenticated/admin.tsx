@@ -15,7 +15,7 @@ export const Route = createFileRoute("/_authenticated/admin")({
 });
 
 /* =========================== TYPES =========================== */
-type TabId = "overview" | "users" | "offers" | "payouts" | "requests" | "conversions" | "broadcast" | "ai";
+type TabId = "overview" | "users" | "offers" | "payouts" | "requests" | "conversions" | "broadcast" | "moderation" | "ai";
 
 type Profile = {
   id: string; email: string | null; display_name: string | null;
@@ -64,6 +64,8 @@ function AdminPage() {
   const [checking, setChecking] = useState(true);
   const [accessError, setAccessError] = useState<string | null>(null);
   const [tab, setTab] = useState<TabId>("overview");
+  const [moderationUnread, setModerationUnread] = useState(0);
+  const [meId, setMeId] = useState<string | null>(null);
 
   // ADMIN GUARD: надёжная проверка сессии и роли.
   // - Ждём валидную сессию с access_token (учитываем гонку с onAuthStateChange).
@@ -123,6 +125,27 @@ function AdminPage() {
 
   useEffect(() => { void runCheck(); }, [runCheck]);
 
+  // Load unread moderation notifications count (for header bell + tab badge)
+  useEffect(() => {
+    if (checking || accessError) return;
+    let cancelled = false;
+    const load = async () => {
+      const { data: u } = await supabase.auth.getUser();
+      if (!u.user || cancelled) return;
+      setMeId(u.user.id);
+      const { count } = await supabase
+        .from("notifications")
+        .select("id", { count: "exact", head: true })
+        .eq("user_id", u.user.id)
+        .eq("kind", "moderation")
+        .eq("read", false);
+      if (!cancelled) setModerationUnread(count ?? 0);
+    };
+    void load();
+    const t = setInterval(() => void load(), 30000);
+    return () => { cancelled = true; clearInterval(t); };
+  }, [checking, accessError, tab]);
+
   const signOut = async () => { await supabase.auth.signOut(); navigate({ to: "/" }); };
 
   if (checking) return <CenterLoader label="Проверка доступа" />;
@@ -142,7 +165,7 @@ function AdminPage() {
     );
   }
 
-  const tabs: { id: TabId; label: string; Icon: typeof Users }[] = [
+  const tabs: { id: TabId; label: string; Icon: typeof Users; badge?: number }[] = [
     { id: "overview", label: "Обзор", Icon: LayoutDashboard },
     { id: "users", label: "Пользователи", Icon: Users },
     { id: "offers", label: "Офферы", Icon: Package },
@@ -150,6 +173,7 @@ function AdminPage() {
     { id: "requests", label: "Заявки", Icon: ClipboardList },
     { id: "conversions", label: "Конверсии", Icon: Activity },
     { id: "broadcast", label: "Рассылка", Icon: Bell },
+    { id: "moderation", label: "Модерация", Icon: Shield, badge: moderationUnread },
     { id: "ai", label: "AI-аналитик", Icon: Sparkles },
   ];
 
@@ -164,18 +188,37 @@ function AdminPage() {
           <span className="text-sm font-bold uppercase tracking-tight">Админ-панель</span>
           <span className="rounded-full bg-primary/15 px-2 py-0.5 text-[9px] font-bold uppercase text-primary">only admin</span>
         </div>
-        <button onClick={signOut} aria-label="Выйти" className="flex size-8 items-center justify-center rounded-full text-muted-foreground hover:bg-accent hover:text-foreground">
-          <LogOut className="size-4" />
-        </button>
+        <div className="flex items-center gap-1">
+          <button
+            onClick={() => setTab("moderation")}
+            aria-label="Уведомления модерации"
+            className="relative flex size-8 items-center justify-center rounded-full text-muted-foreground hover:bg-accent hover:text-foreground"
+          >
+            <Bell className="size-4" />
+            {moderationUnread > 0 && (
+              <span className="absolute -right-0.5 -top-0.5 grid min-w-[16px] h-4 place-items-center rounded-full bg-destructive px-1 text-[9px] font-black text-destructive-foreground">
+                {moderationUnread > 99 ? "99+" : moderationUnread}
+              </span>
+            )}
+          </button>
+          <button onClick={signOut} aria-label="Выйти" className="flex size-8 items-center justify-center rounded-full text-muted-foreground hover:bg-accent hover:text-foreground">
+            <LogOut className="size-4" />
+          </button>
+        </div>
       </header>
 
       <nav className="sticky top-14 z-10 flex gap-1 overflow-x-auto border-b border-border bg-background/80 px-3 py-2 backdrop-blur-md">
         {tabs.map((t) => (
           <button key={t.id} onClick={() => setTab(t.id)}
-            className={`inline-flex shrink-0 items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-bold uppercase tracking-wider transition ${
+            className={`relative inline-flex shrink-0 items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-bold uppercase tracking-wider transition ${
               tab === t.id ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-accent hover:text-foreground"
             }`}>
             <t.Icon className="size-3.5" /> {t.label}
+            {t.badge && t.badge > 0 ? (
+              <span className="ml-1 grid min-w-[16px] h-4 place-items-center rounded-full bg-destructive px-1 text-[9px] font-black text-destructive-foreground">
+                {t.badge > 99 ? "99+" : t.badge}
+              </span>
+            ) : null}
           </button>
         ))}
       </nav>
@@ -188,6 +231,7 @@ function AdminPage() {
         {tab === "requests" && <RequestsTab />}
         {tab === "conversions" && <ConversionsTab />}
         {tab === "broadcast" && <BroadcastTab />}
+        {tab === "moderation" && <ModerationTab meId={meId} onCountChange={setModerationUnread} />}
         {tab === "ai" && <AdminAnalystTab />}
       </main>
     </div>
@@ -1726,6 +1770,288 @@ function BroadcastTab() {
           {recent.length === 0 && <EmptyState text="Ещё нет уведомлений" />}
         </div>
       </div>
+    </div>
+  );
+}
+
+/* =========================== MODERATION =========================== */
+type ModNotif = {
+  id: string; user_id: string; title: string; body: string;
+  amount: string | null; status: string | null; read: boolean; created_at: string;
+};
+type OffenderProfile = {
+  id: string; email: string | null; display_name: string | null;
+  blocked: boolean; warnings_count: number; blocked_reason: string | null;
+};
+
+function ModerationTab({ meId, onCountChange }: { meId: string | null; onCountChange: (n: number) => void }) {
+  const [items, setItems] = useState<ModNotif[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [filter, setFilter] = useState<"all" | "unread" | "illegal" | "offtopic">("all");
+  const [selected, setSelected] = useState<ModNotif | null>(null);
+  const [offender, setOffender] = useState<OffenderProfile | null>(null);
+  const [busy, setBusy] = useState(false);
+  const [flash, setFlash] = useState<string | null>(null);
+
+  const load = useCallback(async () => {
+    if (!meId) return;
+    setLoading(true);
+    const { data } = await supabase
+      .from("notifications")
+      .select("id,user_id,title,body,amount,status,read,created_at")
+      .eq("user_id", meId)
+      .eq("kind", "moderation")
+      .order("created_at", { ascending: false })
+      .limit(200);
+    const rows = (data ?? []) as ModNotif[];
+    setItems(rows);
+    onCountChange(rows.filter((r) => !r.read).length);
+    setLoading(false);
+  }, [meId, onCountChange]);
+
+  useEffect(() => { void load(); }, [load]);
+
+  // Parse offender uuid from `amount` field or from body "Пользователь: name (uuid)"
+  const offenderIdOf = (n: ModNotif): string | null => {
+    if (n.amount && /^[0-9a-f-]{36}$/i.test(n.amount)) return n.amount;
+    const m = n.body?.match(/\(([0-9a-f-]{36})\)/i);
+    return m ? m[1] : null;
+  };
+  const questionOf = (n: ModNotif) => {
+    const m = n.body?.match(/Вопрос:\s*([\s\S]*)$/);
+    return m ? m[1].trim() : n.body;
+  };
+  const reasonOf = (n: ModNotif) => {
+    const m = n.body?.match(/Причина:\s*(.+)/);
+    return m ? m[1].trim() : "—";
+  };
+  const userLabelOf = (n: ModNotif) => {
+    const m = n.body?.match(/Пользователь:\s*(.+?)\s*\(/);
+    return m ? m[1] : "Партнёр";
+  };
+
+  const open = async (n: ModNotif) => {
+    setSelected(n);
+    setOffender(null);
+    if (!n.read) {
+      await supabase.from("notifications").update({ read: true }).eq("id", n.id);
+      setItems((prev) => prev.map((x) => (x.id === n.id ? { ...x, read: true } : x)));
+      onCountChange(items.filter((x) => !x.read && x.id !== n.id).length);
+    }
+    const uid = offenderIdOf(n);
+    if (uid) {
+      const { data } = await supabase
+        .from("profiles")
+        .select("id,email,display_name,blocked,warnings_count,blocked_reason")
+        .eq("id", uid)
+        .maybeSingle();
+      if (data) setOffender(data as OffenderProfile);
+    }
+  };
+
+  const flashMsg = (m: string) => { setFlash(m); setTimeout(() => setFlash(null), 2500); };
+
+  const delNotif = async (n: ModNotif) => {
+    if (!confirm("Удалить уведомление?")) return;
+    setBusy(true);
+    await supabase.from("notifications").delete().eq("id", n.id);
+    setBusy(false);
+    setSelected(null);
+    await load();
+    flashMsg("Уведомление удалено");
+  };
+
+  const warnUser = async () => {
+    if (!selected || !offender) return;
+    const text = prompt("Текст предупреждения (придёт пользователю):", "Ваш запрос нарушает правила платформы. Повторное нарушение приведёт к блокировке.");
+    if (text === null) return;
+    setBusy(true);
+    await supabase.from("profiles").update({ warnings_count: (offender.warnings_count ?? 0) + 1 }).eq("id", offender.id);
+    await supabase.from("notifications").insert({
+      user_id: offender.id, kind: "warning",
+      title: "⚠️ Предупреждение от администрации",
+      body: text.trim() || "Предупреждение о нарушении правил платформы.",
+      read: false,
+    });
+    setOffender({ ...offender, warnings_count: (offender.warnings_count ?? 0) + 1 });
+    setBusy(false);
+    flashMsg("Предупреждение отправлено");
+  };
+
+  const blockUser = async () => {
+    if (!selected || !offender) return;
+    const reason = prompt("Причина блокировки (увидит пользователь на странице блокировки):", reasonOf(selected));
+    if (reason === null) return;
+    if (!confirm(`Заблокировать ${offender.email || offender.display_name || offender.id}?`)) return;
+    setBusy(true);
+    await supabase.from("profiles").update({
+      blocked: true,
+      blocked_reason: reason.trim() || "Нарушение правил платформы.",
+      blocked_at: new Date().toISOString(),
+    }).eq("id", offender.id);
+    await supabase.from("notifications").insert({
+      user_id: offender.id, kind: "warning",
+      title: "🚫 Аккаунт заблокирован",
+      body: `Ваш аккаунт заблокирован администрацией. Причина: ${reason.trim() || "нарушение правил платформы"}.`,
+      read: false,
+    });
+    setOffender({ ...offender, blocked: true, blocked_reason: reason.trim() });
+    setBusy(false);
+    flashMsg("Пользователь заблокирован");
+  };
+
+  const unblockUser = async () => {
+    if (!offender) return;
+    if (!confirm("Снять блокировку?")) return;
+    setBusy(true);
+    await supabase.from("profiles").update({
+      blocked: false, blocked_reason: null, blocked_at: null,
+    }).eq("id", offender.id);
+    await supabase.from("notifications").insert({
+      user_id: offender.id, kind: "success",
+      title: "Блокировка снята",
+      body: "Администрация разблокировала ваш аккаунт. Пожалуйста, соблюдайте правила платформы.",
+      read: false,
+    });
+    setOffender({ ...offender, blocked: false, blocked_reason: null });
+    setBusy(false);
+    flashMsg("Блокировка снята");
+  };
+
+  const markAllRead = async () => {
+    if (!meId) return;
+    setBusy(true);
+    await supabase.from("notifications").update({ read: true })
+      .eq("user_id", meId).eq("kind", "moderation").eq("read", false);
+    setBusy(false);
+    await load();
+  };
+
+  const filtered = items.filter((n) => {
+    if (filter === "unread") return !n.read;
+    if (filter === "illegal") return n.status === "illegal";
+    if (filter === "offtopic") return n.status === "offtopic";
+    return true;
+  });
+
+  const kindBadge = (s: string | null) =>
+    s === "illegal"
+      ? <span className="rounded bg-destructive/15 px-1.5 py-0.5 text-[9px] font-black uppercase text-destructive">противозаконное</span>
+      : s === "offtopic"
+      ? <span className="rounded bg-amber-500/15 px-1.5 py-0.5 text-[9px] font-black uppercase text-amber-500">не по теме</span>
+      : <span className="rounded bg-secondary px-1.5 py-0.5 text-[9px] font-black uppercase text-muted-foreground">инцидент</span>;
+
+  return (
+    <div className="space-y-3">
+      <div className="flex flex-wrap items-center gap-2">
+        <div className="flex flex-wrap gap-1">
+          {(["all", "unread", "illegal", "offtopic"] as const).map((f) => (
+            <button key={f} onClick={() => setFilter(f)}
+              className={`rounded-full px-3 py-1 text-[11px] font-bold uppercase ${filter === f ? "bg-primary text-primary-foreground" : "border border-border text-muted-foreground"}`}>
+              {f === "all" ? "Все" : f === "unread" ? "Непрочитанные" : f === "illegal" ? "Противозаконное" : "Не по теме"}
+            </button>
+          ))}
+        </div>
+        <button onClick={markAllRead} disabled={busy}
+          className="ml-auto inline-flex items-center gap-1 rounded-lg border border-border px-3 py-1.5 text-[11px] font-bold uppercase hover:bg-accent disabled:opacity-60">
+          <Check className="size-3" /> Прочитать всё
+        </button>
+        <button onClick={() => void load()} className="inline-flex items-center gap-1 rounded-lg border border-border px-3 py-1.5 text-[11px] font-bold uppercase hover:bg-accent">
+          <RefreshCw className="size-3" /> Обновить
+        </button>
+      </div>
+
+      {flash && <div className="rounded-lg border border-primary/30 bg-primary/10 px-3 py-2 text-xs text-primary">{flash}</div>}
+
+      {loading ? (
+        <CenterLoader label="Загрузка" />
+      ) : filtered.length === 0 ? (
+        <EmptyState text="Нет инцидентов — партнёры ведут себя хорошо." />
+      ) : (
+        <div className="space-y-2">
+          {filtered.map((n) => (
+            <button key={n.id} onClick={() => void open(n)}
+              className={`flex w-full items-start gap-3 rounded-xl border p-3 text-left transition ${n.read ? "border-border bg-card" : "border-destructive/40 bg-destructive/5"}`}>
+              {!n.read && <span className="mt-1 size-2 shrink-0 rounded-full bg-destructive" />}
+              <div className="min-w-0 flex-1">
+                <div className="flex flex-wrap items-center gap-1.5">
+                  <p className="truncate text-sm font-bold">{n.title}</p>
+                  {kindBadge(n.status)}
+                </div>
+                <p className="mt-0.5 line-clamp-2 text-[11px] text-muted-foreground">{n.body}</p>
+                <p className="mt-1 text-[10px] text-muted-foreground">{dt(n.created_at)}</p>
+              </div>
+              <ChevronRight className="size-4 shrink-0 text-muted-foreground" />
+            </button>
+          ))}
+        </div>
+      )}
+
+      {selected && (
+        <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/60 p-0 sm:items-center sm:p-4" onClick={() => setSelected(null)}>
+          <div className="max-h-[92vh] w-full max-w-lg overflow-y-auto rounded-t-2xl border border-border bg-card p-4 sm:rounded-2xl" onClick={(e) => e.stopPropagation()}>
+            <div className="mb-3 flex items-start justify-between gap-2">
+              <div className="min-w-0">
+                <div className="flex flex-wrap items-center gap-1.5">
+                  <h2 className="text-base font-black">{selected.title}</h2>
+                  {kindBadge(selected.status)}
+                </div>
+                <p className="mt-0.5 text-[11px] text-muted-foreground">{dt(selected.created_at)}</p>
+              </div>
+              <button onClick={() => setSelected(null)} className="grid size-8 place-items-center rounded-full hover:bg-accent"><X className="size-4" /></button>
+            </div>
+
+            <div className="rounded-xl border border-border bg-background p-3">
+              <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Пользователь</p>
+              <p className="mt-0.5 text-sm font-bold">{userLabelOf(selected)}</p>
+              {offender && (
+                <div className="mt-1 space-y-0.5 text-[11px] text-muted-foreground">
+                  <p>{offender.email ?? "—"}</p>
+                  <p className="font-mono">{offender.id}</p>
+                  <p>Предупреждений: <span className="font-bold text-foreground">{offender.warnings_count ?? 0}</span></p>
+                  {offender.blocked && (
+                    <p className="mt-1 rounded bg-destructive/15 px-2 py-1 text-destructive">
+                      Заблокирован{offender.blocked_reason ? `: ${offender.blocked_reason}` : ""}
+                    </p>
+                  )}
+                </div>
+              )}
+            </div>
+
+            <div className="mt-3 rounded-xl border border-border bg-background p-3">
+              <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Причина срабатывания</p>
+              <p className="mt-0.5 text-xs">{reasonOf(selected)}</p>
+            </div>
+
+            <div className="mt-3 rounded-xl border border-destructive/40 bg-destructive/5 p-3">
+              <p className="text-[10px] font-bold uppercase tracking-wider text-destructive">Что писал пользователь</p>
+              <p className="mt-1 whitespace-pre-wrap break-words text-sm">{questionOf(selected)}</p>
+            </div>
+
+            <div className="mt-4 grid grid-cols-1 gap-2 sm:grid-cols-2">
+              <button onClick={warnUser} disabled={busy || !offender}
+                className="inline-flex items-center justify-center gap-1.5 rounded-xl bg-amber-500 px-4 py-2.5 text-xs font-bold uppercase tracking-wider text-white disabled:opacity-60">
+                <Bell className="size-3.5" /> Предупредить
+              </button>
+              {offender?.blocked ? (
+                <button onClick={unblockUser} disabled={busy}
+                  className="inline-flex items-center justify-center gap-1.5 rounded-xl border border-border px-4 py-2.5 text-xs font-bold uppercase tracking-wider hover:bg-accent disabled:opacity-60">
+                  <Check className="size-3.5" /> Разблокировать
+                </button>
+              ) : (
+                <button onClick={blockUser} disabled={busy || !offender}
+                  className="inline-flex items-center justify-center gap-1.5 rounded-xl bg-destructive px-4 py-2.5 text-xs font-bold uppercase tracking-wider text-destructive-foreground disabled:opacity-60">
+                  <Ban className="size-3.5" /> Заблокировать
+                </button>
+              )}
+              <button onClick={() => delNotif(selected)} disabled={busy}
+                className="col-span-1 inline-flex items-center justify-center gap-1.5 rounded-xl border border-border px-4 py-2.5 text-xs font-bold uppercase tracking-wider text-muted-foreground hover:bg-accent sm:col-span-2 disabled:opacity-60">
+                <Trash2 className="size-3.5" /> Удалить уведомление
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
