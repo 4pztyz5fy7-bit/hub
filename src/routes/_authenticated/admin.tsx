@@ -520,6 +520,9 @@ function UserDetailSheet({ profile, isAdmin, onClose, onChanged }: { profile: Pr
   const [name, setName] = useState(profile.display_name ?? "");
   const [tg, setTg] = useState(profile.telegram ?? "");
   const [saving, setSaving] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const [reason, setReason] = useState("");
+  const [current, setCurrent] = useState<Profile>(profile);
   const [stats, setStats] = useState<{ payouts: number; reqs: number; convs: number; earned: number } | null>(null);
 
   useEffect(() => {
@@ -531,7 +534,7 @@ function UserDetailSheet({ profile, isAdmin, onClose, onChanged }: { profile: Pr
       ]);
       setStats({
         payouts: (p.data ?? []).length, reqs: (r.data ?? []).length, convs: (c.data ?? []).length,
-        earned: (c.data ?? []).filter((x: any) => x.status === "approved").reduce((a, x: any) => a + Number(x.amount || 0), 0),
+        earned: (c.data ?? []).filter((x: any) => x.status === "approved" || x.status === "ok").reduce((a, x: any) => a + Number(x.amount || 0), 0),
       });
     })();
   }, [profile.id]);
@@ -542,6 +545,58 @@ function UserDetailSheet({ profile, isAdmin, onClose, onChanged }: { profile: Pr
     setSaving(false); onChanged(); onClose();
   };
 
+  const warn = async () => {
+    if (!reason.trim()) { alert("Укажите причину предупреждения"); return; }
+    setBusy(true);
+    const next = (current.warnings_count ?? 0) + 1;
+    await supabase.from("profiles").update({ warnings_count: next }).eq("id", profile.id);
+    await supabase.from("notifications").insert({
+      user_id: profile.id, kind: "warning",
+      title: `Предупреждение #${next}`,
+      body: reason.trim(),
+      status: "warning",
+    });
+    setCurrent({ ...current, warnings_count: next });
+    setReason("");
+    setBusy(false); onChanged();
+  };
+
+  const block = async () => {
+    if (!confirm("Заблокировать пользователя?")) return;
+    setBusy(true);
+    const r = reason.trim() || "Нарушение правил платформы.";
+    await supabase.from("profiles").update({
+      blocked: true, blocked_reason: r, blocked_at: new Date().toISOString(),
+    }).eq("id", profile.id);
+    await supabase.from("notifications").insert({
+      user_id: profile.id, kind: "warning",
+      title: "Аккаунт заблокирован", body: r, status: "blocked",
+    });
+    setCurrent({ ...current, blocked: true, blocked_reason: r, blocked_at: new Date().toISOString() });
+    setBusy(false); onChanged();
+  };
+
+  const unblock = async () => {
+    setBusy(true);
+    await supabase.from("profiles").update({
+      blocked: false, blocked_reason: null, blocked_at: null,
+    }).eq("id", profile.id);
+    await supabase.from("notifications").insert({
+      user_id: profile.id, kind: "info",
+      title: "Аккаунт разблокирован", body: "Доступ восстановлен.", status: "ok",
+    });
+    setCurrent({ ...current, blocked: false, blocked_reason: null, blocked_at: null });
+    setBusy(false); onChanged();
+  };
+
+  const resetWarnings = async () => {
+    if (!confirm("Сбросить счётчик предупреждений?")) return;
+    setBusy(true);
+    await supabase.from("profiles").update({ warnings_count: 0 }).eq("id", profile.id);
+    setCurrent({ ...current, warnings_count: 0 });
+    setBusy(false); onChanged();
+  };
+
   return (
     <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/50 md:items-center md:p-4">
       <div className="max-h-[92vh] w-full max-w-md overflow-y-auto rounded-t-2xl bg-card p-5 md:rounded-2xl">
@@ -550,9 +605,19 @@ function UserDetailSheet({ profile, isAdmin, onClose, onChanged }: { profile: Pr
           <button onClick={onClose} className="grid size-8 place-items-center rounded-full hover:bg-accent"><X className="size-4" /></button>
         </div>
         <div className="mb-3 rounded-lg border border-border bg-background p-3 text-[11px]">
-          <p className="font-mono text-muted-foreground">{profile.id}</p>
+          <p className="font-mono text-muted-foreground break-all">{profile.id}</p>
           <p className="mt-1">{profile.email} · создан {dt(profile.created_at)}</p>
-          {isAdmin && <p className="mt-1 font-bold text-primary">Роль: admin</p>}
+          <div className="mt-1.5 flex flex-wrap gap-1.5">
+            {isAdmin && <span className="rounded-full bg-primary/15 px-2 py-0.5 text-[9px] font-bold uppercase text-primary">admin</span>}
+            {current.blocked && <span className="rounded-full bg-destructive/15 px-2 py-0.5 text-[9px] font-bold uppercase text-destructive">заблокирован</span>}
+            {(current.warnings_count ?? 0) > 0 && <span className="rounded-full bg-[color:var(--warning)]/15 px-2 py-0.5 text-[9px] font-bold uppercase text-[color:var(--warning)]">⚠ {current.warnings_count}</span>}
+          </div>
+          {current.blocked && current.blocked_reason && (
+            <p className="mt-2 rounded border border-destructive/30 bg-destructive/5 p-2 text-[11px] text-destructive">
+              {current.blocked_reason}
+              {current.blocked_at && <span className="ml-1 text-[10px] opacity-70">({dt(current.blocked_at)})</span>}
+            </p>
+          )}
         </div>
         {stats && (
           <div className="mb-3 grid grid-cols-4 gap-2 text-center">
@@ -562,6 +627,38 @@ function UserDetailSheet({ profile, isAdmin, onClose, onChanged }: { profile: Pr
             <StatMini label="₽" v={stats.earned} />
           </div>
         )}
+
+        {/* MODERATION */}
+        <div className="mb-4 rounded-xl border border-border bg-background p-3">
+          <p className="mb-2 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Модерация</p>
+          <textarea value={reason} onChange={(e) => setReason(e.target.value)} rows={2}
+            placeholder="Причина (для предупреждения / блокировки)"
+            className="w-full resize-none rounded-lg border border-border bg-card px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/40" />
+          <div className="mt-2 grid grid-cols-2 gap-2">
+            <button disabled={busy} onClick={warn}
+              className="rounded-lg border border-[color:var(--warning)]/40 bg-[color:var(--warning)]/10 px-3 py-2 text-[11px] font-bold uppercase text-[color:var(--warning)] disabled:opacity-60">
+              ⚠ Предупредить
+            </button>
+            {current.blocked ? (
+              <button disabled={busy} onClick={unblock}
+                className="rounded-lg border border-emerald-500/40 bg-emerald-500/10 px-3 py-2 text-[11px] font-bold uppercase text-emerald-500 disabled:opacity-60">
+                ✓ Разблокировать
+              </button>
+            ) : (
+              <button disabled={busy} onClick={block}
+                className="rounded-lg bg-destructive px-3 py-2 text-[11px] font-bold uppercase text-destructive-foreground disabled:opacity-60">
+                <Ban className="mr-1 inline size-3" /> Заблокировать
+              </button>
+            )}
+          </div>
+          {(current.warnings_count ?? 0) > 0 && (
+            <button disabled={busy} onClick={resetWarnings}
+              className="mt-2 w-full rounded-lg border border-border px-3 py-1.5 text-[10px] font-bold uppercase text-muted-foreground hover:bg-accent disabled:opacity-60">
+              Сбросить предупреждения
+            </button>
+          )}
+        </div>
+
         <div className="space-y-3">
           <label className="block"><span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Отображаемое имя</span>
             <input value={name} onChange={(e) => setName(e.target.value)} className="mt-0.5 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm" /></label>
