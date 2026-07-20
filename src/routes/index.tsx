@@ -8,6 +8,7 @@ import {
   Clock, Users, Target, Gift, MessageCircle, CreditCard, Globe, Award,
 } from "lucide-react";
 import { getLandingStats, type LandingStats } from "@/lib/landing-stats.functions";
+import { randomAvatarUrl } from "@/lib/avatars";
 
 function formatRub(n: number): string {
   if (n >= 1_000_000_000) return `₽${(n / 1_000_000_000).toFixed(n >= 10_000_000_000 ? 0 : 1)} млрд`;
@@ -541,11 +542,16 @@ function AuthDialog({ initialMode, onClose }: { initialMode: Mode; onClose: () =
         const { error: err } = await supabase.auth.signInWithPassword({ email: em, password: pw });
         if (err) throw err;
       } else {
-        const { error: err } = await supabase.auth.signUp({
+        const avatar = randomAvatarUrl(em);
+        const { data: signUpData, error: err } = await supabase.auth.signUp({
           email: em, password: pw,
-          options: { emailRedirectTo: window.location.origin, data: { display_name: displayName.trim() } },
+          options: { emailRedirectTo: window.location.origin, data: { display_name: displayName.trim(), avatar_url: avatar } },
         });
         if (err) throw err;
+        // Best-effort: ensure the profile row has the avatar (in case the trigger doesn't pick it up).
+        if (signUpData.user) {
+          try { await supabase.from("profiles").update({ avatar_url: avatar }).eq("id", signUpData.user.id); } catch { /* ignore */ }
+        }
         setInfo("Регистрация прошла успешно. Если email-подтверждение включено — проверьте почту.");
       }
     } catch (e: unknown) {

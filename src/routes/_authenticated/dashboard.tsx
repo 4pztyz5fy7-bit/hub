@@ -6,6 +6,7 @@ import { ProfileTab } from "@/components/dashboard/profile-tab";
 import { SupportTab } from "@/components/dashboard/support-tab";
 import { RewardsTab } from "@/components/dashboard/rewards-tab";
 import { t } from "@/lib/i18n";
+import { randomAvatarUrl } from "@/lib/avatars";
 import { LogOut } from "lucide-react";
 import {
   LayoutGrid,
@@ -670,7 +671,12 @@ function DashboardPage() {
       const pRow = profileRes.data as { bank?: BankDetails | null; display_name?: string | null; avatar_url?: string | null; email?: string | null; settings?: Partial<UserPrefs> | null } | null;
       if (pRow?.bank) setBank(pRow.bank);
       setUserName(pRow?.display_name || pRow?.email || u.user.email || "");
-      setUserAvatar(pRow?.avatar_url ?? null);
+      let avatarToUse = pRow?.avatar_url ?? null;
+      if (!avatarToUse) {
+        avatarToUse = randomAvatarUrl(uid);
+        try { await supabase.from("profiles").update({ avatar_url: avatarToUse }).eq("id", uid); } catch { /* ignore */ }
+      }
+      setUserAvatar(avatarToUse);
       if (pRow?.settings) setPrefs((s) => ({ ...s, ...(pRow.settings as Partial<UserPrefs>) }));
 
       setPayouts((payoutsRes.data ?? []).map((r: any): Payout => ({
