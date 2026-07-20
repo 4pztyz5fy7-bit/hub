@@ -27,6 +27,7 @@ import {
   EyeOff,
   BadgeCheck,
 } from "lucide-react";
+import { randomAvatarUrl } from "@/lib/avatars";
 
 export type Prefs = {
   notify_email: boolean;
@@ -113,15 +114,23 @@ export function ProfileTab({
     let cancel = false;
     (async () => {
       if (!userId) return;
-      const { data } = await supabase
-        .from("profiles")
-        .select("id,email,display_name,telegram,avatar_url,phone,bio,city,website,settings,created_at")
-        .eq("id", userId)
-        .maybeSingle();
+      const [{ data }, { data: userData }] = await Promise.all([
+        supabase
+          .from("profiles")
+          .select("id,email,display_name,telegram,avatar_url,phone,bio,city,website,settings,created_at")
+          .eq("id", userId)
+          .maybeSingle(),
+        supabase.auth.getUser(),
+      ]);
       if (cancel) return;
+      const authCreated = userData?.user?.created_at ?? null;
       if (data) {
-        setP(data as ProfileData);
-        setDraft(data as ProfileData);
+        const merged: ProfileData = {
+          ...(data as ProfileData),
+          created_at: (data as ProfileData).created_at || authCreated || new Date().toISOString(),
+        };
+        setP(merged);
+        setDraft(merged);
         setPrefsLocal({ ...DEFAULT_PREFS, ...((data as any).settings ?? {}) });
       }
       setLoading(false);
@@ -212,13 +221,21 @@ export function ProfileTab({
       <section className="relative overflow-hidden rounded-2xl border border-border bg-card p-4">
         <div className="absolute inset-x-0 top-0 h-16 bg-gradient-to-b from-primary/10 to-transparent" />
         <div className="relative flex items-center gap-3">
-          <div className="grid size-16 place-items-center rounded-2xl border border-border bg-secondary text-lg font-bold">
-            {draft.avatar_url ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img src={draft.avatar_url} alt="" className="size-full rounded-2xl object-cover" onError={(e) => ((e.target as HTMLImageElement).style.display = "none")} />
-            ) : (
-              <span className="font-mono">{initials}</span>
-            )}
+          <div className="grid size-16 place-items-center overflow-hidden rounded-2xl border border-border bg-secondary text-lg font-bold">
+            <img
+              src={
+                (draft.avatar_url && /^(https?:|\/)/.test(draft.avatar_url))
+                  ? draft.avatar_url
+                  : randomAvatarUrl(userId ?? p?.email ?? "u")
+              }
+              alt=""
+              className="size-full object-cover"
+              onError={(e) => {
+                const img = e.currentTarget as HTMLImageElement;
+                const fb = randomAvatarUrl(userId ?? p?.email ?? "u");
+                if (img.src !== fb) img.src = fb;
+              }}
+            />
           </div>
           <div className="min-w-0 flex-1">
             <div className="flex items-center gap-1.5">
