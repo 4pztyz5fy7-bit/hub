@@ -1009,13 +1009,31 @@ function PayoutsTab() {
                 </div>
               </div>
             </div>
-            {(r.status === "pending" || r.status === "processing") && (
+            {r.status === "pending" && (
               <div className="flex gap-2">
                 <button onClick={() => setStatus(r.id, "processing")} className="flex-1 rounded-lg border border-primary/40 px-3 py-1.5 text-[11px] font-bold text-primary hover:bg-primary/10">В работу</button>
-                <button onClick={() => setStatus(r.id, "paid")} className="flex-1 rounded-lg bg-emerald-500 px-3 py-1.5 text-[11px] font-bold text-background hover:bg-emerald-600"><Check className="mr-1 inline size-3" />Выплатить</button>
                 <button onClick={() => setStatus(r.id, "rejected")} className="rounded-lg border border-destructive/40 px-3 py-1.5 text-[11px] font-bold text-destructive hover:bg-destructive/10"><X className="size-3" /></button>
               </div>
             )}
+            {r.status === "processing" && (
+              <div className="flex gap-2">
+                <button onClick={() => setStatus(r.id, "paid")} className="flex-1 rounded-lg bg-emerald-500 px-3 py-1.5 text-[11px] font-bold text-background hover:bg-emerald-600"><Check className="mr-1 inline size-3" />Одобрить</button>
+                <button
+                  onClick={async () => {
+                    const reason = window.prompt("Причина отказа (комментарий пользователю):", r.note ?? "");
+                    if (reason === null) return;
+                    const trimmed = reason.trim();
+                    if (!trimmed) { alert("Комментарий обязателен при отказе."); return; }
+                    await supabase.from("payout_requests").update({ note: trimmed }).eq("id", r.id);
+                    await setStatus(r.id, "rejected");
+                  }}
+                  className="flex-1 rounded-lg border border-destructive/40 px-3 py-1.5 text-[11px] font-bold text-destructive hover:bg-destructive/10"
+                >
+                  <X className="mr-1 inline size-3" />Отказ с комментарием
+                </button>
+              </div>
+            )}
+
           </div>
         );
       })}
