@@ -32,7 +32,7 @@ async function callLovableAI(system: string, messages: z.infer<typeof MessageSch
   });
 
   if (res.status === 429) throw new Error("Слишком много запросов. Попробуйте через минуту.");
-  if (res.status === 402) throw new Error("Кредиты AI Gateway исчерпаны. Пополните в Lovable Cloud.");
+  if (res.status === 402) throw new Error("Кредиты AI исчерпаны. Обратитесь к администратору.");
   if (!res.ok) throw new Error(`AI error ${res.status}`);
   const json = (await res.json()) as {
     choices?: Array<{ message?: { content?: string } }>;
