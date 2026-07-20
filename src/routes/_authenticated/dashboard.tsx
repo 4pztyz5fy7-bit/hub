@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { AssistantTab } from "@/components/dashboard/assistant-tab";
 import { ProfileTab } from "@/components/dashboard/profile-tab";
 import { SupportTab } from "@/components/dashboard/support-tab";
+import { RewardsTab } from "@/components/dashboard/rewards-tab";
 import { t } from "@/lib/i18n";
 import { LogOut } from "lucide-react";
 import {
@@ -1129,6 +1130,16 @@ function DashboardPage() {
         {active === "ai" && <AssistantTab />}
         {active === "support" && <SupportTab />}
         {active === "requests" && <RequestsTab requests={requests} />}
+        {active === "rewards" && (
+          <RewardsTab
+            userId={userId}
+            earned={balance}
+            conversionsCount={conversions.filter(c => c.status === "ok").length}
+            requestsCount={requests.length}
+            todayConversions={conversions.filter(c => c.status === "ok" && isToday(c.createdAt)).length}
+            todayRequests={requests.filter(r => isToday(r.createdAt)).length}
+          />
+        )}
         {active === "profile" && (
           <ProfileTab
             userId={userId}
@@ -1213,6 +1224,7 @@ function DashboardPage() {
             { id: "stats", key: "nav_stats", Icon: BarChart3 },
             { id: "payouts", key: "nav_payouts", Icon: Wallet },
             { id: "ai", key: "nav_ai", Icon: Sparkles },
+            { id: "rewards", key: "nav_rewards", Icon: Trophy },
             { id: "support", key: "nav_support", Icon: Headphones },
           ] as const
         ).map(({ id, key, Icon }) => (
