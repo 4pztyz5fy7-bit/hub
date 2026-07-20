@@ -147,6 +147,14 @@ function RootComponent() {
     };
   }, [router, queryClient]);
 
+  useEffect(() => {
+    const unsub = router.subscribe("onResolved", ({ toLocation, fromLocation }) => {
+      if (fromLocation?.pathname === toLocation.pathname) return;
+      if (typeof window !== "undefined") window.scrollTo(0, 0);
+    });
+    return () => unsub();
+  }, [router]);
+
   return (
     <QueryClientProvider client={queryClient}>
       {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}

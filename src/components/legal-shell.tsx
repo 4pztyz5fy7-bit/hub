@@ -30,7 +30,7 @@ export function LegalShell({
             <span className="grid size-7 place-items-center rounded-md bg-primary text-primary-foreground text-xs font-black">К</span>
             <span className="tracking-wider">КВАНТ</span>
           </Link>
-          <Link to="/" className="inline-flex items-center gap-1.5 rounded-lg border border-border px-3 py-1.5 text-xs font-bold text-muted-foreground hover:bg-secondary hover:text-foreground">
+          <Link to="/dashboard" className="inline-flex items-center gap-1.5 rounded-lg border border-border px-3 py-1.5 text-xs font-bold text-muted-foreground hover:bg-secondary hover:text-foreground">
             <ArrowLeft className="size-3.5" /> На главную
           </Link>
         </div>
