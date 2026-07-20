@@ -1099,7 +1099,7 @@ function RequestsTab() {
         const qty = Math.max(1, t.orders_count || 1);
         const amount = per * qty;
         if (amount > 0) {
-          convs.push({ user_id: t.user_id, offer_id: t.offer_id, offer_name: t.offer_name, amount, status: "paid" });
+          convs.push({ user_id: t.user_id, offer_id: t.offer_id, offer_name: t.offer_name, amount, status: "ok" });
           notes.push({ user_id: t.user_id, kind: "payout", title: "Начисление за оффер", body: `${t.offer_name}: начислено ${amount.toLocaleString("ru-RU")} ₽`, amount: String(amount), status: "paid" });
         }
       }
@@ -1350,7 +1350,7 @@ function RequestRowControls({ row, onReload }: { row: LinkRow; onReload: () => v
             offer_id: offerId,
             offer_name: row.offer_name,
             amount,
-            status: "paid",
+            status: "ok",
           });
           await supabase.from("notifications").insert({
             user_id: row.user_id,
