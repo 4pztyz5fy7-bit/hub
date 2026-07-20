@@ -59,6 +59,7 @@ import {
   ThumbsDown,
   Eye,
   EyeOff,
+  Medal,
   type LucideIcon,
 } from "lucide-react";
 
