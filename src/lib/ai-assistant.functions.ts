@@ -134,7 +134,8 @@ async function reportToAdmins(userId: string, userLabel: string, question: strin
     kind: "moderation",
     title: category === "illegal" ? "⚠️ Подозрительный запрос к AI" : "Нецелевой запрос к AI",
     body: `Пользователь: ${userLabel} (${userId})\nКатегория: ${category}\nПричина: ${reason}\n\nВопрос: ${question.slice(0, 800)}`,
-    status: "new",
+    amount: userId, // encode offender uuid for moderation actions
+    status: category,
     read: false,
   }));
   if (rows.length) await supabaseAdmin.from("notifications").insert(rows);
