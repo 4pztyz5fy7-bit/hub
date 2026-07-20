@@ -6,10 +6,12 @@ import {
   Check, X, Plus, Pencil, Trash2, LogOut, LayoutDashboard, Bell,
   BarChart3, Search, Download, Copy, RefreshCw, Send, Filter, MoreHorizontal,
   TrendingUp, DollarSign, UserCheck, Activity, ChevronRight, Eye, Ban, Sparkles,
-  Headphones,
+  Headphones, Megaphone, Newspaper,
 } from "lucide-react";
 import { AdminAnalystTab } from "@/components/admin/analyst-tab";
 import { AdminSupportTab } from "@/components/admin/support-tab";
+import { AdminBannersTab } from "@/components/admin/banners-tab";
+import { AdminNewsTab } from "@/components/admin/news-tab";
 
 export const Route = createFileRoute("/_authenticated/admin")({
   head: () => ({ meta: [{ title: "Админ-панель — КВАНТ" }] }),
@@ -39,7 +41,7 @@ function useRealtimeReload(tables: string[], reload: () => void, channelKey?: st
 }
 
 /* =========================== TYPES =========================== */
-type TabId = "overview" | "users" | "offers" | "payouts" | "requests" | "conversions" | "broadcast" | "moderation" | "support" | "ai";
+type TabId = "overview" | "users" | "offers" | "payouts" | "requests" | "conversions" | "broadcast" | "banners" | "news" | "moderation" | "support" | "ai";
 
 type Profile = {
   id: string; email: string | null; display_name: string | null;
@@ -212,6 +214,8 @@ function AdminPage() {
     { id: "requests", label: "Заявки", Icon: ClipboardList },
     { id: "conversions", label: "Конверсии", Icon: Activity },
     { id: "broadcast", label: "Рассылка", Icon: Bell },
+    { id: "banners", label: "Баннеры", Icon: Megaphone },
+    { id: "news", label: "Новости", Icon: Newspaper },
     { id: "moderation", label: "Модерация", Icon: Shield, badge: moderationUnread },
     { id: "support", label: "Поддержка", Icon: Headphones, badge: supportUnread },
     { id: "ai", label: "AI-аналитик", Icon: Sparkles },
@@ -271,6 +275,8 @@ function AdminPage() {
         {tab === "requests" && <RequestsTab />}
         {tab === "conversions" && <ConversionsTab />}
         {tab === "broadcast" && <BroadcastTab />}
+        {tab === "banners" && <AdminBannersTab />}
+        {tab === "news" && <AdminNewsTab />}
         {tab === "moderation" && <ModerationTab meId={meId} onCountChange={setModerationUnread} />}
         {tab === "support" && <AdminSupportTab meId={meId} onCountChange={setSupportUnread} />}
         {tab === "ai" && <AdminAnalystTab />}

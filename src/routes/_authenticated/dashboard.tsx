@@ -5,6 +5,7 @@ import { AssistantTab } from "@/components/dashboard/assistant-tab";
 import { ProfileTab } from "@/components/dashboard/profile-tab";
 import { SupportTab } from "@/components/dashboard/support-tab";
 import { RewardsTab } from "@/components/dashboard/rewards-tab";
+import { BannerBoard } from "@/components/dashboard/banner-board";
 import { t } from "@/lib/i18n";
 import { randomAvatarUrl } from "@/lib/avatars";
 import { LogOut } from "lucide-react";
@@ -1367,6 +1368,7 @@ function InfoTab({
 
   return (
     <>
+      <BannerBoard />
       {/* ============ HERO: баланс + вывод ============ */}
       <section className="animate-in-up">
         <div className="relative overflow-hidden rounded-2xl bg-foreground p-5 text-background shadow-lg shadow-foreground/10">
