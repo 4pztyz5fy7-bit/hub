@@ -19,6 +19,7 @@ import {
   Bell,
   ArrowUpRight,
   TrendingUp,
+  TrendingDown,
   Landmark,
   Pencil,
   X,
@@ -2340,42 +2341,95 @@ function StatsTab({ conversions, offers, requests }: { conversions: Conversion[]
 
 
       <section className="animate-in-up" style={{ animationDelay: "60ms" }}>
-        <div className="flex h-52 w-full flex-col justify-between rounded-lg border border-border bg-card p-4">
-          <div className="flex items-center justify-between">
-            <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
-              Динамика дохода
-            </span>
-            <span className="flex items-center gap-1 font-mono text-[10px]">
-              <TrendingUp className="size-3 text-[color:var(--success)]" />
-              Σ {fmt(income)} ₽
-            </span>
-          </div>
-          <div className="flex h-28 items-end gap-1.5">
-            {bars.map((h, i) => (
-              <div key={i} className="flex flex-1 flex-col items-center gap-1">
-                <div
-                  className={`w-full rounded-t-sm ${
-                    h === maxBar && h > 0 ? "bg-primary" : "bg-secondary"
-                  }`}
-                  style={{ height: `${Math.max(4, (h / maxBar) * 100)}%` }}
-                />
+        {(() => {
+          const first = bars.find((v) => v > 0) ?? 0;
+          const last = [...bars].reverse().find((v) => v > 0) ?? 0;
+          const delta = last - first;
+          const pct = first > 0 ? (delta / first) * 100 : last > 0 ? 100 : 0;
+          const isUp = delta >= 0;
+          const trendColor = isUp ? "var(--success)" : "var(--destructive)";
+          const TrendIcon = isUp ? TrendingUp : TrendingDown;
+          const W = 300;
+          const H = 96;
+          const PAD_X = 4;
+          const PAD_Y = 8;
+          const n = bars.length;
+          const step = n > 1 ? (W - PAD_X * 2) / (n - 1) : 0;
+          const points = bars.map((v, i) => {
+            const x = PAD_X + i * step;
+            const y = PAD_Y + (H - PAD_Y * 2) * (1 - v / maxBar);
+            return { x, y };
+          });
+          const linePath = points.length
+            ? points.map((p, i) => `${i === 0 ? "M" : "L"}${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(" ")
+            : "";
+          const areaPath = points.length
+            ? `${linePath} L${points[points.length - 1].x.toFixed(1)},${H - PAD_Y} L${points[0].x.toFixed(1)},${H - PAD_Y} Z`
+            : "";
+          const gradId = `dyn-grad-${isUp ? "up" : "down"}`;
+          return (
+            <div className="flex h-52 w-full flex-col justify-between rounded-lg border border-border bg-card p-4">
+              <div className="flex items-center justify-between">
+                <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+                  Динамика дохода
+                </span>
+                <span className="flex items-center gap-1 font-mono text-[10px]" style={{ color: trendColor }}>
+                  <TrendIcon className="size-3" />
+                  {isUp ? "+" : ""}{pct.toFixed(1)}% • Σ {fmt(income)} ₽
+                </span>
               </div>
-            ))}
-          </div>
-          <div className="flex gap-1.5">
-            {barLabels.map((l, i) => (
-              <span
-                key={`${l}-${i}`}
-                className={`flex-1 text-center font-mono text-[9px] uppercase ${
-                  bars[i] === maxBar && bars[i] > 0 ? "font-bold text-primary" : "text-muted-foreground"
-                }`}
-              >
-                {l}
-              </span>
-            ))}
-          </div>
-        </div>
+              <div className="relative h-28 w-full">
+                <svg
+                  viewBox={`0 0 ${W} ${H}`}
+                  preserveAspectRatio="none"
+                  className="h-full w-full text-foreground"
+                >
+                  <defs>
+                    <linearGradient id={gradId} x1="0" x2="0" y1="0" y2="1">
+                      <stop offset="0%" stopColor="currentColor" stopOpacity="0.25" />
+                      <stop offset="100%" stopColor="currentColor" stopOpacity="0" />
+                    </linearGradient>
+                  </defs>
+                  {areaPath && <path d={areaPath} fill={`url(#${gradId})`} />}
+                  {linePath && (
+                    <path
+                      d={linePath}
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="1.75"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      vectorEffect="non-scaling-stroke"
+                    />
+                  )}
+                  {points.map((p, i) => (
+                    <circle
+                      key={i}
+                      cx={p.x}
+                      cy={p.y}
+                      r={i === points.length - 1 ? 2.75 : 1.75}
+                      fill={i === points.length - 1 ? trendColor : "currentColor"}
+                    />
+                  ))}
+                </svg>
+              </div>
+              <div className="flex gap-1.5">
+                {barLabels.map((l, i) => (
+                  <span
+                    key={`${l}-${i}`}
+                    className={`flex-1 text-center font-mono text-[9px] uppercase ${
+                      bars[i] === maxBar && bars[i] > 0 ? "font-bold text-foreground" : "text-muted-foreground"
+                    }`}
+                  >
+                    {l}
+                  </span>
+                ))}
+              </div>
+            </div>
+          );
+        })()}
       </section>
+
 
       <section className="animate-in-up" style={{ animationDelay: "120ms" }}>
         <div className="mb-3 flex items-center justify-between">
