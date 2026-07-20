@@ -114,15 +114,23 @@ export function ProfileTab({
     let cancel = false;
     (async () => {
       if (!userId) return;
-      const { data } = await supabase
-        .from("profiles")
-        .select("id,email,display_name,telegram,avatar_url,phone,bio,city,website,settings,created_at")
-        .eq("id", userId)
-        .maybeSingle();
+      const [{ data }, { data: userData }] = await Promise.all([
+        supabase
+          .from("profiles")
+          .select("id,email,display_name,telegram,avatar_url,phone,bio,city,website,settings,created_at")
+          .eq("id", userId)
+          .maybeSingle(),
+        supabase.auth.getUser(),
+      ]);
       if (cancel) return;
+      const authCreated = userData?.user?.created_at ?? null;
       if (data) {
-        setP(data as ProfileData);
-        setDraft(data as ProfileData);
+        const merged: ProfileData = {
+          ...(data as ProfileData),
+          created_at: (data as ProfileData).created_at || authCreated || new Date().toISOString(),
+        };
+        setP(merged);
+        setDraft(merged);
         setPrefsLocal({ ...DEFAULT_PREFS, ...((data as any).settings ?? {}) });
       }
       setLoading(false);
