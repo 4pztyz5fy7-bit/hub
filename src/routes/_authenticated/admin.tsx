@@ -985,6 +985,7 @@ function PayoutsTab() {
     setLoading(false);
   }, []);
   useEffect(() => { load(); }, [load]);
+  useRealtimeReload(["payout_requests"], load, "rt:payouts");
 
   const filtered = useMemo(() => {
     const query = q.trim().toLowerCase();
