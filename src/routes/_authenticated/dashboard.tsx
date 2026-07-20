@@ -713,6 +713,10 @@ function DashboardPage() {
       setUserAvatar(avatarToUse);
       if (pRow?.settings) setPrefs((s) => ({ ...s, ...(pRow.settings as Partial<UserPrefs>) }));
 
+      // Await the deferred history batch before painting user history sections.
+      const [payoutsRes, reqsRes, convRes, notifRes] = await historyPromise;
+      if (cancelled) return;
+
       setPayouts((payoutsRes.data ?? []).map((r: any): Payout => ({
         id: String(r.id).slice(0, 8).toUpperCase(),
         date: dateShortOf(r.created_at),
