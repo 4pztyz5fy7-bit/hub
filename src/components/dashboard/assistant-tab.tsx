@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import {
   Sparkles, Send, Loader2, Wallet, TrendingUp, Target, Lightbulb,
-  Calendar, Award, BarChart3, RefreshCw,
+  Calendar, Award, BarChart3, RefreshCw, Users,
 } from "lucide-react";
 import { askAssistant, getUserSnapshot, type UserSnapshot } from "@/lib/ai-assistant.functions";
 
