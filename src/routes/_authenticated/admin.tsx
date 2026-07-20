@@ -1647,19 +1647,8 @@ function RequestRowControls({ row, onReload }: { row: LinkRow; onReload: () => v
         {savedFlash && <span className="text-[10px] font-bold uppercase text-emerald-500">Сохранено</span>}
       </div>
       <label className="block">
-        <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Выполнено заказов</span>
-        <input
-          type="number"
-          min={0}
-          value={orders}
-          onChange={(e) => setOrders(e.target.value.replace(/[^\d]/g, ""))}
-          placeholder="0"
-          className="mt-0.5 w-full rounded-lg border border-border bg-background px-3 py-1.5 text-sm outline-none focus:ring-2 focus:ring-primary/40"
-        />
-      </label>
-      <label className="block">
         <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
-          Цена за заказ, ₽ <span className="normal-case text-muted-foreground/70">(пусто = как в оффере)</span>
+          Сумма к начислению партнёру, ₽ <span className="normal-case text-muted-foreground/70">(фикс., пусто = как в оффере)</span>
         </span>
         <input
           type="number"
@@ -1670,9 +1659,9 @@ function RequestRowControls({ row, onReload }: { row: LinkRow; onReload: () => v
           placeholder="напр. 3500"
           className="mt-0.5 w-full rounded-lg border border-border bg-background px-3 py-1.5 text-sm outline-none focus:ring-2 focus:ring-primary/40"
         />
-        {ordersNum > 0 && priceNum != null && priceNum > 0 && (
+        {priceNum != null && priceNum > 0 && (
           <span className="mt-1 block text-[10px] font-bold uppercase tracking-wider text-emerald-500">
-            К начислению: {(ordersNum * priceNum).toLocaleString("ru-RU")} ₽
+            К начислению: {priceNum.toLocaleString("ru-RU")} ₽
           </span>
         )}
       </label>
