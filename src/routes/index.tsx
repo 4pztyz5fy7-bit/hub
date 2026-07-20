@@ -33,6 +33,8 @@ export const Route = createFileRoute("/")({
       { name: "twitter:card", content: "summary_large_image" },
     ],
   }),
+  loader: () => getLandingStats().catch(() => null),
+  staleTime: 15_000,
   component: LandingPage,
 });
 
