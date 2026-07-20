@@ -1844,6 +1844,7 @@ function ModerationTab({ meId, onCountChange }: { meId: string | null; onCountCh
   }, [meId, onCountChange]);
 
   useEffect(() => { void load(); }, [load]);
+  useRealtimeReload(["notifications"], () => void load(), "rt:moderation");
 
   // Parse offender uuid from `amount` field or from body "Пользователь: name (uuid)"
   const offenderIdOf = (n: ModNotif): string | null => {
