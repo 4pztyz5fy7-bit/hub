@@ -1130,14 +1130,14 @@ function DashboardPage() {
         {active === "ai" && <AssistantTab />}
         {active === "support" && <SupportTab />}
         {active === "requests" && <RequestsTab requests={requests} />}
-        {active === "rewards" && (
+        {active === "rewards" && userId && (
           <RewardsTab
             userId={userId}
             earned={balance}
             conversionsCount={conversions.filter(c => c.status === "ok").length}
             requestsCount={requests.length}
-            todayConversions={conversions.filter(c => c.status === "ok" && isToday(c.createdAt)).length}
-            todayRequests={requests.filter(r => isToday(r.createdAt)).length}
+            todayConversions={conversions.filter(c => c.status === "ok" && isSameDay(c.createdAt)).length}
+            todayRequests={requests.filter(r => isSameDay(r.createdAt)).length}
           />
         )}
         {active === "profile" && (
