@@ -15,7 +15,7 @@ export const Route = createFileRoute("/_authenticated/admin")({
 });
 
 /* =========================== TYPES =========================== */
-type TabId = "overview" | "users" | "offers" | "payouts" | "requests" | "conversions" | "broadcast" | "ai";
+type TabId = "overview" | "users" | "offers" | "payouts" | "requests" | "conversions" | "broadcast" | "moderation" | "ai";
 
 type Profile = {
   id: string; email: string | null; display_name: string | null;
