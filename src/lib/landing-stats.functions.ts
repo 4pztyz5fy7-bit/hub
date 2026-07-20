@@ -55,11 +55,11 @@ export const getLandingStats = createServerFn({ method: "GET" }).handler(
         .order("epc", { ascending: false })
         .limit(6),
       supabaseAdmin.from("payout_requests").select("amount").eq("status", "paid"),
-      supabaseAdmin.from("conversions").select("amount").eq("status", "approved"),
+      supabaseAdmin.from("conversions").select("amount").eq("status", "ok"),
       supabaseAdmin
         .from("conversions")
         .select("offer_name,amount,user_id,created_at")
-        .eq("status", "approved")
+        .eq("status", "ok")
         .order("created_at", { ascending: false })
         .limit(10),
       supabaseAdmin
