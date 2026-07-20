@@ -27,6 +27,7 @@ import {
   EyeOff,
   BadgeCheck,
 } from "lucide-react";
+import { randomAvatarUrl } from "@/lib/avatars";
 
 export type Prefs = {
   notify_email: boolean;
