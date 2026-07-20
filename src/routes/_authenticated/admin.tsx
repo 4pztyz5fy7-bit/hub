@@ -64,6 +64,8 @@ function AdminPage() {
   const [checking, setChecking] = useState(true);
   const [accessError, setAccessError] = useState<string | null>(null);
   const [tab, setTab] = useState<TabId>("overview");
+  const [moderationUnread, setModerationUnread] = useState(0);
+  const [meId, setMeId] = useState<string | null>(null);
 
   // ADMIN GUARD: надёжная проверка сессии и роли.
   // - Ждём валидную сессию с access_token (учитываем гонку с onAuthStateChange).
@@ -123,6 +125,27 @@ function AdminPage() {
 
   useEffect(() => { void runCheck(); }, [runCheck]);
 
+  // Load unread moderation notifications count (for header bell + tab badge)
+  useEffect(() => {
+    if (checking || accessError) return;
+    let cancelled = false;
+    const load = async () => {
+      const { data: u } = await supabase.auth.getUser();
+      if (!u.user || cancelled) return;
+      setMeId(u.user.id);
+      const { count } = await supabase
+        .from("notifications")
+        .select("id", { count: "exact", head: true })
+        .eq("user_id", u.user.id)
+        .eq("kind", "moderation")
+        .eq("read", false);
+      if (!cancelled) setModerationUnread(count ?? 0);
+    };
+    void load();
+    const t = setInterval(() => void load(), 30000);
+    return () => { cancelled = true; clearInterval(t); };
+  }, [checking, accessError, tab]);
+
   const signOut = async () => { await supabase.auth.signOut(); navigate({ to: "/" }); };
 
   if (checking) return <CenterLoader label="Проверка доступа" />;
@@ -142,7 +165,7 @@ function AdminPage() {
     );
   }
 
-  const tabs: { id: TabId; label: string; Icon: typeof Users }[] = [
+  const tabs: { id: TabId; label: string; Icon: typeof Users; badge?: number }[] = [
     { id: "overview", label: "Обзор", Icon: LayoutDashboard },
     { id: "users", label: "Пользователи", Icon: Users },
     { id: "offers", label: "Офферы", Icon: Package },
@@ -150,6 +173,7 @@ function AdminPage() {
     { id: "requests", label: "Заявки", Icon: ClipboardList },
     { id: "conversions", label: "Конверсии", Icon: Activity },
     { id: "broadcast", label: "Рассылка", Icon: Bell },
+    { id: "moderation", label: "Модерация", Icon: Shield, badge: moderationUnread },
     { id: "ai", label: "AI-аналитик", Icon: Sparkles },
   ];
 
@@ -164,18 +188,37 @@ function AdminPage() {
           <span className="text-sm font-bold uppercase tracking-tight">Админ-панель</span>
           <span className="rounded-full bg-primary/15 px-2 py-0.5 text-[9px] font-bold uppercase text-primary">only admin</span>
         </div>
-        <button onClick={signOut} aria-label="Выйти" className="flex size-8 items-center justify-center rounded-full text-muted-foreground hover:bg-accent hover:text-foreground">
-          <LogOut className="size-4" />
-        </button>
+        <div className="flex items-center gap-1">
+          <button
+            onClick={() => setTab("moderation")}
+            aria-label="Уведомления модерации"
+            className="relative flex size-8 items-center justify-center rounded-full text-muted-foreground hover:bg-accent hover:text-foreground"
+          >
+            <Bell className="size-4" />
+            {moderationUnread > 0 && (
+              <span className="absolute -right-0.5 -top-0.5 grid min-w-[16px] h-4 place-items-center rounded-full bg-destructive px-1 text-[9px] font-black text-destructive-foreground">
+                {moderationUnread > 99 ? "99+" : moderationUnread}
+              </span>
+            )}
+          </button>
+          <button onClick={signOut} aria-label="Выйти" className="flex size-8 items-center justify-center rounded-full text-muted-foreground hover:bg-accent hover:text-foreground">
+            <LogOut className="size-4" />
+          </button>
+        </div>
       </header>
 
       <nav className="sticky top-14 z-10 flex gap-1 overflow-x-auto border-b border-border bg-background/80 px-3 py-2 backdrop-blur-md">
         {tabs.map((t) => (
           <button key={t.id} onClick={() => setTab(t.id)}
-            className={`inline-flex shrink-0 items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-bold uppercase tracking-wider transition ${
+            className={`relative inline-flex shrink-0 items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-bold uppercase tracking-wider transition ${
               tab === t.id ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-accent hover:text-foreground"
             }`}>
             <t.Icon className="size-3.5" /> {t.label}
+            {t.badge && t.badge > 0 ? (
+              <span className="ml-1 grid min-w-[16px] h-4 place-items-center rounded-full bg-destructive px-1 text-[9px] font-black text-destructive-foreground">
+                {t.badge > 99 ? "99+" : t.badge}
+              </span>
+            ) : null}
           </button>
         ))}
       </nav>
@@ -188,6 +231,7 @@ function AdminPage() {
         {tab === "requests" && <RequestsTab />}
         {tab === "conversions" && <ConversionsTab />}
         {tab === "broadcast" && <BroadcastTab />}
+        {tab === "moderation" && <ModerationTab meId={meId} onCountChange={setModerationUnread} />}
         {tab === "ai" && <AdminAnalystTab />}
       </main>
     </div>
