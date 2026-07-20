@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { AssistantTab } from "@/components/dashboard/assistant-tab";
 import { ProfileTab } from "@/components/dashboard/profile-tab";
 import { SupportTab } from "@/components/dashboard/support-tab";
+import { t } from "@/lib/i18n";
 import { LogOut } from "lucide-react";
 import {
   LayoutGrid,
@@ -1206,15 +1207,15 @@ function DashboardPage() {
       <nav className="fixed bottom-0 left-0 right-0 z-30 flex h-16 items-center justify-around border-t border-border bg-background/95 px-2 backdrop-blur-md">
         {(
           [
-            { id: "info", label: "Инфо", Icon: LayoutGrid },
-            { id: "offers", label: "Офферы", Icon: Package },
-            { id: "requests", label: "Заявки", Icon: Inbox },
-            { id: "stats", label: "Стата", Icon: BarChart3 },
-            { id: "payouts", label: "Выплаты", Icon: Wallet },
-            { id: "ai", label: "AI", Icon: Sparkles },
-            { id: "support", label: "Помощь", Icon: Headphones },
+            { id: "info", key: "nav_info", Icon: LayoutGrid },
+            { id: "offers", key: "nav_offers", Icon: Package },
+            { id: "requests", key: "nav_requests", Icon: Inbox },
+            { id: "stats", key: "nav_stats", Icon: BarChart3 },
+            { id: "payouts", key: "nav_payouts", Icon: Wallet },
+            { id: "ai", key: "nav_ai", Icon: Sparkles },
+            { id: "support", key: "nav_support", Icon: Headphones },
           ] as const
-        ).map(({ id, label, Icon }) => (
+        ).map(({ id, key, Icon }) => (
           <button
             key={id}
             onClick={() => setActive(id)}
@@ -1223,10 +1224,11 @@ function DashboardPage() {
             }`}
           >
             <Icon className={`size-5 ${active === id ? "" : "opacity-60"}`} />
-            <span className="text-[9px] font-bold uppercase tracking-tighter">{label}</span>
+            <span className="text-[9px] font-bold uppercase tracking-tighter">{t(prefs.language, key)}</span>
           </button>
         ))}
       </nav>
+
     </div>
   );
 }

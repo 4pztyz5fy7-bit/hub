@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { t } from "@/lib/i18n";
 import {
   User as UserIcon,
   Mail,
@@ -306,23 +307,23 @@ export function ProfileTab({
       </Card>
 
       {/* Notification preferences */}
-      <Card title="Уведомления" icon={Bell}>
-        <Toggle label="E-mail уведомления" desc="Заявки, выплаты, важные события" value={prefs.notify_email} onChange={(v) => setPrefs((s) => ({ ...s, notify_email: v }))} />
-        <Toggle label="Push в приложении" desc="Показывать колокольчик и всплывашки" value={prefs.notify_push} onChange={(v) => setPrefs((s) => ({ ...s, notify_push: v }))} />
-        <Toggle label="Выплаты" desc="Статусы вывода, начисления, откаты" value={prefs.notify_payouts} onChange={(v) => setPrefs((s) => ({ ...s, notify_payouts: v }))} />
-        <Toggle label="Новые офферы" desc="Уведомлять о новых и приоритетных офферах" value={prefs.notify_offers} onChange={(v) => setPrefs((s) => ({ ...s, notify_offers: v }))} />
-        <Toggle label="Маркетинг и советы" desc="Полезные подборки и рекомендации" value={prefs.notify_marketing} onChange={(v) => setPrefs((s) => ({ ...s, notify_marketing: v }))} />
+      <Card title={t(prefs.language, "card_notifications")} icon={Bell}>
+        <Toggle label={t(prefs.language, "notify_email_label")} desc={t(prefs.language, "notify_email_desc")} value={prefs.notify_email} onChange={(v) => setPrefs((s) => ({ ...s, notify_email: v }))} />
+        <Toggle label={t(prefs.language, "notify_push_label")} desc={t(prefs.language, "notify_push_desc")} value={prefs.notify_push} onChange={(v) => setPrefs((s) => ({ ...s, notify_push: v }))} />
+        <Toggle label={t(prefs.language, "notify_payouts_label")} desc={t(prefs.language, "notify_payouts_desc")} value={prefs.notify_payouts} onChange={(v) => setPrefs((s) => ({ ...s, notify_payouts: v }))} />
+        <Toggle label={t(prefs.language, "notify_offers_label")} desc={t(prefs.language, "notify_offers_desc")} value={prefs.notify_offers} onChange={(v) => setPrefs((s) => ({ ...s, notify_offers: v }))} />
+        <Toggle label={t(prefs.language, "notify_marketing_label")} desc={t(prefs.language, "notify_marketing_desc")} value={prefs.notify_marketing} onChange={(v) => setPrefs((s) => ({ ...s, notify_marketing: v }))} />
       </Card>
 
       {/* Appearance */}
-      <Card title="Оформление" icon={Moon}>
+      <Card title={t(prefs.language, "card_appearance")} icon={Moon}>
         <div className="space-y-1.5">
-          <p className="text-[10.5px] font-semibold uppercase tracking-wider text-muted-foreground">Тема</p>
+          <p className="text-[10.5px] font-semibold uppercase tracking-wider text-muted-foreground">{t(prefs.language, "theme_label")}</p>
           <div className="grid grid-cols-3 gap-2">
             {([
-              { id: "system", label: "Система", Icon: Sparkles },
-              { id: "dark", label: "Тёмная", Icon: Moon },
-              { id: "light", label: "Светлая", Icon: Sun },
+              { id: "system", label: t(prefs.language, "theme_system"), Icon: Sparkles },
+              { id: "dark", label: t(prefs.language, "theme_dark"), Icon: Moon },
+              { id: "light", label: t(prefs.language, "theme_light"), Icon: Sun },
             ] as const).map(({ id, label, Icon }) => (
               <button
                 key={id}
@@ -338,7 +339,7 @@ export function ProfileTab({
           </div>
         </div>
         <div className="space-y-1.5">
-          <p className="text-[10.5px] font-semibold uppercase tracking-wider text-muted-foreground">Язык</p>
+          <p className="text-[10.5px] font-semibold uppercase tracking-wider text-muted-foreground">{t(prefs.language, "language_label")}</p>
           <div className="grid grid-cols-2 gap-2">
             {([
               { id: "ru", label: "Русский" },
@@ -357,12 +358,13 @@ export function ProfileTab({
             ))}
           </div>
         </div>
-        <Toggle label="Компактный режим" desc="Меньше отступов в списках" value={prefs.compact} onChange={(v) => setPrefs((s) => ({ ...s, compact: v }))} />
-        <Toggle label="Показывать баланс" desc="Скрыть суммы на главной" value={prefs.showBalance} onChange={(v) => setPrefs((s) => ({ ...s, showBalance: v }))} />
+        <Toggle label={t(prefs.language, "compact_label")} desc={t(prefs.language, "compact_desc")} value={prefs.compact} onChange={(v) => setPrefs((s) => ({ ...s, compact: v }))} />
+        <Toggle label={t(prefs.language, "show_balance_label")} desc={t(prefs.language, "show_balance_desc")} value={prefs.showBalance} onChange={(v) => setPrefs((s) => ({ ...s, showBalance: v }))} />
       </Card>
 
       {/* Security */}
-      <Card title="Безопасность" icon={Shield}>
+      <Card title={t(prefs.language, "card_security")} icon={Shield}>
+
         <button
           onClick={() => setPwOpen((v) => !v)}
           className="flex w-full items-center justify-between rounded-lg border border-border bg-background/60 px-3 py-2.5 text-left transition-colors hover:bg-accent"
