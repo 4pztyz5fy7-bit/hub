@@ -88,6 +88,7 @@ function LandingPage() {
             <a href="#offers" className="text-sm text-muted-foreground hover:text-foreground">Офферы</a>
             <a href="#levels" className="text-sm text-muted-foreground hover:text-foreground">Уровни</a>
             <a href="#how" className="text-sm text-muted-foreground hover:text-foreground">Как это работает</a>
+            <a href="/news" className="text-sm text-muted-foreground hover:text-foreground">Новости</a>
             <a href="#faq" className="text-sm text-muted-foreground hover:text-foreground">FAQ</a>
           </nav>
 
@@ -109,6 +110,7 @@ function LandingPage() {
               <a href="#offers" onClick={() => setMenuOpen(false)} className="rounded-md px-2 py-2 text-sm hover:bg-secondary">Офферы</a>
               <a href="#levels" onClick={() => setMenuOpen(false)} className="rounded-md px-2 py-2 text-sm hover:bg-secondary">Уровни</a>
               <a href="#how" onClick={() => setMenuOpen(false)} className="rounded-md px-2 py-2 text-sm hover:bg-secondary">Как это работает</a>
+              <a href="/news" onClick={() => setMenuOpen(false)} className="rounded-md px-2 py-2 text-sm hover:bg-secondary">Новости</a>
               <a href="#faq" onClick={() => setMenuOpen(false)} className="rounded-md px-2 py-2 text-sm hover:bg-secondary">FAQ</a>
               <div className="mt-2 flex gap-2">
                 <button onClick={() => openAuth("login")} className="flex-1 rounded-lg border border-border px-3 py-2 text-sm font-semibold">Войти</button>
@@ -496,6 +498,7 @@ function LandingPage() {
             <span className="text-xs font-bold tracking-wider">КВАНТ © {new Date().getFullYear()}</span>
           </div>
           <nav className="flex flex-wrap items-center justify-center gap-x-5 gap-y-2 text-xs">
+            <a href="/news" className="text-muted-foreground hover:text-foreground">Новости</a>
             <a href="/terms" className="text-muted-foreground hover:text-foreground">Оферта</a>
             <a href="/privacy" className="text-muted-foreground hover:text-foreground">Конфиденциальность</a>
             <a href="/cookies" className="text-muted-foreground hover:text-foreground">Cookies</a>
