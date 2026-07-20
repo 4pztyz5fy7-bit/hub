@@ -151,15 +151,22 @@ export const askAssistant = createServerFn({ method: "POST" })
     const lastUser = [...data.messages].reverse().find((m) => m.role === "user");
     if (lastUser) {
       const mod = await moderateQuery(lastUser.content);
-      if (mod.flagged) {
+      if (mod.category === "illegal") {
         const { data: prof } = await supabase.from("profiles").select("display_name,email").eq("id", userId).maybeSingle();
         const label = prof?.display_name || prof?.email || "Партнёр";
         await reportToAdmins(userId, label, lastUser.content, mod.category, mod.reason).catch(() => {});
-        const answer =
-          mod.category === "illegal"
-            ? "Не могу помочь с этим запросом — он противоречит правилам платформы. Инцидент передан администрации."
-            : "Я отвечаю только на вопросы по арбитражу, офферам, аналитике и работе на платформе КВАНТ. Запрос передан администратору.";
-        return { answer, flagged: true, category: mod.category };
+        return {
+          answer: "Не могу помочь с этим запросом — он противоречит правилам платформы. Инцидент передан администрации.",
+          flagged: true,
+          category: mod.category,
+        };
+      }
+      if (mod.category === "offtopic") {
+        return {
+          answer: "Я специализируюсь на арбитраже трафика, CPA, маркетинге и работе с платформой КВАНТ. Задай вопрос по этой теме — с удовольствием помогу.",
+          flagged: false,
+          category: mod.category,
+        };
       }
     }
 
