@@ -1737,6 +1737,7 @@ function BroadcastTab() {
     setRecent((data ?? []) as any);
   }, []);
   useEffect(() => { load(); }, [load]);
+  useRealtimeReload(["notifications"], load, "rt:broadcast");
 
   const send = async () => {
     setMsg(null);
