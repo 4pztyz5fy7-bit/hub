@@ -1098,8 +1098,8 @@ function RequestsTab() {
         const off = t.offer_id ? offersMap.get(t.offer_id) : null;
         const offerPer = off ? Number(String(off.payout ?? "").replace(/[^\d.]/g, "")) || Number(off.payout_max) || Number(off.payout_min) || 0 : 0;
         const per = t.payout_override != null && t.payout_override > 0 ? Number(t.payout_override) : offerPer;
-        const qty = Math.max(1, t.orders_count || 1);
-        const amount = per * qty;
+        const amount = per;
+
         if (amount > 0) {
           convs.push({ user_id: t.user_id, offer_id: t.offer_id, offer_name: t.offer_name, amount, status: "ok" });
           notes.push({ user_id: t.user_id, kind: "payout", title: "Начисление за оффер", body: `${t.offer_name}: начислено ${amount.toLocaleString("ru-RU")} ₽`, amount: String(amount), status: "paid" });
@@ -1348,8 +1348,8 @@ function RequestRowControls({ row, onReload }: { row: LinkRow; onReload: () => v
             perOrder = num || Number(off.payout_max) || Number(off.payout_min) || 0;
           }
         }
-        const qty = Math.max(1, Number(patch.orders_count ?? row.orders_count) || 1);
-        const amount = perOrder * qty;
+        const amount = perOrder;
+
         if (amount > 0) {
           await supabase.from("conversions").insert({
             user_id: row.user_id,
