@@ -3817,7 +3817,10 @@ function OfferDetailSheet({
   const hasBoost = level.bonusPct > 0 && boosted.boostedPayout !== offer.payout;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end justify-center bg-foreground/40 backdrop-blur-sm sm:items-center">
+    <div
+      className="fixed inset-0 z-50 flex items-end justify-center bg-foreground/40 backdrop-blur-sm sm:items-center"
+      onClick={(e) => { if (e.currentTarget === e.target) onClose(); }}
+    >
       <div className="animate-in-up flex max-h-[92vh] w-full max-w-[440px] flex-col overflow-hidden rounded-t-2xl border border-border bg-background sm:rounded-2xl">
         {/* Header */}
         <div className="flex items-start justify-between gap-3 border-b border-border px-4 py-3">
@@ -3836,7 +3839,7 @@ function OfferDetailSheet({
           <button
             onClick={onClose}
             aria-label="Закрыть"
-            className="grid size-8 shrink-0 place-items-center rounded-full text-muted-foreground hover:bg-accent"
+            className="grid size-8 shrink-0 place-items-center rounded-full border border-border bg-secondary text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
           >
             <X className="size-4" />
           </button>
