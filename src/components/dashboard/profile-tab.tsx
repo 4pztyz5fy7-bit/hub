@@ -421,6 +421,33 @@ export function ProfileTab({
         </button>
       </Card>
 
+      {/* Documents */}
+      <Card icon={Shield} title="Документы">
+        <p className="text-[11px] text-muted-foreground">
+          Правовая информация о работе платформы КВАНТ.
+        </p>
+        <div className="mt-2 grid gap-1.5">
+          {[
+            { href: "/terms", label: "Пользовательское соглашение (оферта)" },
+            { href: "/privacy", label: "Политика конфиденциальности" },
+            { href: "/cookies", label: "Политика cookies" },
+            { href: "/legal", label: "Все документы" },
+          ].map((d) => (
+            <a
+              key={d.href}
+              href={d.href}
+              target="_blank"
+              rel="noreferrer"
+              className="flex items-center justify-between rounded-md border border-border bg-secondary/40 px-3 py-2 text-xs font-medium transition-colors hover:bg-secondary hover:text-primary"
+            >
+              <span>{d.label}</span>
+              <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Открыть →</span>
+            </a>
+          ))}
+        </div>
+      </Card>
+
+
       {/* Save bar */}
       {dirty && (
         <div className="sticky bottom-20 z-20 flex items-center gap-2 rounded-xl border border-border bg-background/95 p-2 shadow-lg backdrop-blur">
