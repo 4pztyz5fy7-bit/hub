@@ -747,8 +747,11 @@ function DashboardPage() {
     await supabase.from("notifications").update({ read: true }).eq("user_id", userId).eq("read", false);
   };
   const toggleRead = async (id: string) => {
-    setNotifs((ns) => ns.map((n) => (n.id === id ? { ...n, read: true } : n)));
-    await supabase.from("notifications").update({ read: true }).eq("id", id);
+    const target = notifs.find((n) => n.id === id);
+    if (!target) return;
+    const nextRead = !target.read;
+    setNotifs((ns) => ns.map((n) => (n.id === id ? { ...n, read: nextRead } : n)));
+    await supabase.from("notifications").update({ read: nextRead }).eq("id", id);
   };
 
   /* --------------------------- Level-up watcher ----------------------- */
