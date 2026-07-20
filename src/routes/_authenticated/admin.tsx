@@ -1564,24 +1564,20 @@ function DetailRow({ label, value, mono, onCopy, copied }: { label: string; valu
 function RequestRowControls({ row, onReload }: { row: LinkRow; onReload: () => void }) {
   const [link, setLink] = useState(row.link ?? "");
   const [note, setNote] = useState(row.note ?? "");
-  const [orders, setOrders] = useState<string>(String(row.orders_count ?? 0));
   const [price, setPrice] = useState<string>(row.payout_override != null ? String(row.payout_override) : "");
   const [saving, setSaving] = useState(false);
   const [savedFlash, setSavedFlash] = useState(false);
-  const ordersNum = Math.max(0, Number(orders) || 0);
   const priceNum = price.trim() === "" ? null : Math.max(0, Number(price) || 0);
   const dirty =
     link !== (row.link ?? "") ||
     note !== (row.note ?? "") ||
-    ordersNum !== (row.orders_count ?? 0) ||
     priceNum !== (row.payout_override ?? null);
 
   useEffect(() => {
     setLink(row.link ?? "");
     setNote(row.note ?? "");
-    setOrders(String(row.orders_count ?? 0));
     setPrice(row.payout_override != null ? String(row.payout_override) : "");
-  }, [row.id, row.link, row.note, row.orders_count, row.payout_override]);
+  }, [row.id, row.link, row.note, row.payout_override]);
 
   const change = async (patch: Partial<Pick<LinkRow, "status" | "link" | "note" | "orders_count" | "payout_override">>) => {
     setSaving(true);
