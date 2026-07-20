@@ -19,6 +19,7 @@ import {
   Bell,
   ArrowUpRight,
   TrendingUp,
+  TrendingDown,
   Landmark,
   Pencil,
   X,
