@@ -67,6 +67,12 @@ export const Route = createFileRoute("/_authenticated/dashboard")({
 
 type Tab = "info" | "offers" | "stats" | "payouts" | "ai" | "requests" | "profile" | "support" | "rewards";
 
+function isSameDay(iso: string): boolean {
+  const d = new Date(iso);
+  const n = new Date();
+  return d.getFullYear() === n.getFullYear() && d.getMonth() === n.getMonth() && d.getDate() === n.getDate();
+}
+
 export type UserPrefs = {
   notify_email: boolean;
   notify_push: boolean;
