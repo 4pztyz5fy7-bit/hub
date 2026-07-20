@@ -2785,9 +2785,17 @@ function NotificationsSheet({
   onClose: () => void;
 }) {
   const filtered = filter === "all" ? notifs : notifs.filter((n) => n.kind === filter);
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const selected = selectedId ? notifs.find((n) => n.id === selectedId) ?? null : null;
+  const openNotif = (n: Notification) => {
+    setSelectedId(n.id);
+    if (!n.read) onToggleRead(n.id);
+  };
+  const selectedMeta = selected ? notifMeta(selected) : null;
   return (
     <div className="fixed inset-0 z-50 flex items-end justify-center bg-foreground/40 backdrop-blur-sm sm:items-center">
-      <div className="animate-in-up flex max-h-[92vh] w-full max-w-[440px] flex-col overflow-hidden rounded-t-2xl border border-border bg-background sm:rounded-2xl">
+      <div className="animate-in-up relative flex max-h-[92vh] w-full max-w-[440px] flex-col overflow-hidden rounded-t-2xl border border-border bg-background sm:rounded-2xl">
+
         <div className="flex items-center justify-between border-b border-border px-4 py-3">
           <div>
             <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
@@ -2851,7 +2859,7 @@ function NotificationsSheet({
             return (
               <button
                 key={n.id}
-                onClick={() => onToggleRead(n.id)}
+                onClick={() => openNotif(n)}
                 className={`flex w-full items-start gap-3 p-4 text-left transition-colors hover:bg-accent/50 ${
                   n.read ? "opacity-70" : ""
                 }`}
@@ -2898,6 +2906,92 @@ function NotificationsSheet({
             );
           })}
         </div>
+
+        {selected && selectedMeta && (
+          <div className="absolute inset-0 z-10 flex flex-col bg-background animate-in fade-in">
+            <div className="flex items-center gap-2 border-b border-border px-4 py-3">
+              <button
+                onClick={() => setSelectedId(null)}
+                className="grid size-8 place-items-center rounded-full text-muted-foreground hover:bg-accent"
+                aria-label="Назад"
+              >
+                <ChevronRight className="size-4 rotate-180" />
+              </button>
+              <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+                Уведомление
+              </p>
+              <button
+                onClick={onClose}
+                aria-label="Закрыть"
+                className="ml-auto grid size-8 place-items-center rounded-full text-muted-foreground hover:bg-accent"
+              >
+                <X className="size-4" />
+              </button>
+            </div>
+            <div className="flex-1 overflow-y-auto p-5">
+              <div className="flex items-start gap-3">
+                <div className={`grid size-12 shrink-0 place-items-center rounded-xl ${selectedMeta.iconBg}`}>
+                  <selectedMeta.Icon className={`size-5 ${selectedMeta.iconColor}`} />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <h4 className="text-base font-bold leading-snug break-words">{selected.title}</h4>
+                  <p className="mt-1 flex items-center gap-1 font-mono text-[10px] uppercase text-muted-foreground">
+                    <Clock className="size-3" /> {selected.time}
+                  </p>
+                </div>
+              </div>
+
+              {(selected.amount || (selected.status && selected.kind === "payout")) && (
+                <div className="mt-4 flex flex-wrap items-center gap-2">
+                  {selected.amount && (
+                    <span className="rounded-full bg-[color:var(--success)]/10 px-3 py-1 font-mono text-xs font-bold text-[color:var(--success)]">
+                      {selected.amount}
+                    </span>
+                  )}
+                  {selected.status && selected.kind === "payout" && (
+                    <span
+                      className={`rounded-full px-3 py-1 font-mono text-[10px] font-bold uppercase ${
+                        selected.status === "paid"
+                          ? "bg-[color:var(--success)]/10 text-[color:var(--success)]"
+                          : selected.status === "processing" || selected.status === "pending"
+                            ? "bg-[color:var(--warning)]/10 text-[color:var(--warning)]"
+                            : "bg-destructive/10 text-destructive"
+                      }`}
+                    >
+                      {selected.status === "paid"
+                        ? "Готово"
+                        : selected.status === "processing"
+                          ? "В работе"
+                          : selected.status === "pending"
+                            ? "Ожидает"
+                            : "Отказ"}
+                    </span>
+                  )}
+                </div>
+              )}
+
+              <div className="mt-5 rounded-xl border border-border bg-secondary/40 p-4">
+                <p className="whitespace-pre-wrap break-words text-sm leading-relaxed text-foreground">
+                  {selected.body || "Без описания"}
+                </p>
+              </div>
+            </div>
+            <div className="flex gap-2 border-t border-border p-3">
+              <button
+                onClick={() => onToggleRead(selected.id)}
+                className="flex-1 rounded-lg border border-border bg-secondary px-3 py-2 text-xs font-bold uppercase tracking-wider hover:bg-accent"
+              >
+                {selected.read ? "Отметить непрочитанным" : "Отметить прочитанным"}
+              </button>
+              <button
+                onClick={() => setSelectedId(null)}
+                className="flex-1 rounded-lg bg-foreground px-3 py-2 text-xs font-bold uppercase tracking-wider text-background hover:opacity-90"
+              >
+                Закрыть
+              </button>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
