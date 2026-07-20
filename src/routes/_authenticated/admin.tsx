@@ -50,6 +50,7 @@ type LinkRow = {
   id: string; user_id: string; offer_id: string | null; offer_name: string;
   offer_tag: string | null; source: string | null; sub: string | null;
   link: string | null; note: string | null; orders_count: number;
+  payout_override: number | null;
   status: LinkStatus; created_at: string;
 };
 type Conversion = {
@@ -1095,7 +1096,8 @@ function RequestsTab() {
       const notes: any[] = [];
       for (const t of targets) {
         const off = t.offer_id ? offersMap.get(t.offer_id) : null;
-        const per = off ? Number(String(off.payout ?? "").replace(/[^\d.]/g, "")) || Number(off.payout_max) || Number(off.payout_min) || 0 : 0;
+        const offerPer = off ? Number(String(off.payout ?? "").replace(/[^\d.]/g, "")) || Number(off.payout_max) || Number(off.payout_min) || 0 : 0;
+        const per = t.payout_override != null && t.payout_override > 0 ? Number(t.payout_override) : offerPer;
         const qty = Math.max(1, t.orders_count || 1);
         const amount = per * qty;
         if (amount > 0) {
@@ -1307,29 +1309,34 @@ function RequestRowControls({ row, onReload }: { row: LinkRow; onReload: () => v
   const [link, setLink] = useState(row.link ?? "");
   const [note, setNote] = useState(row.note ?? "");
   const [orders, setOrders] = useState<string>(String(row.orders_count ?? 0));
+  const [price, setPrice] = useState<string>(row.payout_override != null ? String(row.payout_override) : "");
   const [saving, setSaving] = useState(false);
   const [savedFlash, setSavedFlash] = useState(false);
   const ordersNum = Math.max(0, Number(orders) || 0);
+  const priceNum = price.trim() === "" ? null : Math.max(0, Number(price) || 0);
   const dirty =
     link !== (row.link ?? "") ||
     note !== (row.note ?? "") ||
-    ordersNum !== (row.orders_count ?? 0);
+    ordersNum !== (row.orders_count ?? 0) ||
+    priceNum !== (row.payout_override ?? null);
 
   useEffect(() => {
     setLink(row.link ?? "");
     setNote(row.note ?? "");
     setOrders(String(row.orders_count ?? 0));
-  }, [row.id, row.link, row.note, row.orders_count]);
+    setPrice(row.payout_override != null ? String(row.payout_override) : "");
+  }, [row.id, row.link, row.note, row.orders_count, row.payout_override]);
 
-  const change = async (patch: Partial<Pick<LinkRow, "status" | "link" | "note" | "orders_count">>) => {
+  const change = async (patch: Partial<Pick<LinkRow, "status" | "link" | "note" | "orders_count" | "payout_override">>) => {
     setSaving(true);
     const becamePaid = patch.status === "paid" && row.status !== "paid";
     await supabase.from("link_requests").update(patch).eq("id", row.id);
     if (becamePaid) {
       try {
-        let payoutStr: string | null = null;
+        const overrideVal = patch.payout_override !== undefined ? patch.payout_override : row.payout_override;
+        let perOrder = overrideVal != null && Number(overrideVal) > 0 ? Number(overrideVal) : 0;
         let offerId: string | null = row.offer_id;
-        if (row.offer_id) {
+        if (perOrder === 0 && row.offer_id) {
           const { data: off } = await supabase
             .from("offers")
             .select("id, payout, payout_min, payout_max")
@@ -1338,10 +1345,9 @@ function RequestRowControls({ row, onReload }: { row: LinkRow; onReload: () => v
           if (off) {
             offerId = off.id;
             const num = Number(String(off.payout ?? "").replace(/[^\d.]/g, "")) || 0;
-            payoutStr = String(num || off.payout_max || off.payout_min || 0);
+            perOrder = num || Number(off.payout_max) || Number(off.payout_min) || 0;
           }
         }
-        const perOrder = Number(String(payoutStr ?? "0").replace(/[^\d.]/g, "")) || 0;
         const qty = Math.max(1, Number(patch.orders_count ?? row.orders_count) || 1);
         const amount = perOrder * qty;
         if (amount > 0) {
@@ -1372,7 +1378,7 @@ function RequestRowControls({ row, onReload }: { row: LinkRow; onReload: () => v
   };
 
   const saveFields = async () => {
-    await change({ link: link.trim() || null, note: note.trim() || null, orders_count: ordersNum });
+    await change({ link: link.trim() || null, note: note.trim() || null, orders_count: ordersNum, payout_override: priceNum });
   };
 
   return (
@@ -1402,6 +1408,25 @@ function RequestRowControls({ row, onReload }: { row: LinkRow; onReload: () => v
           placeholder="0"
           className="mt-0.5 w-full rounded-lg border border-border bg-background px-3 py-1.5 text-sm outline-none focus:ring-2 focus:ring-primary/40"
         />
+      </label>
+      <label className="block">
+        <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+          Цена за заказ, ₽ <span className="normal-case text-muted-foreground/70">(пусто = как в оффере)</span>
+        </span>
+        <input
+          type="number"
+          min={0}
+          step="0.01"
+          value={price}
+          onChange={(e) => setPrice(e.target.value.replace(/[^\d.]/g, ""))}
+          placeholder="напр. 3500"
+          className="mt-0.5 w-full rounded-lg border border-border bg-background px-3 py-1.5 text-sm outline-none focus:ring-2 focus:ring-primary/40"
+        />
+        {ordersNum > 0 && priceNum != null && priceNum > 0 && (
+          <span className="mt-1 block text-[10px] font-bold uppercase tracking-wider text-emerald-500">
+            К начислению: {(ordersNum * priceNum).toLocaleString("ru-RU")} ₽
+          </span>
+        )}
       </label>
       <label className="block">
         <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Партнёрская ссылка (её копирует пользователь)</span>

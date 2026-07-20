@@ -62,6 +62,7 @@ export type Database = {
           offer_name: string
           offer_tag: string | null
           orders_count: number
+          payout_override: number | null
           source: string | null
           status: Database["public"]["Enums"]["link_status"]
           sub: string | null
@@ -77,6 +78,7 @@ export type Database = {
           offer_name: string
           offer_tag?: string | null
           orders_count?: number
+          payout_override?: number | null
           source?: string | null
           status?: Database["public"]["Enums"]["link_status"]
           sub?: string | null
@@ -92,6 +94,7 @@ export type Database = {
           offer_name?: string
           offer_tag?: string | null
           orders_count?: number
+          payout_override?: number | null
           source?: string | null
           status?: Database["public"]["Enums"]["link_status"]
           sub?: string | null

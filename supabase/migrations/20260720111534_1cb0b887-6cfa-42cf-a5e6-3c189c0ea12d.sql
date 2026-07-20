@@ -1,0 +1,1 @@
+ALTER TABLE public.link_requests ADD COLUMN IF NOT EXISTS payout_override numeric;
