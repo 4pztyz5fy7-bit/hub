@@ -44,6 +44,8 @@ type TabId = "overview" | "users" | "offers" | "payouts" | "requests" | "convers
 type Profile = {
   id: string; email: string | null; display_name: string | null;
   telegram: string | null; created_at: string;
+  blocked?: boolean; blocked_reason?: string | null; blocked_at?: string | null;
+  warnings_count?: number;
 };
 type RoleRow = { user_id: string; role: "admin" | "user" };
 type PayoutKind = "exact" | "up_to" | "from" | "range";
