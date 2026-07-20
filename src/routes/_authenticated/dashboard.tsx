@@ -1367,6 +1367,7 @@ function InfoTab({
 
   return (
     <>
+      <BannerBoard />
       {/* ============ HERO: баланс + вывод ============ */}
       <section className="animate-in-up">
         <div className="relative overflow-hidden rounded-2xl bg-foreground p-5 text-background shadow-lg shadow-foreground/10">
