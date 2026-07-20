@@ -213,6 +213,7 @@ export function TicketView({
   const [text, setText] = useState("");
   const [busy, setBusy] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [err, setErr] = useState<string | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   async function load() {
@@ -233,7 +234,9 @@ export function TicketView({
     const ch = supabase
       .channel(`support:${ticketId}`)
       .on("postgres_changes", { event: "INSERT", schema: "public", table: "support_messages", filter: `ticket_id=eq.${ticketId}` },
-        (p) => setMessages((prev) => [...prev, p.new as SupportMessage]))
+        (p) => setMessages((prev) => prev.some((x) => x.id === (p.new as SupportMessage).id) ? prev : [...prev, p.new as SupportMessage]))
+      .on("postgres_changes", { event: "UPDATE", schema: "public", table: "support_tickets", filter: `id=eq.${ticketId}` },
+        (p) => setTicket((prev) => (prev ? { ...prev, ...(p.new as SupportTicket) } : prev)))
       .subscribe();
     return () => { void supabase.removeChannel(ch); };
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -244,18 +247,23 @@ export function TicketView({
   }, [messages.length]);
 
   async function send() {
-    if (!text.trim() || !meId || !ticket) return;
-    setBusy(true);
-    const { error } = await supabase.from("support_messages").insert({
-      ticket_id: ticket.id, author_id: meId, from_admin: isAdmin, text: text.trim(),
-    });
+    if (!text.trim() || !meId || !ticket || busy) return;
+    setBusy(true); setErr(null);
+    const body = text.trim();
+    const { data, error } = await supabase.from("support_messages").insert({
+      ticket_id: ticket.id, author_id: meId, from_admin: isAdmin, text: body,
+    }).select("*").single();
     setBusy(false);
-    if (!error) setText("");
+    if (error) { setErr(error.message); return; }
+    setText("");
+    if (data) setMessages((prev) => prev.some((x) => x.id === data.id) ? prev : [...prev, data as SupportMessage]);
   }
 
   async function setStatus(status: "open" | "closed") {
     if (!ticket) return;
-    await supabase.from("support_tickets").update({ status }).eq("id", ticket.id);
+    setErr(null);
+    const { error } = await supabase.from("support_tickets").update({ status }).eq("id", ticket.id);
+    if (error) { setErr(error.message); return; }
     setTicket({ ...ticket, status });
   }
 
@@ -310,19 +318,26 @@ export function TicketView({
         })}
       </div>
 
-      {ticket.status !== "closed" && (
-        <div className="mt-2 flex items-end gap-2">
-          <textarea
-            value={text} onChange={(e) => setText(e.target.value)}
-            rows={2}
-            placeholder="Введите сообщение…"
-            className="flex-1 resize-none rounded-xl border border-border bg-card px-3 py-2 text-sm outline-none focus:border-primary"
-            onKeyDown={(e) => { if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) void send(); }}
-          />
-          <button onClick={() => void send()} disabled={busy || !text.trim()}
-            className="grid size-10 shrink-0 place-items-center rounded-full bg-primary text-primary-foreground disabled:opacity-50">
-            {busy ? <Loader2 className="size-4 animate-spin" /> : <Send className="size-4" />}
-          </button>
+      {ticket.status !== "closed" ? (
+        <div className="mt-2 space-y-1.5">
+          {err && <p className="text-[11px] text-destructive">{err}</p>}
+          <div className="flex items-end gap-2">
+            <textarea
+              value={text} onChange={(e) => setText(e.target.value)}
+              rows={2}
+              placeholder="Введите сообщение… (Ctrl+Enter — отправить)"
+              className="flex-1 resize-none rounded-xl border border-border bg-card px-3 py-2 text-sm outline-none focus:border-primary"
+              onKeyDown={(e) => { if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) void send(); }}
+            />
+            <button onClick={() => void send()} disabled={busy || !text.trim()}
+              className="grid size-10 shrink-0 place-items-center rounded-full bg-primary text-primary-foreground disabled:opacity-50">
+              {busy ? <Loader2 className="size-4 animate-spin" /> : <Send className="size-4" />}
+            </button>
+          </div>
+        </div>
+      ) : (
+        <div className="mt-2 rounded-xl border border-dashed border-border p-3 text-center text-[11px] text-muted-foreground">
+          Тикет закрыт. Нажмите «Открыть» чтобы продолжить переписку.
         </div>
       )}
     </div>
