@@ -1097,11 +1097,10 @@ function DashboardPage() {
           [
             { id: "info", label: "Инфо", Icon: LayoutGrid },
             { id: "offers", label: "Офферы", Icon: Package },
-            
+            { id: "requests", label: "Заявки", Icon: Inbox },
             { id: "stats", label: "Стата", Icon: BarChart3 },
             { id: "payouts", label: "Выплаты", Icon: Wallet },
             { id: "tools", label: "Инстр.", Icon: ClipboardList },
-            
           ] as const
         ).map(({ id, label, Icon }) => (
           <button
