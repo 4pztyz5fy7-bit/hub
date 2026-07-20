@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { AssistantTab } from "@/components/dashboard/assistant-tab";
 import { ProfileTab } from "@/components/dashboard/profile-tab";
 import { SupportTab } from "@/components/dashboard/support-tab";
+import { RewardsTab } from "@/components/dashboard/rewards-tab";
 import { t } from "@/lib/i18n";
 import { LogOut } from "lucide-react";
 import {
@@ -64,7 +65,13 @@ export const Route = createFileRoute("/_authenticated/dashboard")({
 
 /* ================================ Types ================================ */
 
-type Tab = "info" | "offers" | "stats" | "payouts" | "ai" | "requests" | "profile" | "support";
+type Tab = "info" | "offers" | "stats" | "payouts" | "ai" | "requests" | "profile" | "support" | "rewards";
+
+function isSameDay(iso: string): boolean {
+  const d = new Date(iso);
+  const n = new Date();
+  return d.getFullYear() === n.getFullYear() && d.getMonth() === n.getMonth() && d.getDate() === n.getDate();
+}
 
 export type UserPrefs = {
   notify_email: boolean;
@@ -1129,6 +1136,16 @@ function DashboardPage() {
         {active === "ai" && <AssistantTab />}
         {active === "support" && <SupportTab />}
         {active === "requests" && <RequestsTab requests={requests} />}
+        {active === "rewards" && userId && (
+          <RewardsTab
+            userId={userId}
+            earned={balance}
+            conversionsCount={conversions.filter(c => c.status === "ok").length}
+            requestsCount={requests.length}
+            todayConversions={conversions.filter(c => c.status === "ok" && isSameDay(c.createdAt)).length}
+            todayRequests={requests.filter(r => isSameDay(r.createdAt)).length}
+          />
+        )}
         {active === "profile" && (
           <ProfileTab
             userId={userId}
@@ -1213,6 +1230,7 @@ function DashboardPage() {
             { id: "stats", key: "nav_stats", Icon: BarChart3 },
             { id: "payouts", key: "nav_payouts", Icon: Wallet },
             { id: "ai", key: "nav_ai", Icon: Sparkles },
+            { id: "rewards", key: "nav_rewards", Icon: Trophy },
             { id: "support", key: "nav_support", Icon: Headphones },
           ] as const
         ).map(({ id, key, Icon }) => (

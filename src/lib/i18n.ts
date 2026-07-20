@@ -9,6 +9,7 @@ const DICT: Record<string, { ru: string; en: string }> = {
   nav_payouts: { ru: "Выплаты", en: "Payouts" },
   nav_ai: { ru: "AI", en: "AI" },
   nav_support: { ru: "Помощь", en: "Help" },
+  nav_rewards: { ru: "Награды", en: "Rewards" },
   // profile cards
   card_notifications: { ru: "Уведомления", en: "Notifications" },
   card_appearance: { ru: "Оформление", en: "Appearance" },
