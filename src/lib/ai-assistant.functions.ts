@@ -109,18 +109,19 @@ export const getUserSnapshot = createServerFn({ method: "GET" })
 
 async function moderateQuery(text: string): Promise<{ flagged: boolean; category: "illegal" | "offtopic" | "ok"; reason: string }> {
   const sys =
-    `Ты — модератор чата AI-наставника CPA-сети КВАНТ. Классифицируй ПОСЛЕДНИЙ вопрос пользователя. ` +
+    `Ты — лёгкий модератор чата AI-наставника CPA-сети КВАНТ. Классифицируй ПОСЛЕДНИЙ вопрос пользователя. ` +
     `Верни СТРОГО JSON без пояснений в формате: {"category":"illegal|offtopic|ok","reason":"кратко на русском"}.\n` +
-    `- "illegal" — если запрос про противозаконное (наркотики, оружие, взлом, мошенничество, обход законов, экстремизм, вред людям, кража данных и т.п.).\n` +
-    `- "offtopic" — если запрос НЕ относится к арбитражу трафика, CPA, партнёрским сетям, офферам, лидам, рекламе, аналитике, доходу партнёра или платформе КВАНТ.\n` +
-    `- "ok" — если это нормальный рабочий вопрос по теме.`;
+    `- "illegal" — только если запрос про противозаконное (наркотики, оружие, взлом, мошенничество, обход законов, экстремизм, вред людям, кража данных, шантаж, терроризм и т.п.).\n` +
+    `- "offtopic" — если запрос явно НЕ связан с арбитражем трафика, CPA, маркетингом, рекламой, трафиком, лидами, клиентами, заработком онлайн, офферами, аналитикой, креативами, источниками трафика, воронкой продаж, платформой КВАНТ или бизнесом в целом.\n` +
+    `- "ok" — всё остальное: в том числе "как привлечь человека/клиента", "где взять трафик", "как настроить рекламу", "какой оффер лучше", "как поднять CR", "как масштабироваться", "какие креативы использовать", вопросы по выплатам, конверсиям, статистике и работе в КВАНТ.`;
   try {
     const raw = await callLovableAI(sys, [{ role: "user", content: text.slice(0, 2000) }]);
     const m = raw.match(/\{[\s\S]*\}/);
     if (!m) return { flagged: false, category: "ok", reason: "" };
     const parsed = JSON.parse(m[0]) as { category?: string; reason?: string };
     const cat = parsed.category === "illegal" || parsed.category === "offtopic" ? parsed.category : "ok";
-    return { flagged: cat !== "ok", category: cat as any, reason: parsed.reason ?? "" };
+    // Сообщаем админам только о явно противозаконных запросах; оффтопик просто отклоняем.
+    return { flagged: cat === "illegal", category: cat as any, reason: parsed.reason ?? "" };
   } catch {
     return { flagged: false, category: "ok", reason: "" };
   }
