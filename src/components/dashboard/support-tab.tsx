@@ -252,11 +252,19 @@ export function TicketView({
     const body = text.trim();
     const { data, error } = await supabase.from("support_messages").insert({
       ticket_id: ticket.id, author_id: meId, from_admin: isAdmin, text: body,
-    }).select("*").single();
+    }).select("*").maybeSingle();
     setBusy(false);
     if (error) { setErr(error.message); return; }
     setText("");
-    if (data) setMessages((prev) => prev.some((x) => x.id === data.id) ? prev : [...prev, data as SupportMessage]);
+    if (data) {
+      setMessages((prev) => prev.some((x) => x.id === data.id) ? prev : [...prev, data as SupportMessage]);
+    } else {
+      // RLS may hide RETURNING row for some paths — refetch full list as fallback
+      const { data: m } = await supabase
+        .from("support_messages").select("*")
+        .eq("ticket_id", ticket.id).order("created_at", { ascending: true });
+      if (m) setMessages(m as SupportMessage[]);
+    }
   }
 
   async function setStatus(status: "open" | "closed") {
