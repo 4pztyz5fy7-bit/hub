@@ -327,6 +327,7 @@ function OverviewTab() {
     setLoading(false);
   }, []);
   useEffect(() => { load(); }, [load]);
+  useRealtimeReload(["profiles","offers","payout_requests","conversions","user_roles"], load, "rt:overview");
 
   if (loading || !s) return <CenterLoader label="Загрузка метрик" />;
 
