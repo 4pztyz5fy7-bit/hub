@@ -53,6 +53,39 @@ export type Database = {
         }
         Relationships: []
       }
+      banners: {
+        Row: {
+          active: boolean
+          button_label: string
+          button_url: string
+          created_at: string
+          id: string
+          text: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          button_label?: string
+          button_url?: string
+          created_at?: string
+          id?: string
+          text?: string
+          title?: string
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          button_label?: string
+          button_url?: string
+          created_at?: string
+          id?: string
+          text?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       conversions: {
         Row: {
           amount: number
@@ -155,6 +188,33 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      news_posts: {
+        Row: {
+          content: string
+          created_at: string
+          id: string
+          published: boolean
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          content?: string
+          created_at?: string
+          id?: string
+          published?: boolean
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          id?: string
+          published?: boolean
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
       }
       notifications: {
         Row: {
