@@ -1410,6 +1410,25 @@ function RequestRowControls({ row, onReload }: { row: LinkRow; onReload: () => v
         />
       </label>
       <label className="block">
+        <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+          Цена за заказ, ₽ <span className="normal-case text-muted-foreground/70">(пусто = как в оффере)</span>
+        </span>
+        <input
+          type="number"
+          min={0}
+          step="0.01"
+          value={price}
+          onChange={(e) => setPrice(e.target.value.replace(/[^\d.]/g, ""))}
+          placeholder="напр. 3500"
+          className="mt-0.5 w-full rounded-lg border border-border bg-background px-3 py-1.5 text-sm outline-none focus:ring-2 focus:ring-primary/40"
+        />
+        {ordersNum > 0 && priceNum != null && priceNum > 0 && (
+          <span className="mt-1 block text-[10px] font-bold uppercase tracking-wider text-emerald-500">
+            К начислению: {(ordersNum * priceNum).toLocaleString("ru-RU")} ₽
+          </span>
+        )}
+      </label>
+      <label className="block">
         <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Партнёрская ссылка (её копирует пользователь)</span>
         <input
           type="url"
