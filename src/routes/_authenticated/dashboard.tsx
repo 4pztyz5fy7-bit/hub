@@ -2959,9 +2959,27 @@ function NotificationsSheet({
     if (!n.read) onToggleRead(n.id);
   };
   const selectedMeta = selected ? notifMeta(selected) : null;
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        if (selectedId) setSelectedId(null);
+        else onClose();
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [onClose, selectedId]);
   return (
-    <div className="fixed inset-0 z-50 flex items-end justify-center bg-foreground/40 backdrop-blur-sm sm:items-center">
-      <div className="animate-in-up relative flex max-h-[92vh] w-full max-w-[440px] flex-col overflow-hidden rounded-t-2xl border border-border bg-background sm:rounded-2xl">
+    <div
+      className="fixed inset-0 z-50 flex items-end justify-center bg-foreground/40 backdrop-blur-sm sm:items-center"
+      onClick={onClose}
+      role="button"
+      aria-label="Закрыть"
+    >
+      <div
+        onClick={(e) => e.stopPropagation()}
+        className="animate-in-up relative flex max-h-[92vh] w-full max-w-[440px] flex-col overflow-hidden rounded-t-2xl border border-border bg-background sm:rounded-2xl"
+      >
 
         <div className="flex items-center justify-between border-b border-border px-4 py-3">
           <div>
