@@ -2858,7 +2858,7 @@ function NotificationsSheet({
             return (
               <button
                 key={n.id}
-                onClick={() => onToggleRead(n.id)}
+                onClick={() => openNotif(n)}
                 className={`flex w-full items-start gap-3 p-4 text-left transition-colors hover:bg-accent/50 ${
                   n.read ? "opacity-70" : ""
                 }`}
