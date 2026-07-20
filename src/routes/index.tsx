@@ -164,24 +164,39 @@ function LandingPage() {
                 <span className="absolute inset-0 animate-ping rounded-full bg-emerald-500 opacity-75" />
                 <span className="relative inline-flex size-2 rounded-full bg-emerald-500" />
               </span>
-              <span className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground">Живая лента конверсий</span>
+              <span className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground">Живая лента действий</span>
               <span className="ml-auto text-[11px] text-muted-foreground">обновление в реальном времени</span>
             </div>
             <div className="relative overflow-hidden">
               {tickerItems.length > 0 ? (
-                <div className="flex animate-[marquee_40s_linear_infinite] gap-8 whitespace-nowrap py-3 px-4 text-sm">
-                  {tickerItems.map((t) => (
-                    <span key={t.key} className="inline-flex items-center gap-2 text-muted-foreground">
-                      <span className="font-bold text-foreground">{t.who}</span>
-                      <span>→</span>
-                      <span>{t.offer}</span>
-                      <span className="rounded-md bg-emerald-500/15 px-2 py-0.5 text-xs font-bold text-emerald-500">+{formatRub(t.amount)}</span>
-                    </span>
-                  ))}
+                <div className="flex animate-[marquee_50s_linear_infinite] gap-8 whitespace-nowrap py-3 px-4 text-sm">
+                  {tickerItems.map((t) => {
+                    const dot =
+                      t.kind === "conversion" ? "bg-emerald-500"
+                      : t.kind === "payout" ? "bg-primary"
+                      : t.kind === "signup" ? "bg-sky-500"
+                      : t.kind === "offer" ? "bg-amber-500"
+                      : "bg-muted-foreground";
+                    const badge =
+                      t.kind === "conversion" ? "bg-emerald-500/15 text-emerald-500"
+                      : "bg-primary/15 text-primary";
+                    return (
+                      <span key={t.key} className="inline-flex items-center gap-2 text-muted-foreground">
+                        <span className={`size-1.5 rounded-full ${dot}`} />
+                        <span className="font-bold text-foreground">{t.who}</span>
+                        <span>{t.text}</span>
+                        {typeof t.amount === "number" && t.amount > 0 && (
+                          <span className={`rounded-md px-2 py-0.5 text-xs font-bold ${badge}`}>
+                            +{formatRub(t.amount)}
+                          </span>
+                        )}
+                      </span>
+                    );
+                  })}
                 </div>
               ) : (
                 <div className="px-4 py-4 text-center text-xs text-muted-foreground">
-                  Первые конверсии появятся здесь, как только партнёры начнут работу.
+                  Первые действия появятся здесь, как только партнёры начнут работу.
                 </div>
               )}
             </div>
