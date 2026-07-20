@@ -33,6 +33,8 @@ export const Route = createFileRoute("/")({
       { name: "twitter:card", content: "summary_large_image" },
     ],
   }),
+  loader: () => getLandingStats().catch(() => null),
+  staleTime: 15_000,
   component: LandingPage,
 });
 
@@ -48,7 +50,8 @@ function LandingPage() {
   const [initialMode, setInitialMode] = useState<Mode>("login");
   const [menuOpen, setMenuOpen] = useState(false);
 
-  const [stats, setStats] = useState<LandingStats | null>(null);
+  const initialStats = Route.useLoaderData() as LandingStats | null;
+  const [stats, setStats] = useState<LandingStats | null>(initialStats);
 
   useEffect(() => {
     let cancelled = false;
@@ -62,10 +65,11 @@ function LandingPage() {
   }, [navigate]);
 
   useEffect(() => {
+    if (initialStats) return; // SSR already delivered
     let cancelled = false;
     getLandingStats().then((s) => { if (!cancelled) setStats(s); }).catch(() => {});
     return () => { cancelled = true; };
-  }, []);
+  }, [initialStats]);
 
   const openAuth = (m: Mode) => { setInitialMode(m); setAuthOpen(true); setMenuOpen(false); };
 

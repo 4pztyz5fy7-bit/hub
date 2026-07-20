@@ -585,6 +585,7 @@ export type Database = {
           unlocked_name: string
         }[]
       }
+      get_landing_stats: { Args: never; Returns: Json }
       get_leaderboard: {
         Args: { _limit?: number; _period?: string }
         Returns: {

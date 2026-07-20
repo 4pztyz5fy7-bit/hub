@@ -1,4 +1,5 @@
 import { createServerFn } from "@tanstack/react-start";
+import { setResponseHeader } from "@tanstack/react-start/server";
 
 export type LandingOffer = {
   id: string;
@@ -38,64 +39,51 @@ function maskName(input: string | null | undefined): string {
   return initial ? `${short} ${initial}.` : short;
 }
 
+type RpcResult = {
+  partners: number;
+  offersCount: number;
+  totalPaid: number;
+  completedConversions: number;
+  topOffers: Array<{ id: string; name: string; category: string | null; payout: string; cr: number | null; epc: number | null; is_new: boolean | null }>;
+  recentConv: Array<{ offer_name: string; amount: number; user_id: string | null; created_at: string }>;
+  recentSignups: Array<{ id: string; display_name: string | null; email: string | null; created_at: string }>;
+  recentOffers: Array<{ name: string; created_at: string }>;
+  recentPayouts: Array<{ amount: number; user_id: string | null; created_at: string }>;
+  recentReqs: Array<{ offer_name: string; user_id: string | null; status: string; orders_count: number | null; created_at: string }>;
+  names: Record<string, { display_name: string | null; email: string | null }>;
+};
+
 export const getLandingStats = createServerFn({ method: "GET" }).handler(
   async (): Promise<LandingStats> => {
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    // Short edge cache: fast repeat visits + stale-while-revalidate for freshness.
+    try {
+      setResponseHeader("cache-control", "public, max-age=15, s-maxage=30, stale-while-revalidate=120");
+    } catch { /* ignore in non-request contexts */ }
 
-    const [
-      partnersRes, offersActiveRes, topOffersRes, paidRes, completedRes,
-      recentConvRes, recentSignupsRes, recentOffersRes, recentPayoutsRes, recentReqRes,
-    ] = await Promise.all([
-      supabaseAdmin.from("profiles").select("id", { count: "exact", head: true }),
-      supabaseAdmin.from("offers").select("id", { count: "exact", head: true }).eq("active", true),
-      supabaseAdmin
-        .from("offers")
-        .select("id,name,category,payout,cr,epc,is_new")
-        .eq("active", true)
-        .order("epc", { ascending: false })
-        .limit(6),
-      supabaseAdmin.from("payout_requests").select("amount").eq("status", "paid"),
-      supabaseAdmin.from("conversions").select("amount").eq("status", "ok"),
-      supabaseAdmin
-        .from("conversions")
-        .select("offer_name,amount,user_id,created_at")
-        .eq("status", "ok")
-        .order("created_at", { ascending: false })
-        .limit(10),
-      supabaseAdmin
-        .from("profiles")
-        .select("id,display_name,email,created_at")
-        .order("created_at", { ascending: false })
-        .limit(8),
-      supabaseAdmin
-        .from("offers")
-        .select("name,created_at")
-        .eq("active", true)
-        .order("created_at", { ascending: false })
-        .limit(5),
-      supabaseAdmin
-        .from("payout_requests")
-        .select("amount,user_id,created_at")
-        .eq("status", "paid")
-        .order("created_at", { ascending: false })
-        .limit(8),
-      supabaseAdmin
-        .from("link_requests")
-        .select("offer_name,user_id,status,orders_count,created_at")
-        .order("created_at", { ascending: false })
-        .limit(12),
-    ]);
+    const { createClient } = await import("@supabase/supabase-js");
+    const key = process.env.SUPABASE_PUBLISHABLE_KEY!;
+    const supa = createClient(process.env.SUPABASE_URL!, key, {
+      auth: { persistSession: false, autoRefreshToken: false },
+      global: {
+        fetch: (input, init) => {
+          const h = new Headers(init?.headers);
+          if (key.startsWith("sb_") && h.get("Authorization") === `Bearer ${key}`) h.delete("Authorization");
+          h.set("apikey", key);
+          return fetch(input, { ...init, headers: h });
+        },
+      },
+    });
 
-    const partners = partnersRes.count ?? 0;
-    const offersCount = offersActiveRes.count ?? 0;
+    const { data, error } = await supa.rpc("get_landing_stats");
+    if (error || !data) {
+      return {
+        partners: 0, totalPaid: 0, completedConversions: 0,
+        offersCount: 0, avgEpc: 0, offers: [], ticker: [],
+      };
+    }
+    const r = data as unknown as RpcResult;
 
-    const totalPaid =
-      (paidRes.data ?? []).reduce((s, r) => s + Number(r.amount ?? 0), 0) +
-      (completedRes.data ?? []).reduce((s, r) => s + Number(r.amount ?? 0), 0);
-
-    const completedConversions = completedRes.data?.length ?? 0;
-
-    const offers: LandingOffer[] = (topOffersRes.data ?? []).map((o) => ({
+    const offers: LandingOffer[] = (r.topOffers ?? []).map((o) => ({
       id: o.id,
       name: o.name,
       category: o.category,
@@ -105,87 +93,31 @@ export const getLandingStats = createServerFn({ method: "GET" }).handler(
       is_new: !!o.is_new,
     }));
 
-    const avgEpc =
-      offers.length > 0
-        ? Math.round(offers.reduce((s, o) => s + o.epc, 0) / offers.length)
-        : 0;
+    const avgEpc = offers.length > 0
+      ? Math.round(offers.reduce((s, o) => s + o.epc, 0) / offers.length)
+      : 0;
 
-    // Gather user names for masking
-    const userIds = Array.from(
-      new Set(
-        [
-          ...(recentConvRes.data ?? []).map((r) => r.user_id),
-          ...(recentPayoutsRes.data ?? []).map((r) => r.user_id),
-          ...(recentReqRes.data ?? []).map((r) => r.user_id),
-        ].filter(Boolean) as string[],
-      ),
-    );
-    const nameMap = new Map<string, string>();
-    if (userIds.length > 0) {
-      const { data: profs } = await supabaseAdmin
-        .from("profiles")
-        .select("id,display_name,email")
-        .in("id", userIds);
-      for (const p of profs ?? []) {
-        nameMap.set(p.id, maskName(p.display_name || p.email?.split("@")[0] || null));
-      }
-    }
-    const nameOf = (id: string | null | undefined) =>
-      (id && nameMap.get(id)) || "Партнёр";
+    const nameOf = (id: string | null | undefined) => {
+      if (!id) return "Партнёр";
+      const p = r.names?.[id];
+      return maskName(p?.display_name || p?.email?.split("@")[0] || null);
+    };
 
     const raw: LandingTickerItem[] = [];
-
-    for (const r of recentConvRes.data ?? []) {
-      raw.push({
-        kind: "conversion",
-        who: nameOf(r.user_id),
-        text: `закрыл сделку по «${r.offer_name}»`,
-        amount: Number(r.amount ?? 0),
-        at: r.created_at,
-      });
-    }
-    for (const p of recentSignupsRes.data ?? []) {
-      raw.push({
-        kind: "signup",
-        who: maskName(p.display_name || p.email?.split("@")[0] || null),
-        text: "присоединился к сети",
-        at: p.created_at,
-      });
-    }
-    for (const o of recentOffersRes.data ?? []) {
-      raw.push({
-        kind: "offer",
-        who: "КВАНТ",
-        text: `запустил новый оффер «${o.name}»`,
-        at: o.created_at,
-      });
-    }
-    for (const p of recentPayoutsRes.data ?? []) {
-      raw.push({
-        kind: "payout",
-        who: nameOf(p.user_id),
-        text: "получил выплату",
-        amount: Number(p.amount ?? 0),
-        at: p.created_at,
-      });
-    }
-    for (const r of recentReqRes.data ?? []) {
+    for (const c of r.recentConv ?? []) raw.push({ kind: "conversion", who: nameOf(c.user_id), text: `закрыл сделку по «${c.offer_name}»`, amount: Number(c.amount ?? 0), at: c.created_at });
+    for (const p of r.recentSignups ?? []) raw.push({ kind: "signup", who: maskName(p.display_name || p.email?.split("@")[0] || null), text: "присоединился к сети", at: p.created_at });
+    for (const o of r.recentOffers ?? []) raw.push({ kind: "offer", who: "КВАНТ", text: `запустил новый оффер «${o.name}»`, at: o.created_at });
+    for (const p of r.recentPayouts ?? []) raw.push({ kind: "payout", who: nameOf(p.user_id), text: "получил выплату", amount: Number(p.amount ?? 0), at: p.created_at });
+    for (const req of r.recentReqs ?? []) {
       const label =
-        r.status === "finished" || r.status === "paid"
-          ? `завершил заявку «${r.offer_name}»`
-          : r.status === "completed"
-            ? `выполнил ${r.orders_count ?? 0} заказ(ов) по «${r.offer_name}»`
-            : r.status === "in_progress"
-              ? `взял в работу оффер «${r.offer_name}»`
+        req.status === "finished" || req.status === "paid"
+          ? `завершил заявку «${req.offer_name}»`
+          : req.status === "completed"
+            ? `выполнил ${req.orders_count ?? 0} заказ(ов) по «${req.offer_name}»`
+            : req.status === "in_progress"
+              ? `взял в работу оффер «${req.offer_name}»`
               : null;
-      if (label) {
-        raw.push({
-          kind: "request",
-          who: nameOf(r.user_id),
-          text: label,
-          at: r.created_at,
-        });
-      }
+      if (label) raw.push({ kind: "request", who: nameOf(req.user_id), text: label, at: req.created_at });
     }
 
     const ticker = raw
@@ -194,10 +126,10 @@ export const getLandingStats = createServerFn({ method: "GET" }).handler(
       .slice(0, 20);
 
     return {
-      partners,
-      totalPaid,
-      completedConversions,
-      offersCount,
+      partners: r.partners ?? 0,
+      totalPaid: Number(r.totalPaid ?? 0),
+      completedConversions: r.completedConversions ?? 0,
+      offersCount: r.offersCount ?? 0,
       avgEpc,
       offers,
       ticker,
