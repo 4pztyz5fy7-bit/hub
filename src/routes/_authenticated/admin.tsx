@@ -1079,7 +1079,37 @@ function RequestsTab() {
   }, [rows, statusF, q, profiles]);
 
   const del = async (id: string) => { if (!confirm("Удалить заявку?")) return; await supabase.from("link_requests").delete().eq("id", id); if (openId === id) setOpenId(null); load(); };
-  const bulk = async (status: LinkRow["status"]) => { if (!selected.size) return; await supabase.from("link_requests").update({ status }).in("id", Array.from(selected)); load(); };
+  const bulk = async (status: LinkRow["status"]) => {
+    if (!selected.size) return;
+    const ids = Array.from(selected);
+    if (status === "paid") {
+      const targets = rows.filter((r) => selected.has(r.id) && r.status !== "paid");
+      const offerIds = Array.from(new Set(targets.map((t) => t.offer_id).filter(Boolean))) as string[];
+      const offersMap = new Map<string, { payout: string; payout_min: number | null; payout_max: number | null }>();
+      if (offerIds.length) {
+        const { data: offs } = await supabase.from("offers").select("id, payout, payout_min, payout_max").in("id", offerIds);
+        (offs ?? []).forEach((o: any) => offersMap.set(o.id, o));
+      }
+      await supabase.from("link_requests").update({ status }).in("id", ids);
+      const convs: any[] = [];
+      const notes: any[] = [];
+      for (const t of targets) {
+        const off = t.offer_id ? offersMap.get(t.offer_id) : null;
+        const per = off ? Number(String(off.payout ?? "").replace(/[^\d.]/g, "")) || Number(off.payout_max) || Number(off.payout_min) || 0 : 0;
+        const qty = Math.max(1, t.orders_count || 1);
+        const amount = per * qty;
+        if (amount > 0) {
+          convs.push({ user_id: t.user_id, offer_id: t.offer_id, offer_name: t.offer_name, amount, status: "paid" });
+          notes.push({ user_id: t.user_id, kind: "payout", title: "Начисление за оффер", body: `${t.offer_name}: начислено ${amount.toLocaleString("ru-RU")} ₽`, amount: String(amount), status: "paid" });
+        }
+      }
+      if (convs.length) await supabase.from("conversions").insert(convs);
+      if (notes.length) await supabase.from("notifications").insert(notes);
+    } else {
+      await supabase.from("link_requests").update({ status }).in("id", ids);
+    }
+    load();
+  };
   const bulkDel = async () => { if (!selected.size || !confirm(`Удалить ${selected.size} заявок?`)) return; await supabase.from("link_requests").delete().in("id", Array.from(selected)); load(); };
   const toggleSel = (id: string) => setSelected((s) => { const n = new Set(s); n.has(id) ? n.delete(id) : n.add(id); return n; });
 
@@ -1293,7 +1323,48 @@ function RequestRowControls({ row, onReload }: { row: LinkRow; onReload: () => v
 
   const change = async (patch: Partial<Pick<LinkRow, "status" | "link" | "note" | "orders_count">>) => {
     setSaving(true);
+    const becamePaid = patch.status === "paid" && row.status !== "paid";
     await supabase.from("link_requests").update(patch).eq("id", row.id);
+    if (becamePaid) {
+      try {
+        let payoutStr: string | null = null;
+        let offerId: string | null = row.offer_id;
+        if (row.offer_id) {
+          const { data: off } = await supabase
+            .from("offers")
+            .select("id, payout, payout_min, payout_max")
+            .eq("id", row.offer_id)
+            .maybeSingle();
+          if (off) {
+            offerId = off.id;
+            const num = Number(String(off.payout ?? "").replace(/[^\d.]/g, "")) || 0;
+            payoutStr = String(num || off.payout_max || off.payout_min || 0);
+          }
+        }
+        const perOrder = Number(String(payoutStr ?? "0").replace(/[^\d.]/g, "")) || 0;
+        const qty = Math.max(1, Number(patch.orders_count ?? row.orders_count) || 1);
+        const amount = perOrder * qty;
+        if (amount > 0) {
+          await supabase.from("conversions").insert({
+            user_id: row.user_id,
+            offer_id: offerId,
+            offer_name: row.offer_name,
+            amount,
+            status: "paid",
+          });
+          await supabase.from("notifications").insert({
+            user_id: row.user_id,
+            kind: "payout",
+            title: "Начисление за оффер",
+            body: `${row.offer_name}: начислено ${amount.toLocaleString("ru-RU")} ₽`,
+            amount: String(amount),
+            status: "paid",
+          });
+        }
+      } catch (e) {
+        console.error("credit on paid failed", e);
+      }
+    }
     setSaving(false);
     setSavedFlash(true);
     setTimeout(() => setSavedFlash(false), 1200);
