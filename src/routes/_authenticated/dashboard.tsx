@@ -655,13 +655,18 @@ function DashboardPage() {
       const uid = u.user.id;
       setUserId(uid);
 
-      const [role, offersRes, profileRes, payoutsRes, reqsRes, convRes, notifRes] = await Promise.all([
+      // Phase 1: critical for first paint — profile, role, offers.
+      const [role, offersRes, profileRes] = await Promise.all([
         supabase.from("user_roles").select("role").eq("user_id", uid).eq("role", "admin").maybeSingle(),
         supabase.from("offers").select("*").eq("active", true).order("created_at", { ascending: false }),
         supabase.from("profiles").select("bank,display_name,avatar_url,email,settings,blocked,blocked_reason").eq("id", uid).maybeSingle(),
-        supabase.from("payout_requests").select("*").eq("user_id", uid).order("created_at", { ascending: false }),
-        supabase.from("link_requests").select("*").eq("user_id", uid).order("created_at", { ascending: false }),
-        supabase.from("conversions").select("*").eq("user_id", uid).order("created_at", { ascending: false }),
+      ]);
+
+      // Phase 2: history — kicked off in parallel with Phase 1, awaited after paint.
+      const historyPromise = Promise.all([
+        supabase.from("payout_requests").select("*").eq("user_id", uid).order("created_at", { ascending: false }).limit(200),
+        supabase.from("link_requests").select("*").eq("user_id", uid).order("created_at", { ascending: false }).limit(500),
+        supabase.from("conversions").select("*").eq("user_id", uid).order("created_at", { ascending: false }).limit(500),
         supabase.from("notifications").select("*").eq("user_id", uid).order("created_at", { ascending: false }).limit(50),
       ]);
       if (cancelled) return;
