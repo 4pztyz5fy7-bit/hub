@@ -59,6 +59,7 @@ import {
   ThumbsDown,
   Eye,
   EyeOff,
+  Medal,
   type LucideIcon,
 } from "lucide-react";
 
@@ -1388,6 +1389,158 @@ function sumToday(conversions: Conversion[]): { income: number; count: number } 
 }
 
 
+type AchRow = {
+  id: string;
+  code: string;
+  name: string;
+  description: string;
+  icon: string;
+  tier: "bronze" | "silver" | "gold" | "platinum";
+  metric: "earned" | "conversions" | "requests" | "streak" | "leaderboard";
+  threshold: number;
+  sort_order: number;
+};
+
+const ACH_ICONS: Record<string, LucideIcon> = {
+  trophy: Trophy, rocket: Rocket, sparkles: Sparkles, target: Target,
+  coins: Coins, gem: Gem, crown: Crown, zap: Zap, medal: Medal,
+};
+
+function AchievementsProgress({
+  earned,
+  conversionsCount,
+  requestsCount,
+}: {
+  earned: number;
+  conversionsCount: number;
+  requestsCount: number;
+}) {
+  const [achievements, setAchievements] = useState<AchRow[]>([]);
+  const [unlockedIds, setUnlockedIds] = useState<Set<string>>(new Set());
+  const [streak, setStreak] = useState(0);
+
+  useEffect(() => {
+    let cancelled = false;
+    let channel: ReturnType<typeof supabase.channel> | null = null;
+
+    (async () => {
+      const { data: u } = await supabase.auth.getUser();
+      const uid = u.user?.id;
+      const [{ data: ach }, { data: ua }, { data: prof }] = await Promise.all([
+        supabase.from("achievements").select("*").order("sort_order"),
+        uid ? supabase.from("user_achievements").select("achievement_id").eq("user_id", uid)
+            : Promise.resolve({ data: [] as { achievement_id: string }[] }),
+        uid ? supabase.from("profiles").select("streak_days").eq("id", uid).maybeSingle()
+            : Promise.resolve({ data: null as null | { streak_days: number | null } }),
+      ]);
+      if (cancelled) return;
+      setAchievements((ach ?? []) as AchRow[]);
+      setUnlockedIds(new Set(((ua as { achievement_id: string }[] | null) ?? []).map((r) => r.achievement_id)));
+      setStreak(prof?.streak_days ?? 0);
+
+      if (uid) {
+        channel = supabase
+          .channel(`ua_progress_${uid}`)
+          .on("postgres_changes", { event: "INSERT", schema: "public", table: "user_achievements", filter: `user_id=eq.${uid}` },
+            (payload) => {
+              const id = (payload.new as { achievement_id?: string })?.achievement_id;
+              if (id) setUnlockedIds((s) => new Set(s).add(id));
+            })
+          .on("postgres_changes", { event: "UPDATE", schema: "public", table: "profiles", filter: `id=eq.${uid}` },
+            (payload) => {
+              const s = (payload.new as { streak_days?: number })?.streak_days;
+              if (typeof s === "number") setStreak(s);
+            })
+          .subscribe();
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+      if (channel) supabase.removeChannel(channel);
+    };
+  }, []);
+
+  const rows = useMemo(() => {
+    const values = { earned, conversions: conversionsCount, requests: requestsCount, streak };
+    return achievements.map((a) => {
+      const cur = a.metric === "earned" ? values.earned
+        : a.metric === "conversions" ? values.conversions
+        : a.metric === "requests" ? values.requests
+        : a.metric === "streak" ? values.streak : 0;
+      const pct = Math.max(0, Math.min(1, cur / Math.max(1, a.threshold)));
+      return { a, cur, pct, unlocked: unlockedIds.has(a.id) };
+    });
+  }, [achievements, earned, conversionsCount, requestsCount, streak, unlockedIds]);
+
+  // Next 4 uncompleted, closest to done first; fallback: 4 latest unlocked
+  const nextRows = useMemo(() => {
+    const pending = rows.filter((r) => !r.unlocked).sort((a, b) => b.pct - a.pct).slice(0, 4);
+    if (pending.length >= 3) return pending;
+    const done = rows.filter((r) => r.unlocked).slice(0, 4 - pending.length);
+    return [...pending, ...done];
+  }, [rows]);
+
+  if (achievements.length === 0) return null;
+
+  const unlockedCount = rows.filter((r) => r.unlocked).length;
+
+  const fmtMetric = (a: AchRow, cur: number) => {
+    const t = a.threshold;
+    if (a.metric === "earned") return `${fmt(Math.min(cur, t))} / ${fmt(t)} ₽`;
+    if (a.metric === "streak") return `${Math.min(cur, t)} / ${t} дн.`;
+    if (a.metric === "conversions") return `${Math.min(cur, t)} / ${t} конв.`;
+    if (a.metric === "requests") return `${Math.min(cur, t)} / ${t} заявок`;
+    return `${Math.min(cur, t)} / ${t}`;
+  };
+
+  return (
+    <section className="animate-in-up" style={{ animationDelay: "150ms" }}>
+      <div className="mb-2 flex items-center justify-between">
+        <h3 className="text-[10px] font-bold uppercase tracking-[0.14em] text-muted-foreground">
+          Прогресс достижений
+        </h3>
+        <span className="font-mono text-[10px] text-muted-foreground">
+          {unlockedCount}/{achievements.length}
+        </span>
+      </div>
+      <div className="divide-y divide-border overflow-hidden rounded-xl border border-border bg-card">
+        {nextRows.map(({ a, cur, pct, unlocked }) => {
+          const Icon = ACH_ICONS[a.icon] ?? Trophy;
+          return (
+            <div key={a.id} className="flex items-center gap-3 p-3">
+              <div className={`grid size-9 shrink-0 place-items-center rounded-lg border ${
+                unlocked
+                  ? "border-foreground/30 bg-foreground text-background"
+                  : "border-border bg-secondary/60 text-muted-foreground"
+              }`}>
+                {unlocked ? <CheckCircle2 className="size-4" /> : <Icon className="size-4" />}
+              </div>
+              <div className="min-w-0 flex-1">
+                <div className="flex items-center justify-between gap-2">
+                  <p className="truncate text-[12px] font-bold">{a.name}</p>
+                  <span className="shrink-0 font-mono text-[10px] tabular-nums text-muted-foreground">
+                    {unlocked ? "100%" : `${Math.round(pct * 100)}%`}
+                  </span>
+                </div>
+                <div className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-secondary">
+                  <div
+                    className="h-full rounded-full bg-foreground transition-all"
+                    style={{ width: `${unlocked ? 100 : Math.round(pct * 100)}%` }}
+                  />
+                </div>
+                <p className="mt-1 font-mono text-[10px] text-muted-foreground">
+                  {fmtMetric(a, cur)}
+                </p>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </section>
+  );
+}
+
 function InfoTab({
   balance,
   available,
@@ -1608,6 +1761,15 @@ function InfoTab({
           </div>
         </div>
       </section>
+
+      {/* ============ Прогресс достижений ============ */}
+      <AchievementsProgress
+        earned={balance}
+        conversionsCount={conversions.filter((c) => c.status === "ok").length}
+        requestsCount={requests.length}
+      />
+
+
 
       {/* ============ Активность: табы ============ */}
       <section className="animate-in-up" style={{ animationDelay: "180ms" }}>
