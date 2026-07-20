@@ -387,13 +387,14 @@ function UsersTab() {
   const [busy, setBusy] = useState<string | null>(null);
   const [q, setQ] = useState("");
   const [roleFilter, setRoleFilter] = useState<"all" | "admin" | "user">("all");
-  const [sort, setSort] = useState<"new" | "old" | "name">("new");
+  const [statusFilter, setStatusFilter] = useState<"all" | "blocked" | "warned" | "ok">("all");
+  const [sort, setSort] = useState<"new" | "old" | "name" | "warnings">("new");
   const [detail, setDetail] = useState<Profile | null>(null);
 
   const load = useCallback(async () => {
     setLoading(true);
     const [{ data: profiles }, { data: rr }] = await Promise.all([
-      supabase.from("profiles").select("id,email,display_name,telegram,created_at").order("created_at", { ascending: false }),
+      supabase.from("profiles").select("id,email,display_name,telegram,created_at,blocked,blocked_reason,blocked_at,warnings_count").order("created_at", { ascending: false }),
       supabase.from("user_roles").select("user_id,role"),
     ]);
     setRows((profiles ?? []) as Profile[]);
@@ -412,13 +413,17 @@ function UsersTab() {
       const isAdmin = roles[p.id]?.has("admin") ?? false;
       if (roleFilter === "admin" && !isAdmin) return false;
       if (roleFilter === "user" && isAdmin) return false;
+      if (statusFilter === "blocked" && !p.blocked) return false;
+      if (statusFilter === "warned" && !((p.warnings_count ?? 0) > 0)) return false;
+      if (statusFilter === "ok" && (p.blocked || (p.warnings_count ?? 0) > 0)) return false;
       return true;
     });
     if (sort === "new") list = [...list].sort((a, b) => b.created_at.localeCompare(a.created_at));
     if (sort === "old") list = [...list].sort((a, b) => a.created_at.localeCompare(b.created_at));
     if (sort === "name") list = [...list].sort((a, b) => (a.display_name || a.email || "").localeCompare(b.display_name || b.email || ""));
+    if (sort === "warnings") list = [...list].sort((a, b) => (b.warnings_count ?? 0) - (a.warnings_count ?? 0));
     return list;
-  }, [rows, roles, q, roleFilter, sort]);
+  }, [rows, roles, q, roleFilter, statusFilter, sort]);
 
   const toggleAdmin = async (userId: string, makeAdmin: boolean) => {
     setBusy(userId);
@@ -429,8 +434,17 @@ function UsersTab() {
 
   if (loading) return <CenterLoader label="Загрузка пользователей" />;
 
+  const totalBlocked = rows.filter((p) => p.blocked).length;
+  const totalWarned = rows.filter((p) => (p.warnings_count ?? 0) > 0).length;
+
   return (
     <div className="space-y-2">
+      <div className="grid grid-cols-2 gap-2 md:grid-cols-4">
+        <MiniStat label="Всего" value={rows.length} tone="primary" />
+        <MiniStat label="Админов" value={rows.filter((p) => roles[p.id]?.has("admin")).length} tone="primary" />
+        <MiniStat label="С предупр." value={totalWarned} tone="warning" />
+        <MiniStat label="Заблок." value={totalBlocked} tone="danger" />
+      </div>
       <div className="flex flex-wrap items-center gap-2">
         <div className="relative flex-1 min-w-[180px]">
           <Search className="pointer-events-none absolute left-2.5 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground" />
@@ -441,9 +455,17 @@ function UsersTab() {
           className="rounded-lg border border-border bg-background px-2 py-1.5 text-xs">
           <option value="all">Все роли</option><option value="admin">Только админы</option><option value="user">Только пользователи</option>
         </select>
+        <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value as any)}
+          className="rounded-lg border border-border bg-background px-2 py-1.5 text-xs">
+          <option value="all">Любой статус</option>
+          <option value="ok">Без нарушений</option>
+          <option value="warned">С предупреждениями</option>
+          <option value="blocked">Заблокированные</option>
+        </select>
         <select value={sort} onChange={(e) => setSort(e.target.value as any)}
           className="rounded-lg border border-border bg-background px-2 py-1.5 text-xs">
-          <option value="new">Сначала новые</option><option value="old">Сначала старые</option><option value="name">По имени</option>
+          <option value="new">Сначала новые</option><option value="old">Сначала старые</option>
+          <option value="name">По имени</option><option value="warnings">По предупр.</option>
         </select>
         <button onClick={() => exportCSV("users", filtered.map((p) => ({ ...p, is_admin: roles[p.id]?.has("admin") ? 1 : 0 })))}
           className="inline-flex items-center gap-1 rounded-lg border border-border px-2 py-1.5 text-[11px] font-bold hover:bg-accent">
@@ -457,13 +479,18 @@ function UsersTab() {
 
       {filtered.map((p) => {
         const isAdmin = roles[p.id]?.has("admin") ?? false;
+        const warns = p.warnings_count ?? 0;
         return (
-          <div key={p.id} className="flex items-center justify-between gap-3 rounded-xl border border-border bg-card p-3">
+          <div key={p.id} className={`flex items-center justify-between gap-3 rounded-xl border p-3 ${p.blocked ? "border-destructive/40 bg-destructive/5" : "border-border bg-card"}`}>
             <button onClick={() => setDetail(p)} className="min-w-0 flex-1 text-left">
-              <p className="truncate text-sm font-bold">{p.display_name || p.email || "Без имени"}</p>
+              <div className="flex flex-wrap items-center gap-1.5">
+                <p className="truncate text-sm font-bold">{p.display_name || p.email || "Без имени"}</p>
+                {isAdmin && <span className="rounded-full bg-primary/15 px-2 py-0.5 text-[9px] font-bold uppercase text-primary">admin</span>}
+                {p.blocked && <span className="inline-flex items-center gap-1 rounded-full bg-destructive/15 px-2 py-0.5 text-[9px] font-bold uppercase text-destructive"><Ban className="size-2.5" /> blocked</span>}
+                {warns > 0 && !p.blocked && <span className="rounded-full bg-[color:var(--warning)]/15 px-2 py-0.5 text-[9px] font-bold uppercase text-[color:var(--warning)]">⚠ {warns}</span>}
+              </div>
               <p className="truncate text-[11px] text-muted-foreground">{p.email} · {p.telegram || "без tg"} · {dt(p.created_at)}</p>
             </button>
-            {isAdmin && <span className="rounded-full bg-primary/15 px-2 py-0.5 text-[10px] font-bold uppercase text-primary">admin</span>}
             <button onClick={() => copy(p.email || "")} title="Копировать email" className="grid size-7 place-items-center rounded-md hover:bg-accent"><Copy className="size-3.5" /></button>
             <button disabled={busy === p.id} onClick={() => toggleAdmin(p.id, !isAdmin)}
               className={`rounded-lg border px-3 py-1.5 text-[11px] font-bold transition ${isAdmin ? "border-destructive/40 text-destructive hover:bg-destructive/10" : "border-primary/40 text-primary hover:bg-primary/10"}`}>
@@ -475,6 +502,16 @@ function UsersTab() {
       {filtered.length === 0 && <EmptyState text="Никого не нашли" />}
 
       {detail && <UserDetailSheet profile={detail} isAdmin={roles[detail.id]?.has("admin") ?? false} onClose={() => setDetail(null)} onChanged={load} />}
+    </div>
+  );
+}
+
+function MiniStat({ label, value, tone }: { label: string; value: number; tone: "primary" | "warning" | "danger" }) {
+  const cls = tone === "primary" ? "text-primary" : tone === "warning" ? "text-[color:var(--warning)]" : "text-destructive";
+  return (
+    <div className="rounded-xl border border-border bg-card p-2.5">
+      <p className={`text-lg font-black tabular-nums ${cls}`}>{fmt(value)}</p>
+      <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">{label}</p>
     </div>
   );
 }
