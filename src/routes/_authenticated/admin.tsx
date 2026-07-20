@@ -16,6 +16,28 @@ export const Route = createFileRoute("/_authenticated/admin")({
   component: AdminPage,
 });
 
+/* --------- Realtime helper: reload data on any change in tables --------- */
+function useRealtimeReload(tables: string[], reload: () => void, channelKey?: string) {
+  useEffect(() => {
+    const key = channelKey ?? `rt:${tables.join(",")}:${Math.random().toString(36).slice(2, 8)}`;
+    let timer: ReturnType<typeof setTimeout> | null = null;
+    const trigger = () => {
+      if (timer) clearTimeout(timer);
+      timer = setTimeout(() => reload(), 250);
+    };
+    let ch = supabase.channel(key);
+    for (const t of tables) {
+      ch = ch.on("postgres_changes", { event: "*", schema: "public", table: t }, trigger);
+    }
+    ch.subscribe();
+    return () => {
+      if (timer) clearTimeout(timer);
+      void supabase.removeChannel(ch);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [reload]);
+}
+
 /* =========================== TYPES =========================== */
 type TabId = "overview" | "users" | "offers" | "payouts" | "requests" | "conversions" | "broadcast" | "moderation" | "support" | "ai";
 
@@ -132,21 +154,33 @@ function AdminPage() {
   useEffect(() => {
     if (checking || accessError) return;
     let cancelled = false;
+    let uid: string | null = null;
     const load = async () => {
-      const { data: u } = await supabase.auth.getUser();
-      if (!u.user || cancelled) return;
-      setMeId(u.user.id);
+      if (!uid) {
+        const { data: u } = await supabase.auth.getUser();
+        if (!u.user || cancelled) return;
+        uid = u.user.id;
+        setMeId(uid);
+      }
       const { count } = await supabase
         .from("notifications")
         .select("id", { count: "exact", head: true })
-        .eq("user_id", u.user.id)
+        .eq("user_id", uid)
         .eq("kind", "moderation")
         .eq("read", false);
       if (!cancelled) setModerationUnread(count ?? 0);
     };
     void load();
-    const t = setInterval(() => void load(), 30000);
-    return () => { cancelled = true; clearInterval(t); };
+    let ch: ReturnType<typeof supabase.channel> | null = null;
+    (async () => {
+      const { data: u } = await supabase.auth.getUser();
+      if (!u.user || cancelled) return;
+      ch = supabase
+        .channel(`mod-bell:${u.user.id}`)
+        .on("postgres_changes", { event: "*", schema: "public", table: "notifications", filter: `user_id=eq.${u.user.id}` }, () => void load())
+        .subscribe();
+    })();
+    return () => { cancelled = true; if (ch) void supabase.removeChannel(ch); };
   }, [checking, accessError, tab]);
 
   const signOut = async () => { await supabase.auth.signOut(); navigate({ to: "/" }); };
@@ -305,6 +339,7 @@ function OverviewTab() {
     setLoading(false);
   }, []);
   useEffect(() => { load(); }, [load]);
+  useRealtimeReload(["profiles","offers","payout_requests","conversions","user_roles"], load, "rt:overview");
 
   if (loading || !s) return <CenterLoader label="Загрузка метрик" />;
 
@@ -366,6 +401,7 @@ function UsersTab() {
     setLoading(false);
   }, []);
   useEffect(() => { load(); }, [load]);
+  useRealtimeReload(["profiles","user_roles"], load, "rt:users");
 
   const filtered = useMemo(() => {
     const query = q.trim().toLowerCase();
@@ -522,6 +558,7 @@ function OffersTab() {
     setLoading(false); setSelected(new Set());
   }, []);
   useEffect(() => { load(); }, [load]);
+  useRealtimeReload(["offers"], load, "rt:offers");
 
   const tags = useMemo(() => Array.from(new Set(rows.map((r) => r.tag).filter(Boolean))), [rows]);
   const filtered = useMemo(() => {
@@ -960,6 +997,7 @@ function PayoutsTab() {
     setLoading(false);
   }, []);
   useEffect(() => { load(); }, [load]);
+  useRealtimeReload(["payout_requests"], load, "rt:payouts");
 
   const filtered = useMemo(() => {
     const query = q.trim().toLowerCase();
@@ -1150,6 +1188,7 @@ function RequestsTab() {
     setLoading(false);
   }, []);
   useEffect(() => { load(); }, [load]);
+  useRealtimeReload(["link_requests"], load, "rt:requests");
 
   const filtered = useMemo(() => {
     const query = q.trim().toLowerCase();
@@ -1572,6 +1611,7 @@ function ConversionsTab() {
     setLoading(false);
   }, []);
   useEffect(() => { load(); }, [load]);
+  useRealtimeReload(["conversions"], load, "rt:conversions");
 
   const filtered = useMemo(() => {
     const query = q.trim().toLowerCase();
@@ -1709,6 +1749,7 @@ function BroadcastTab() {
     setRecent((data ?? []) as any);
   }, []);
   useEffect(() => { load(); }, [load]);
+  useRealtimeReload(["notifications"], load, "rt:broadcast");
 
   const send = async () => {
     setMsg(null);
@@ -1815,6 +1856,7 @@ function ModerationTab({ meId, onCountChange }: { meId: string | null; onCountCh
   }, [meId, onCountChange]);
 
   useEffect(() => { void load(); }, [load]);
+  useRealtimeReload(["notifications"], () => void load(), "rt:moderation");
 
   // Parse offender uuid from `amount` field or from body "Пользователь: name (uuid)"
   const offenderIdOf = (n: ModNotif): string | null => {
