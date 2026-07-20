@@ -64,7 +64,7 @@ export const Route = createFileRoute("/_authenticated/dashboard")({
 
 /* ================================ Types ================================ */
 
-type Tab = "info" | "offers" | "stats" | "payouts" | "ai" | "requests" | "profile" | "support";
+type Tab = "info" | "offers" | "stats" | "payouts" | "ai" | "requests" | "profile" | "support" | "rewards";
 
 export type UserPrefs = {
   notify_email: boolean;
