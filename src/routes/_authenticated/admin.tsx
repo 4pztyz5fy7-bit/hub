@@ -15,7 +15,7 @@ export const Route = createFileRoute("/_authenticated/admin")({
 });
 
 /* =========================== TYPES =========================== */
-type TabId = "overview" | "users" | "offers" | "payouts" | "requests" | "conversions" | "broadcast" | "tools";
+type TabId = "overview" | "users" | "offers" | "payouts" | "requests" | "conversions" | "broadcast" | "ai";
 
 type Profile = {
   id: string; email: string | null; display_name: string | null;
@@ -150,7 +150,7 @@ function AdminPage() {
     { id: "requests", label: "Заявки", Icon: ClipboardList },
     { id: "conversions", label: "Конверсии", Icon: Activity },
     { id: "broadcast", label: "Рассылка", Icon: Bell },
-    { id: "tools", label: "Инструменты", Icon: Wrench },
+    { id: "ai", label: "AI-аналитик", Icon: Sparkles },
   ];
 
   return (
@@ -188,7 +188,7 @@ function AdminPage() {
         {tab === "requests" && <RequestsTab />}
         {tab === "conversions" && <ConversionsTab />}
         {tab === "broadcast" && <BroadcastTab />}
-        {tab === "tools" && <AdminToolsTab />}
+        {tab === "ai" && <AdminAnalystTab />}
       </main>
     </div>
   );
