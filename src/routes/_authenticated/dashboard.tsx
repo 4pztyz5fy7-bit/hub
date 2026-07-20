@@ -1350,13 +1350,22 @@ function InfoTab({
               <span className="text-[10px] font-bold uppercase tracking-[0.14em] opacity-60">
                 Общий баланс
               </span>
-              <span className={`rounded-full bg-white/10 px-2 py-0.5 font-mono text-[10px] font-medium ${weekDelta >= 0 ? "text-[color:var(--success)]" : "text-destructive"}`}>
-                {weekDelta >= 0 ? "+" : ""}{weekDelta}% • 7дн
-              </span>
+              <div className="flex items-center gap-1.5">
+                <button
+                  onClick={onToggleBalance}
+                  aria-label={showBalance ? "Скрыть баланс" : "Показать баланс"}
+                  className="grid size-6 place-items-center rounded-full bg-white/10 text-background/80 transition-colors hover:bg-white/20"
+                >
+                  {showBalance ? <Eye className="size-3.5" /> : <EyeOff className="size-3.5" />}
+                </button>
+                <span className={`rounded-full bg-white/10 px-2 py-0.5 font-mono text-[10px] font-medium ${weekDelta >= 0 ? "text-[color:var(--success)]" : "text-destructive"}`}>
+                  {weekDelta >= 0 ? "+" : ""}{weekDelta}% • 7дн
+                </span>
+              </div>
             </div>
             <div className="mt-2 flex items-baseline gap-1.5">
               <span className="text-[40px] font-bold leading-none tracking-tighter tabular-nums">
-                {fmt(balance)}
+                {showBalance ? fmt(balance) : "•••••"}
               </span>
               <span className="text-xl font-medium opacity-70">₽</span>
             </div>
@@ -1367,7 +1376,7 @@ function InfoTab({
                   Доступно к выводу
                 </p>
                 <p className="mt-0.5 font-mono text-base font-bold tabular-nums">
-                  {fmt(available)} ₽
+                  {showBalance ? `${fmt(available)} ₽` : "••••• ₽"}
                 </p>
               </div>
               <button
