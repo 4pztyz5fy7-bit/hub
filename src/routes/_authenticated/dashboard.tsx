@@ -47,7 +47,7 @@ import {
   Target,
   Building2,
   ClipboardList,
-  
+  Inbox,
   UserCircle,
   ThumbsUp,
   ThumbsDown,
