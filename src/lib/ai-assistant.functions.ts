@@ -109,18 +109,19 @@ export const getUserSnapshot = createServerFn({ method: "GET" })
 
 async function moderateQuery(text: string): Promise<{ flagged: boolean; category: "illegal" | "offtopic" | "ok"; reason: string }> {
   const sys =
-    `Ты — модератор чата AI-наставника CPA-сети КВАНТ. Классифицируй ПОСЛЕДНИЙ вопрос пользователя. ` +
+    `Ты — лёгкий модератор чата AI-наставника CPA-сети КВАНТ. Классифицируй ПОСЛЕДНИЙ вопрос пользователя. ` +
     `Верни СТРОГО JSON без пояснений в формате: {"category":"illegal|offtopic|ok","reason":"кратко на русском"}.\n` +
-    `- "illegal" — если запрос про противозаконное (наркотики, оружие, взлом, мошенничество, обход законов, экстремизм, вред людям, кража данных и т.п.).\n` +
-    `- "offtopic" — если запрос НЕ относится к арбитражу трафика, CPA, партнёрским сетям, офферам, лидам, рекламе, аналитике, доходу партнёра или платформе КВАНТ.\n` +
-    `- "ok" — если это нормальный рабочий вопрос по теме.`;
+    `- "illegal" — только если запрос про противозаконное (наркотики, оружие, взлом, мошенничество, обход законов, экстремизм, вред людям, кража данных, шантаж, терроризм и т.п.).\n` +
+    `- "offtopic" — если запрос явно НЕ связан с арбитражем трафика, CPA, маркетингом, рекламой, трафиком, лидами, клиентами, заработком онлайн, офферами, аналитикой, креативами, источниками трафика, воронкой продаж, платформой КВАНТ или бизнесом в целом.\n` +
+    `- "ok" — всё остальное: в том числе "как привлечь человека/клиента", "где взять трафик", "как настроить рекламу", "какой оффер лучше", "как поднять CR", "как масштабироваться", "какие креативы использовать", вопросы по выплатам, конверсиям, статистике и работе в КВАНТ.`;
   try {
     const raw = await callLovableAI(sys, [{ role: "user", content: text.slice(0, 2000) }]);
     const m = raw.match(/\{[\s\S]*\}/);
     if (!m) return { flagged: false, category: "ok", reason: "" };
     const parsed = JSON.parse(m[0]) as { category?: string; reason?: string };
     const cat = parsed.category === "illegal" || parsed.category === "offtopic" ? parsed.category : "ok";
-    return { flagged: cat !== "ok", category: cat as any, reason: parsed.reason ?? "" };
+    // Сообщаем админам только о явно противозаконных запросах; оффтопик просто отклоняем.
+    return { flagged: cat === "illegal", category: cat as any, reason: parsed.reason ?? "" };
   } catch {
     return { flagged: false, category: "ok", reason: "" };
   }
@@ -150,15 +151,22 @@ export const askAssistant = createServerFn({ method: "POST" })
     const lastUser = [...data.messages].reverse().find((m) => m.role === "user");
     if (lastUser) {
       const mod = await moderateQuery(lastUser.content);
-      if (mod.flagged) {
+      if (mod.category === "illegal") {
         const { data: prof } = await supabase.from("profiles").select("display_name,email").eq("id", userId).maybeSingle();
         const label = prof?.display_name || prof?.email || "Партнёр";
         await reportToAdmins(userId, label, lastUser.content, mod.category, mod.reason).catch(() => {});
-        const answer =
-          mod.category === "illegal"
-            ? "Не могу помочь с этим запросом — он противоречит правилам платформы. Инцидент передан администрации."
-            : "Я отвечаю только на вопросы по арбитражу, офферам, аналитике и работе на платформе КВАНТ. Запрос передан администратору.";
-        return { answer, flagged: true, category: mod.category };
+        return {
+          answer: "Не могу помочь с этим запросом — он противоречит правилам платформы. Инцидент передан администрации.",
+          flagged: true,
+          category: mod.category,
+        };
+      }
+      if (mod.category === "offtopic") {
+        return {
+          answer: "Я специализируюсь на арбитраже трафика, CPA, маркетинге и работе с платформой КВАНТ. Задай вопрос по этой теме — с удовольствием помогу.",
+          flagged: false,
+          category: mod.category,
+        };
       }
     }
 
@@ -176,7 +184,7 @@ export const askAssistant = createServerFn({ method: "POST" })
     const system =
       `Ты — персональный AI-наставник партнёра CPA-сети КВАНТ. ` +
       `Отвечай кратко, по делу, на русском. Давай конкретные шаги, а не общие фразы. ` +
-      `Отвечай ТОЛЬКО на вопросы по арбитражу, CPA, офферам, аналитике и платформе КВАНТ. ` +
+      `Ты можешь отвечать на широкий круг вопросов в рамках арбитража трафика, CPA, партнёрского маркетинга и платформы КВАНТ: выбор оффера, источники трафика, креативы, таргетинг, воронка продаж, аналитика, масштабирование, повышение CR/EPC, работа с клиентами, выплаты и статистика. ` +
       `Опирайся ТОЛЬКО на данные ниже, ничего не выдумывай.\n\n` +
       `ВАЖНО: в КВАНТ офферы не нужно активировать и не нужно подавать заявку на их получение. ` +
       `Партнёр просто открывает карточку оффера, нажимает «Скопировать ссылку», и сразу получает уникальную ссылку, которую можно отправить клиенту или влить в трафик. ` +

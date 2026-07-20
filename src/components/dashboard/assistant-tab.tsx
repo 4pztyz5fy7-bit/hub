@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import {
   Sparkles, Send, Loader2, Wallet, TrendingUp, Target, Lightbulb,
-  Calendar, Award, BarChart3, RefreshCw,
+  Calendar, Award, BarChart3, RefreshCw, Users,
 } from "lucide-react";
 import { askAssistant, getUserSnapshot, type UserSnapshot } from "@/lib/ai-assistant.functions";
 
@@ -10,6 +10,7 @@ type Msg = { role: "user" | "assistant"; content: string };
 
 const QUICK: { label: string; icon: typeof Sparkles; prompt: string }[] = [
   { label: "Разбор недели", icon: Calendar, prompt: "Проанализируй мою активность за последние 7 дней и подскажи 3 конкретных шага для роста." },
+  { label: "Как привлечь клиента?", icon: Users, prompt: "Расскажи, как привлечь первого клиента/лида на мои офферы: источники, креативы и первые шаги." },
   { label: "Как поднять CR?", icon: TrendingUp, prompt: "На моих данных: как поднять конверсию? Дай 5 практичных советов под мои офферы." },
   { label: "Какой оффер выбрать?", icon: Target, prompt: "Из доступных офферов подбери 3 лучших под мой профиль трафика и объясни, почему именно они. Напомни, что ссылку можно сразу скопировать и отправить клиенту." },
   { label: "План на месяц", icon: Award, prompt: "Составь план на 30 дней с реалистичной целью по доходу, исходя из моей статистики." },
