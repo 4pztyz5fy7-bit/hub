@@ -546,6 +546,7 @@ function OffersTab() {
     setLoading(false); setSelected(new Set());
   }, []);
   useEffect(() => { load(); }, [load]);
+  useRealtimeReload(["offers"], load, "rt:offers");
 
   const tags = useMemo(() => Array.from(new Set(rows.map((r) => r.tag).filter(Boolean))), [rows]);
   const filtered = useMemo(() => {
