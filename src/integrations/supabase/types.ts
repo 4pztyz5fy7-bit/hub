@@ -272,6 +272,9 @@ export type Database = {
           avatar_url: string | null
           bank: Json | null
           bio: string | null
+          blocked: boolean
+          blocked_at: string | null
+          blocked_reason: string | null
           city: string | null
           created_at: string
           display_name: string | null
@@ -281,12 +284,16 @@ export type Database = {
           settings: Json
           telegram: string | null
           updated_at: string
+          warnings_count: number
           website: string | null
         }
         Insert: {
           avatar_url?: string | null
           bank?: Json | null
           bio?: string | null
+          blocked?: boolean
+          blocked_at?: string | null
+          blocked_reason?: string | null
           city?: string | null
           created_at?: string
           display_name?: string | null
@@ -296,12 +303,16 @@ export type Database = {
           settings?: Json
           telegram?: string | null
           updated_at?: string
+          warnings_count?: number
           website?: string | null
         }
         Update: {
           avatar_url?: string | null
           bank?: Json | null
           bio?: string | null
+          blocked?: boolean
+          blocked_at?: string | null
+          blocked_reason?: string | null
           city?: string | null
           created_at?: string
           display_name?: string | null
@@ -311,6 +322,7 @@ export type Database = {
           settings?: Json
           telegram?: string | null
           updated_at?: string
+          warnings_count?: number
           website?: string | null
         }
         Relationships: []
