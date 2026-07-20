@@ -1622,7 +1622,7 @@ function RequestRowControls({ row, onReload }: { row: LinkRow; onReload: () => v
 
 
   const saveFields = async () => {
-    await change({ link: link.trim() || null, note: note.trim() || null, orders_count: ordersNum, payout_override: priceNum });
+    await change({ link: link.trim() || null, note: note.trim() || null, payout_override: priceNum });
   };
 
   return (
