@@ -55,6 +55,8 @@ export type Database = {
       link_requests: {
         Row: {
           created_at: string
+          credit_conversion_id: string | null
+          credited_at: string | null
           id: string
           link: string | null
           note: string | null
@@ -71,6 +73,8 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          credit_conversion_id?: string | null
+          credited_at?: string | null
           id?: string
           link?: string | null
           note?: string | null
@@ -87,6 +91,8 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          credit_conversion_id?: string | null
+          credited_at?: string | null
           id?: string
           link?: string | null
           note?: string | null
@@ -113,6 +119,7 @@ export type Database = {
       }
       notifications: {
         Row: {
+          actor_id: string | null
           amount: string | null
           body: string
           created_at: string
@@ -124,6 +131,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          actor_id?: string | null
           amount?: string | null
           body: string
           created_at?: string
@@ -135,6 +143,7 @@ export type Database = {
           user_id: string
         }
         Update: {
+          actor_id?: string | null
           amount?: string | null
           body?: string
           created_at?: string
@@ -424,6 +433,14 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      admin_set_link_request_status: {
+        Args: {
+          _new_status: Database["public"]["Enums"]["link_status"]
+          _payout_override?: number
+          _request_id: string
+        }
+        Returns: Json
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
