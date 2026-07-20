@@ -3817,7 +3817,10 @@ function OfferDetailSheet({
   const hasBoost = level.bonusPct > 0 && boosted.boostedPayout !== offer.payout;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end justify-center bg-foreground/40 backdrop-blur-sm sm:items-center">
+    <div
+      className="fixed inset-0 z-50 flex items-end justify-center bg-foreground/40 backdrop-blur-sm sm:items-center"
+      onClick={(e) => { if (e.currentTarget === e.target) onClose(); }}
+    >
       <div className="animate-in-up flex max-h-[92vh] w-full max-w-[440px] flex-col overflow-hidden rounded-t-2xl border border-border bg-background sm:rounded-2xl">
         {/* Header */}
         <div className="flex items-start justify-between gap-3 border-b border-border px-4 py-3">
@@ -3836,7 +3839,7 @@ function OfferDetailSheet({
           <button
             onClick={onClose}
             aria-label="Закрыть"
-            className="grid size-8 shrink-0 place-items-center rounded-full text-muted-foreground hover:bg-accent"
+            className="grid size-8 shrink-0 place-items-center rounded-full border border-border bg-secondary text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
           >
             <X className="size-4" />
           </button>
@@ -3981,24 +3984,32 @@ function OfferDetailSheet({
 
         {/* Footer CTA */}
         <div className="border-t border-border bg-background px-4 py-3">
-          <button
-            onClick={() => onCopyLink(offer, source)}
-            className={`flex w-full items-center justify-center gap-1.5 rounded-md px-4 py-2.5 text-[11px] font-bold uppercase tracking-wider transition-colors active:scale-95 ${
-              isCopied
-                ? "bg-[color:var(--success)]/15 text-[color:var(--success)]"
-                : "bg-foreground text-background"
-            }`}
-          >
-            {isCopied ? (
-              <>
-                <Check className="size-3.5" /> Ссылка скопирована
-              </>
-            ) : (
-              <>
-                <Copy className="size-3.5" /> {linked ? "Скопировать ссылку ещё раз" : "Скопировать ссылку"}
-              </>
-            )}
-          </button>
+          <div className="flex flex-col gap-2">
+            <button
+              onClick={() => onCopyLink(offer, source)}
+              className={`flex w-full items-center justify-center gap-1.5 rounded-md px-4 py-2.5 text-[11px] font-bold uppercase tracking-wider transition-colors active:scale-95 ${
+                isCopied
+                  ? "bg-[color:var(--success)]/15 text-[color:var(--success)]"
+                  : "bg-foreground text-background"
+              }`}
+            >
+              {isCopied ? (
+                <>
+                  <Check className="size-3.5" /> Ссылка скопирована
+                </>
+              ) : (
+                <>
+                  <Copy className="size-3.5" /> {linked ? "Скопировать ссылку ещё раз" : "Скопировать ссылку"}
+                </>
+              )}
+            </button>
+            <button
+              onClick={onClose}
+              className="flex w-full items-center justify-center gap-1.5 rounded-md border border-border bg-secondary px-4 py-2.5 text-[11px] font-bold uppercase tracking-wider text-muted-foreground transition-colors hover:bg-accent hover:text-foreground active:scale-95"
+            >
+              <X className="size-3.5" /> Закрыть
+            </button>
+          </div>
         </div>
       </div>
     </div>
