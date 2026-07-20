@@ -1176,6 +1176,7 @@ function RequestsTab() {
     setLoading(false);
   }, []);
   useEffect(() => { load(); }, [load]);
+  useRealtimeReload(["link_requests"], load, "rt:requests");
 
   const filtered = useMemo(() => {
     const query = q.trim().toLowerCase();
