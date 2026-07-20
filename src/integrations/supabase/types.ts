@@ -604,6 +604,7 @@ export type Database = {
         Returns: boolean
       }
       is_admin: { Args: never; Returns: boolean }
+      level_bonus_pct: { Args: { _earned: number }; Returns: number }
       touch_streak: {
         Args: never
         Returns: {
