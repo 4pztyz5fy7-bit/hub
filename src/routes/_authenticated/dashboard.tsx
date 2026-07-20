@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { AssistantTab } from "@/components/dashboard/assistant-tab";
 import { ProfileTab } from "@/components/dashboard/profile-tab";
 import { SupportTab } from "@/components/dashboard/support-tab";
+import { t } from "@/lib/i18n";
 import { LogOut } from "lucide-react";
 import {
   LayoutGrid,
