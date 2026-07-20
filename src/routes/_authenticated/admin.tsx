@@ -1293,7 +1293,48 @@ function RequestRowControls({ row, onReload }: { row: LinkRow; onReload: () => v
 
   const change = async (patch: Partial<Pick<LinkRow, "status" | "link" | "note" | "orders_count">>) => {
     setSaving(true);
+    const becamePaid = patch.status === "paid" && row.status !== "paid";
     await supabase.from("link_requests").update(patch).eq("id", row.id);
+    if (becamePaid) {
+      try {
+        let payoutStr: string | null = null;
+        let offerId: string | null = row.offer_id;
+        if (row.offer_id) {
+          const { data: off } = await supabase
+            .from("offers")
+            .select("id, payout, payout_min, payout_max")
+            .eq("id", row.offer_id)
+            .maybeSingle();
+          if (off) {
+            offerId = off.id;
+            const num = Number(String(off.payout ?? "").replace(/[^\d.]/g, "")) || 0;
+            payoutStr = String(num || off.payout_max || off.payout_min || 0);
+          }
+        }
+        const perOrder = Number(String(payoutStr ?? "0").replace(/[^\d.]/g, "")) || 0;
+        const qty = Math.max(1, Number(patch.orders_count ?? row.orders_count) || 1);
+        const amount = perOrder * qty;
+        if (amount > 0) {
+          await supabase.from("conversions").insert({
+            user_id: row.user_id,
+            offer_id: offerId,
+            offer_name: row.offer_name,
+            amount,
+            status: "paid",
+          });
+          await supabase.from("notifications").insert({
+            user_id: row.user_id,
+            kind: "payout",
+            title: "Начисление за оффер",
+            body: `${row.offer_name}: начислено ${amount.toLocaleString("ru-RU")} ₽`,
+            amount: String(amount),
+            status: "paid",
+          });
+        }
+      } catch (e) {
+        console.error("credit on paid failed", e);
+      }
+    }
     setSaving(false);
     setSavedFlash(true);
     setTimeout(() => setSavedFlash(false), 1200);
