@@ -1348,8 +1348,8 @@ function RequestRowControls({ row, onReload }: { row: LinkRow; onReload: () => v
             perOrder = num || Number(off.payout_max) || Number(off.payout_min) || 0;
           }
         }
-        const qty = Math.max(1, Number(patch.orders_count ?? row.orders_count) || 1);
-        const amount = perOrder * qty;
+        const amount = perOrder;
+
         if (amount > 0) {
           await supabase.from("conversions").insert({
             user_id: row.user_id,
