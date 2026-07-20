@@ -89,6 +89,8 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
         content: "Зарабатывайте на рекомендациях. Прозрачная статистика, быстрые выплаты, топовые офферы.",
       },
       { property: "og:type", content: "website" },
+      { property: "og:url", content: "https://kvantom.pro" },
+      { property: "og:site_name", content: "КВАНТ" },
       { name: "twitter:card", content: "summary_large_image" },
     ],
     links: [
