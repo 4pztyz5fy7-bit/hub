@@ -113,3 +113,10 @@
     font-size: 16px !important;
   }
 }
+
+/* Compact mode */
+:root[data-compact="1"] .space-y-6 > * + * { margin-top: 1rem; }
+:root[data-compact="1"] .space-y-4 > * + * { margin-top: 0.5rem; }
+:root[data-compact="1"] .p-4 { padding: 0.75rem; }
+:root[data-compact="1"] .p-5 { padding: 1rem; }
+:root[data-compact="1"] .py-2\.5 { padding-top: 0.5rem; padding-bottom: 0.5rem; }
