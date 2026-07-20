@@ -14,6 +14,45 @@ export type Database = {
   }
   public: {
     Tables: {
+      achievements: {
+        Row: {
+          code: string
+          created_at: string
+          description: string
+          icon: string
+          id: string
+          metric: string
+          name: string
+          sort_order: number
+          threshold: number
+          tier: string
+        }
+        Insert: {
+          code: string
+          created_at?: string
+          description: string
+          icon?: string
+          id?: string
+          metric: string
+          name: string
+          sort_order?: number
+          threshold: number
+          tier?: string
+        }
+        Update: {
+          code?: string
+          created_at?: string
+          description?: string
+          icon?: string
+          id?: string
+          metric?: string
+          name?: string
+          sort_order?: number
+          threshold?: number
+          tier?: string
+        }
+        Relationships: []
+      }
       conversions: {
         Row: {
           amount: number
@@ -289,8 +328,11 @@ export type Database = {
           display_name: string | null
           email: string | null
           id: string
+          last_activity_date: string | null
           phone: string | null
           settings: Json
+          streak_best: number
+          streak_days: number
           telegram: string | null
           updated_at: string
           warnings_count: number
@@ -308,8 +350,11 @@ export type Database = {
           display_name?: string | null
           email?: string | null
           id: string
+          last_activity_date?: string | null
           phone?: string | null
           settings?: Json
+          streak_best?: number
+          streak_days?: number
           telegram?: string | null
           updated_at?: string
           warnings_count?: number
@@ -327,8 +372,11 @@ export type Database = {
           display_name?: string | null
           email?: string | null
           id?: string
+          last_activity_date?: string | null
           phone?: string | null
           settings?: Json
+          streak_best?: number
+          streak_days?: number
           telegram?: string | null
           updated_at?: string
           warnings_count?: number
@@ -410,6 +458,35 @@ export type Database = {
         }
         Relationships: []
       }
+      user_achievements: {
+        Row: {
+          achievement_id: string
+          id: string
+          unlocked_at: string
+          user_id: string
+        }
+        Insert: {
+          achievement_id: string
+          id?: string
+          unlocked_at?: string
+          user_id: string
+        }
+        Update: {
+          achievement_id?: string
+          id?: string
+          unlocked_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_achievements_achievement_id_fkey"
+            columns: ["achievement_id"]
+            isOneToOne: false
+            referencedRelation: "achievements"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_roles: {
         Row: {
           id: string
@@ -441,6 +518,24 @@ export type Database = {
         }
         Returns: Json
       }
+      award_achievements: {
+        Args: never
+        Returns: {
+          unlocked_code: string
+          unlocked_name: string
+        }[]
+      }
+      get_leaderboard: {
+        Args: { _limit?: number; _period?: string }
+        Returns: {
+          avatar_url: string
+          conversions: number
+          display_name: string
+          is_me: boolean
+          total: number
+          user_id: string
+        }[]
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -449,6 +544,14 @@ export type Database = {
         Returns: boolean
       }
       is_admin: { Args: never; Returns: boolean }
+      touch_streak: {
+        Args: never
+        Returns: {
+          last_activity_date: string
+          streak_best: number
+          streak_days: number
+        }[]
+      }
     }
     Enums: {
       app_role: "admin" | "user"
