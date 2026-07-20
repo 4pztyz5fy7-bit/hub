@@ -1100,6 +1100,8 @@ function DashboardPage() {
             onGoConversions={() => setActive("stats")}
             onRequestPayout={() => (bank ? setPayoutOpen(true) : openBank())}
             onOpenLevels={() => setLevelsOpen(true)}
+            showBalance={prefs.showBalance}
+            onToggleBalance={() => setPrefs((s) => ({ ...s, showBalance: !s.showBalance }))}
           />
         )}
         {active === "offers" && (
