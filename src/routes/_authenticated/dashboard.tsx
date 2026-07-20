@@ -2122,10 +2122,25 @@ function StatsTab({ conversions, offers, requests }: { conversions: Conversion[]
     [conversions, cutoff],
   );
 
+  const scopedRequests = useMemo(
+    () => requests.filter((r) => {
+      const d = new Date(r.createdAt);
+      return !isNaN(d.getTime()) && d >= cutoff;
+    }),
+    [requests, cutoff],
+  );
+
   const income = scoped.filter((c) => c.status === "ok").reduce((s, c) => s + c.amount, 0);
   const convs = scoped.filter((c) => c.status === "ok").length;
-  const totalOrders = useMemo(() => requests.reduce((s, r) => s + (r.ordersCount || 0), 0), [requests]);
+  const totalOrders = useMemo(() => scopedRequests.reduce((s, r) => s + (r.ordersCount || 0), 0), [scopedRequests]);
   const epc = convs > 0 ? (income / convs).toFixed(0) : "0";
+  // Real conversion rate = ok conversions / requests created in the period
+  const cr = scopedRequests.length > 0 ? (convs / scopedRequests.length) * 100 : 0;
+  const activeOffers = useMemo(
+    () => new Set(scopedRequests.filter((r) => r.status !== "paid" && r.status !== "finished").map((r) => r.offerId)).size,
+    [scopedRequests],
+  );
+  const paidRequests = useMemo(() => scopedRequests.filter((r) => r.status === "paid").length, [scopedRequests]);
 
   // Bars: bucket scoped income into up to 7 evenly-spaced buckets, оканчивая сегодняшним днём.
   const bucketCount = Math.min(7, days);
@@ -2156,35 +2171,32 @@ function StatsTab({ conversions, offers, requests }: { conversions: Conversion[]
   }, [days, bucketCount]);
 
   const byOffer = useMemo(() => {
-    const m = new Map<string, { offer: Offer; conv: number; income: number }>();
+    const m = new Map<string, { offer: Offer; conv: number; income: number; reqCount: number }>();
+    // Seed with request-derived clicks (each link_request ≈ one link generation)
+    scopedRequests.forEach((r) => {
+      const off: Offer = offers.find((o) => o.id === r.offerId) ?? {
+        id: r.offerId, tag: "×", name: r.offerName, category: "—", payout: "",
+        epc: 0, cr: 0, advertiser: "—", geo: [], hold: "—", goal: "—",
+        description: "", requirements: [], allowed: [], denied: [], landing: "", cityPayouts: [],
+      };
+      const cur = m.get(r.offerId) ?? { offer: off, conv: 0, income: 0, reqCount: 0 };
+      cur.reqCount += 1;
+      m.set(r.offerId, cur);
+    });
     scoped.forEach((c) => {
       if (c.status === "rejected") return;
       const off: Offer = offers.find((o) => o.id === c.offerId) ?? {
-        id: c.offerId,
-        tag: "×",
-        name: c.offerName,
-        category: "—",
-        payout: "",
-        epc: 0,
-        cr: 0,
-        advertiser: "—",
-        geo: [],
-        hold: "—",
-        goal: "—",
-        description: "",
-        requirements: [],
-        allowed: [],
-        denied: [],
-        landing: "",
-        cityPayouts: [],
+        id: c.offerId, tag: "×", name: c.offerName, category: "—", payout: "",
+        epc: 0, cr: 0, advertiser: "—", geo: [], hold: "—", goal: "—",
+        description: "", requirements: [], allowed: [], denied: [], landing: "", cityPayouts: [],
       };
-      const cur = m.get(c.offerId) ?? { offer: off, conv: 0, income: 0 };
+      const cur = m.get(c.offerId) ?? { offer: off, conv: 0, income: 0, reqCount: 0 };
       cur.conv += 1;
       cur.income += c.amount;
       m.set(c.offerId, cur);
     });
     return [...m.values()].sort((a, b) => b.income - a.income);
-  }, [scoped, offers]);
+  }, [scoped, scopedRequests, offers]);
 
   return (
     <>
@@ -2210,10 +2222,15 @@ function StatsTab({ conversions, offers, requests }: { conversions: Conversion[]
         <div className="grid grid-cols-2 gap-px overflow-hidden rounded-lg border border-border bg-border">
           <KpiRow label="Доход" value={`${fmt(income)} ₽`} accent />
           <KpiRow label="Конверсии" value={fmt(convs)} />
-          <KpiRow label="Заказы" value={fmt(totalOrders)} />
+          <KpiRow label="Заявки" value={fmt(scopedRequests.length)} />
+          <KpiRow label="Оплачено" value={fmt(paidRequests)} />
+          <KpiRow label="CR" value={`${cr.toFixed(1)}%`} />
           <KpiRow label="Средний чек" value={`${fmt(Number(epc))} ₽`} />
+          <KpiRow label="Заказы" value={fmt(totalOrders)} />
+          <KpiRow label="Активных офферов" value={fmt(activeOffers)} />
         </div>
       </section>
+
 
       <section className="animate-in-up" style={{ animationDelay: "60ms" }}>
         <div className="flex h-52 w-full flex-col justify-between rounded-lg border border-border bg-card p-4">
@@ -2258,26 +2275,34 @@ function StatsTab({ conversions, offers, requests }: { conversions: Conversion[]
           <h3 className="text-[11px] font-bold uppercase tracking-[0.1em] text-muted-foreground">
             По офферам
           </h3>
-          <span className="font-mono text-[10px] text-muted-foreground">{byOffer.length} активных</span>
+          <span className="font-mono text-[10px] text-muted-foreground">{activeOffers} активных</span>
         </div>
         <div className="divide-y divide-border overflow-hidden rounded-lg border border-border bg-card">
-          {byOffer.map((row) => (
-            <div key={row.offer.id} className="flex items-center gap-3 p-3">
-              <OfferTag tag={row.offer.tag} />
-              <div className="min-w-0 flex-1">
-                <p className="truncate text-xs font-bold leading-none">{row.offer.name}</p>
-                <p className="mt-1 font-mono text-[10px] text-muted-foreground">
-                  {row.conv} конв. • EPC {fmt(row.offer.epc)} ₽
-                </p>
+          {byOffer.length === 0 && (
+            <div className="p-4 text-center text-[11px] text-muted-foreground">Пока нет данных за период</div>
+          )}
+          {byOffer.map((row) => {
+            const rowCr = row.reqCount > 0 ? (row.conv / row.reqCount) * 100 : 0;
+            const rowEpc = row.conv > 0 ? Math.round(row.income / row.conv) : 0;
+            return (
+              <div key={row.offer.id} className="flex items-center gap-3 p-3">
+                <OfferTag tag={row.offer.tag} />
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-xs font-bold leading-none">{row.offer.name}</p>
+                  <p className="mt-1 font-mono text-[10px] text-muted-foreground">
+                    {row.conv} конв. • {row.reqCount} заявок • EPC {fmt(rowEpc)} ₽
+                  </p>
+                </div>
+                <div className="shrink-0 text-right">
+                  <p className="font-mono text-xs font-bold tabular-nums">{fmt(row.income)} ₽</p>
+                  <p className="font-mono text-[9px] uppercase text-[color:var(--success)]">
+                    CR {rowCr.toFixed(1)}%
+                  </p>
+                </div>
               </div>
-              <div className="shrink-0 text-right">
-                <p className="font-mono text-xs font-bold tabular-nums">{fmt(row.income)} ₽</p>
-                <p className="font-mono text-[9px] uppercase text-[color:var(--success)]">
-                  CR {row.offer.cr.toFixed(1)}%
-                </p>
-              </div>
-            </div>
-          ))}
+            );
+          })}
+
         </div>
       </section>
 
