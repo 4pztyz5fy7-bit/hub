@@ -489,14 +489,21 @@ function LandingPage() {
 
       {/* FOOTER */}
       <footer className="border-t border-border/60 py-8">
-        <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-4 px-4 sm:flex-row">
+        <div className="mx-auto flex max-w-6xl flex-col items-center gap-5 px-4 sm:flex-row sm:justify-between">
           <div className="flex items-center gap-2">
             <div className="grid size-7 place-items-center rounded-md bg-primary text-primary-foreground text-xs font-black">К</div>
             <span className="text-xs font-bold tracking-wider">КВАНТ © {new Date().getFullYear()}</span>
           </div>
+          <nav className="flex flex-wrap items-center justify-center gap-x-5 gap-y-2 text-xs">
+            <a href="/terms" className="text-muted-foreground hover:text-foreground">Оферта</a>
+            <a href="/privacy" className="text-muted-foreground hover:text-foreground">Конфиденциальность</a>
+            <a href="/cookies" className="text-muted-foreground hover:text-foreground">Cookies</a>
+            <a href="/legal" className="text-muted-foreground hover:text-foreground">Все документы</a>
+          </nav>
           <p className="text-xs text-muted-foreground">Партнёрская платформа для профессионалов трафика.</p>
         </div>
       </footer>
+
 
       {authOpen && <AuthDialog initialMode={initialMode} onClose={() => setAuthOpen(false)} />}
     </div>
