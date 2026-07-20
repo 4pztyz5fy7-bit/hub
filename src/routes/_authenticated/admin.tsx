@@ -1211,34 +1211,21 @@ function RequestsTab() {
     if (!selected.size) return;
     const ids = Array.from(selected);
     if (status === "paid") {
-      const targets = rows.filter((r) => selected.has(r.id) && r.status !== "paid");
-      const offerIds = Array.from(new Set(targets.map((t) => t.offer_id).filter(Boolean))) as string[];
-      const offersMap = new Map<string, { payout: string; payout_min: number | null; payout_max: number | null }>();
-      if (offerIds.length) {
-        const { data: offs } = await supabase.from("offers").select("id, payout, payout_min, payout_max").in("id", offerIds);
-        (offs ?? []).forEach((o: any) => offersMap.set(o.id, o));
-      }
-      await supabase.from("link_requests").update({ status }).in("id", ids);
-      const convs: any[] = [];
-      const notes: any[] = [];
-      for (const t of targets) {
-        const off = t.offer_id ? offersMap.get(t.offer_id) : null;
-        const offerPer = off ? Number(String(off.payout ?? "").replace(/[^\d.]/g, "")) || Number(off.payout_max) || Number(off.payout_min) || 0 : 0;
-        const per = t.payout_override != null && t.payout_override > 0 ? Number(t.payout_override) : offerPer;
-        const amount = per;
-
-        if (amount > 0) {
-          convs.push({ user_id: t.user_id, offer_id: t.offer_id, offer_name: t.offer_name, amount, status: "ok" });
-          notes.push({ user_id: t.user_id, kind: "payout", title: "Начисление за оффер", body: `${t.offer_name}: начислено ${amount.toLocaleString("ru-RU")} ₽`, amount: String(amount), status: "paid" });
-        }
-      }
-      if (convs.length) await supabase.from("conversions").insert(convs);
-      if (notes.length) await supabase.from("notifications").insert(notes);
+      // Atomic + idempotent crediting via SECURITY DEFINER RPC
+      await Promise.all(
+        ids.map((id) =>
+          supabase.rpc("admin_set_link_request_status", {
+            _request_id: id,
+            _new_status: status,
+          }),
+        ),
+      );
     } else {
       await supabase.from("link_requests").update({ status }).in("id", ids);
     }
     load();
   };
+
   const bulkDel = async () => { if (!selected.size || !confirm(`Удалить ${selected.size} заявок?`)) return; await supabase.from("link_requests").delete().in("id", Array.from(selected)); load(); };
   const toggleSel = (id: string) => setSelected((s) => { const n = new Set(s); n.has(id) ? n.delete(id) : n.add(id); return n; });
 
@@ -1456,53 +1443,45 @@ function RequestRowControls({ row, onReload }: { row: LinkRow; onReload: () => v
 
   const change = async (patch: Partial<Pick<LinkRow, "status" | "link" | "note" | "orders_count" | "payout_override">>) => {
     setSaving(true);
-    const becamePaid = patch.status === "paid" && row.status !== "paid";
-    await supabase.from("link_requests").update(patch).eq("id", row.id);
-    if (becamePaid) {
-      try {
-        const overrideVal = patch.payout_override !== undefined ? patch.payout_override : row.payout_override;
-        let perOrder = overrideVal != null && Number(overrideVal) > 0 ? Number(overrideVal) : 0;
-        let offerId: string | null = row.offer_id;
-        if (perOrder === 0 && row.offer_id) {
-          const { data: off } = await supabase
-            .from("offers")
-            .select("id, payout, payout_min, payout_max")
-            .eq("id", row.offer_id)
-            .maybeSingle();
-          if (off) {
-            offerId = off.id;
-            const num = Number(String(off.payout ?? "").replace(/[^\d.]/g, "")) || 0;
-            perOrder = num || Number(off.payout_max) || Number(off.payout_min) || 0;
-          }
-        }
-        const amount = perOrder;
-
-        if (amount > 0) {
-          await supabase.from("conversions").insert({
-            user_id: row.user_id,
-            offer_id: offerId,
-            offer_name: row.offer_name,
-            amount,
-            status: "ok",
-          });
-          await supabase.from("notifications").insert({
-            user_id: row.user_id,
-            kind: "payout",
-            title: "Начисление за оффер",
-            body: `${row.offer_name}: начислено ${amount.toLocaleString("ru-RU")} ₽`,
-            amount: String(amount),
-            status: "paid",
-          });
-        }
-      } catch (e) {
-        console.error("credit on paid failed", e);
+    try {
+      const statusChange = patch.status !== undefined && patch.status !== row.status;
+      // Fields that are not part of the status transition go through a plain update.
+      const { status: _s, payout_override: _po, ...rest } = patch;
+      const otherPatch: Partial<LinkRow> = { ...rest };
+      if (!statusChange && patch.payout_override !== undefined) {
+        otherPatch.payout_override = patch.payout_override;
       }
+      if (Object.keys(otherPatch).length) {
+        await supabase.from("link_requests").update(otherPatch).eq("id", row.id);
+      }
+      if (statusChange) {
+        const overrideVal =
+          patch.payout_override !== undefined ? patch.payout_override : row.payout_override;
+        const { error } = await supabase.rpc("admin_set_link_request_status", {
+          _request_id: row.id,
+          _new_status: patch.status!,
+          _payout_override:
+            overrideVal != null && Number(overrideVal) > 0 ? Number(overrideVal) : undefined,
+        });
+        if (error) throw error;
+      } else if (patch.payout_override !== undefined) {
+        // override without status change
+        await supabase
+          .from("link_requests")
+          .update({ payout_override: patch.payout_override })
+          .eq("id", row.id);
+      }
+    } catch (e) {
+      console.error("change failed", e);
+      alert("Не удалось сохранить изменения: " + ((e as Error).message ?? "unknown"));
+    } finally {
+      setSaving(false);
+      setSavedFlash(true);
+      setTimeout(() => setSavedFlash(false), 1200);
+      onReload();
     }
-    setSaving(false);
-    setSavedFlash(true);
-    setTimeout(() => setSavedFlash(false), 1200);
-    onReload();
   };
+
 
   const saveFields = async () => {
     await change({ link: link.trim() || null, note: note.trim() || null, orders_count: ordersNum, payout_override: priceNum });
@@ -1823,7 +1802,7 @@ function BroadcastTab() {
 /* =========================== MODERATION =========================== */
 type ModNotif = {
   id: string; user_id: string; title: string; body: string;
-  amount: string | null; status: string | null; read: boolean; created_at: string;
+  amount: string | null; actor_id: string | null; status: string | null; read: boolean; created_at: string;
 };
 type OffenderProfile = {
   id: string; email: string | null; display_name: string | null;
@@ -1844,7 +1823,7 @@ function ModerationTab({ meId, onCountChange }: { meId: string | null; onCountCh
     setLoading(true);
     const { data } = await supabase
       .from("notifications")
-      .select("id,user_id,title,body,amount,status,read,created_at")
+      .select("id,user_id,title,body,amount,actor_id,status,read,created_at")
       .eq("user_id", meId)
       .eq("kind", "moderation")
       .order("created_at", { ascending: false })
@@ -1858,8 +1837,9 @@ function ModerationTab({ meId, onCountChange }: { meId: string | null; onCountCh
   useEffect(() => { void load(); }, [load]);
   useRealtimeReload(["notifications"], () => void load(), "rt:moderation");
 
-  // Parse offender uuid from `amount` field or from body "Пользователь: name (uuid)"
+  // Prefer explicit actor_id; fall back to legacy body/amount parsing for old rows.
   const offenderIdOf = (n: ModNotif): string | null => {
+    if (n.actor_id) return n.actor_id;
     if (n.amount && /^[0-9a-f-]{36}$/i.test(n.amount)) return n.amount;
     const m = n.body?.match(/\(([0-9a-f-]{36})\)/i);
     return m ? m[1] : null;

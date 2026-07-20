@@ -135,7 +135,7 @@ async function reportToAdmins(userId: string, userLabel: string, question: strin
     kind: "moderation",
     title: category === "illegal" ? "⚠️ Подозрительный запрос к AI" : "Нецелевой запрос к AI",
     body: `Пользователь: ${userLabel} (${userId})\nКатегория: ${category}\nПричина: ${reason}\n\nВопрос: ${question.slice(0, 800)}`,
-    amount: userId, // encode offender uuid for moderation actions
+    actor_id: userId,
     status: category,
     read: false,
   }));
