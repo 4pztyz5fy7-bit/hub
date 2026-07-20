@@ -605,6 +605,32 @@ function DashboardPage() {
   const [levelToast, setLevelToast] = useState<Level | null>(null);
   const prevLevelIdxRef = useRef<number>(-1);
   const [levelHistory, setLevelHistory] = useState<LevelHistoryEntry[]>([]);
+  const [achToast, setAchToast] = useState<{ code: string; name: string } | null>(null);
+  const achToastTimerRef = useRef<number | null>(null);
+  const achToastQueueRef = useRef<Array<{ code: string; name: string }>>([]);
+  const awardedCodesRef = useRef<Set<string>>(new Set());
+
+  const showNextAchToast = () => {
+    const next = achToastQueueRef.current.shift();
+    if (!next) { setAchToast(null); return; }
+    setAchToast(next);
+    if (achToastTimerRef.current) window.clearTimeout(achToastTimerRef.current);
+    achToastTimerRef.current = window.setTimeout(() => showNextAchToast(), 4200);
+  };
+
+  const runAwardAchievements = async () => {
+    try {
+      const { data } = await supabase.rpc("award_achievements");
+      const rows = (data ?? []) as Array<{ unlocked_code: string; unlocked_name: string }>;
+      const fresh = rows.filter(r => r.unlocked_code && !awardedCodesRef.current.has(r.unlocked_code));
+      for (const r of fresh) {
+        awardedCodesRef.current.add(r.unlocked_code);
+        achToastQueueRef.current.push({ code: r.unlocked_code, name: r.unlocked_name });
+      }
+      if (fresh.length && !achToast) showNextAchToast();
+    } catch { /* ignore */ }
+  };
+
 
   // Sheets
   const [bankOpen, setBankOpen] = useState(false);
