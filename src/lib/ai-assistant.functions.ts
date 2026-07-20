@@ -107,11 +107,59 @@ export const getUserSnapshot = createServerFn({ method: "GET" })
     };
   });
 
+async function moderateQuery(text: string): Promise<{ flagged: boolean; category: "illegal" | "offtopic" | "ok"; reason: string }> {
+  const sys =
+    `Ты — модератор чата AI-наставника CPA-сети КВАНТ. Классифицируй ПОСЛЕДНИЙ вопрос пользователя. ` +
+    `Верни СТРОГО JSON без пояснений в формате: {"category":"illegal|offtopic|ok","reason":"кратко на русском"}.\n` +
+    `- "illegal" — если запрос про противозаконное (наркотики, оружие, взлом, мошенничество, обход законов, экстремизм, вред людям, кража данных и т.п.).\n` +
+    `- "offtopic" — если запрос НЕ относится к арбитражу трафика, CPA, партнёрским сетям, офферам, лидам, рекламе, аналитике, доходу партнёра или платформе КВАНТ.\n` +
+    `- "ok" — если это нормальный рабочий вопрос по теме.`;
+  try {
+    const raw = await callLovableAI(sys, [{ role: "user", content: text.slice(0, 2000) }]);
+    const m = raw.match(/\{[\s\S]*\}/);
+    if (!m) return { flagged: false, category: "ok", reason: "" };
+    const parsed = JSON.parse(m[0]) as { category?: string; reason?: string };
+    const cat = parsed.category === "illegal" || parsed.category === "offtopic" ? parsed.category : "ok";
+    return { flagged: cat !== "ok", category: cat as any, reason: parsed.reason ?? "" };
+  } catch {
+    return { flagged: false, category: "ok", reason: "" };
+  }
+}
+
+async function reportToAdmins(userId: string, userLabel: string, question: string, category: string, reason: string) {
+  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+  const { data: admins } = await supabaseAdmin.from("user_roles").select("user_id").eq("role", "admin");
+  const rows = (admins ?? []).map((a) => ({
+    user_id: a.user_id,
+    kind: "moderation",
+    title: category === "illegal" ? "⚠️ Подозрительный запрос к AI" : "Нецелевой запрос к AI",
+    body: `Пользователь: ${userLabel} (${userId})\nКатегория: ${category}\nПричина: ${reason}\n\nВопрос: ${question.slice(0, 800)}`,
+    status: "new",
+    read: false,
+  }));
+  if (rows.length) await supabaseAdmin.from("notifications").insert(rows);
+}
+
 export const askAssistant = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d) => AskSchema.parse(d))
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
+
+    const lastUser = [...data.messages].reverse().find((m) => m.role === "user");
+    if (lastUser) {
+      const mod = await moderateQuery(lastUser.content);
+      if (mod.flagged) {
+        const { data: prof } = await supabase.from("profiles").select("display_name,email").eq("id", userId).maybeSingle();
+        const label = prof?.display_name || prof?.email || "Партнёр";
+        await reportToAdmins(userId, label, lastUser.content, mod.category, mod.reason).catch(() => {});
+        const answer =
+          mod.category === "illegal"
+            ? "Не могу помочь с этим запросом — он противоречит правилам платформы. Инцидент передан администрации."
+            : "Я отвечаю только на вопросы по арбитражу, офферам, аналитике и работе на платформе КВАНТ. Запрос передан администратору.";
+        return { answer, flagged: true, category: mod.category };
+      }
+    }
 
     const [snapRes, offersRes] = await Promise.all([
       supabase.from("conversions").select("amount,status,offer_name,created_at").eq("user_id", userId).limit(200),
@@ -127,6 +175,7 @@ export const askAssistant = createServerFn({ method: "POST" })
     const system =
       `Ты — персональный AI-наставник партнёра CPA-сети КВАНТ. ` +
       `Отвечай кратко, по делу, на русском. Давай конкретные шаги, а не общие фразы. ` +
+      `Отвечай ТОЛЬКО на вопросы по арбитражу, CPA, офферам, аналитике и платформе КВАНТ. ` +
       `Опирайся ТОЛЬКО на данные ниже, ничего не выдумывай.\n\n` +
       `СТАТИСТИКА ПАРТНЁРА:\n` +
       `- Всего заработано: ${totalEarned} ₽\n` +
@@ -134,7 +183,7 @@ export const askAssistant = createServerFn({ method: "POST" })
       `АКТУАЛЬНЫЕ ОФФЕРЫ (топ по EPC):\n${offersBrief || "нет активных офферов"}`;
 
     const answer = await callLovableAI(system, data.messages);
-    return { answer };
+    return { answer, flagged: false };
   });
 
 /* =============================== ADMIN ============================== */
