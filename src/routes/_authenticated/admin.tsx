@@ -16,6 +16,28 @@ export const Route = createFileRoute("/_authenticated/admin")({
   component: AdminPage,
 });
 
+/* --------- Realtime helper: reload data on any change in tables --------- */
+function useRealtimeReload(tables: string[], reload: () => void, channelKey?: string) {
+  useEffect(() => {
+    const key = channelKey ?? `rt:${tables.join(",")}:${Math.random().toString(36).slice(2, 8)}`;
+    let timer: ReturnType<typeof setTimeout> | null = null;
+    const trigger = () => {
+      if (timer) clearTimeout(timer);
+      timer = setTimeout(() => reload(), 250);
+    };
+    let ch = supabase.channel(key);
+    for (const t of tables) {
+      ch = ch.on("postgres_changes", { event: "*", schema: "public", table: t }, trigger);
+    }
+    ch.subscribe();
+    return () => {
+      if (timer) clearTimeout(timer);
+      void supabase.removeChannel(ch);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [reload]);
+}
+
 /* =========================== TYPES =========================== */
 type TabId = "overview" | "users" | "offers" | "payouts" | "requests" | "conversions" | "broadcast" | "moderation" | "support" | "ai";
 
