@@ -389,6 +389,7 @@ function UsersTab() {
     setLoading(false);
   }, []);
   useEffect(() => { load(); }, [load]);
+  useRealtimeReload(["profiles","user_roles"], load, "rt:users");
 
   const filtered = useMemo(() => {
     const query = q.trim().toLowerCase();
