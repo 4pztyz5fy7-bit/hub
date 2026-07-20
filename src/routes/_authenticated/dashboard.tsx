@@ -1609,6 +1609,15 @@ function InfoTab({
         </div>
       </section>
 
+      {/* ============ Прогресс достижений ============ */}
+      <AchievementsProgress
+        earned={balance}
+        conversionsCount={conversions.filter((c) => c.status === "ok").length}
+        requestsCount={requests.length}
+      />
+
+
+
       {/* ============ Активность: табы ============ */}
       <section className="animate-in-up" style={{ animationDelay: "180ms" }}>
         <div className="mb-3 flex items-center justify-between">
