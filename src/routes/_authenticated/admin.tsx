@@ -1350,7 +1350,7 @@ function RequestRowControls({ row, onReload }: { row: LinkRow; onReload: () => v
             offer_id: offerId,
             offer_name: row.offer_name,
             amount,
-            status: "paid",
+            status: "ok",
           });
           await supabase.from("notifications").insert({
             user_id: row.user_id,
