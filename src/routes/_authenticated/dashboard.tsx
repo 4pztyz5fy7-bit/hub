@@ -708,6 +708,92 @@ function DashboardPage() {
     return () => { cancelled = true; };
   }, []);
 
+  /* --------------- Realtime: live sync of user-scoped data ------------- */
+  useEffect(() => {
+    if (!userId) return;
+    const flt = `user_id=eq.${userId}`;
+
+    const refetchRequests = async () => {
+      const { data } = await supabase.from("link_requests").select("*").eq("user_id", userId).order("created_at", { ascending: false });
+      const rows = data ?? [];
+      setRequests(rows.map((r: any): LinkRequest => ({
+        id: String(r.id).slice(0, 8).toUpperCase(),
+        offerId: r.offer_id ?? "", offerName: r.offer_name, offerTag: r.offer_tag ?? "",
+        createdAt: `${new Date(r.created_at).toLocaleDateString("ru-RU")}, ${timeOf(r.created_at)}`,
+        source: r.source ?? "", sub: r.sub ?? "", link: r.link ?? "",
+        status: normalizeStatus(r.status), ordersCount: Number(r.orders_count ?? 0),
+        note: r.note ?? undefined,
+      })));
+      setLinkedOffers(new Set(rows.map((r: any) => r.offer_id).filter(Boolean) as string[]));
+    };
+    const refetchPayouts = async () => {
+      const { data } = await supabase.from("payout_requests").select("*").eq("user_id", userId).order("created_at", { ascending: false });
+      setPayouts((data ?? []).map((r: any): Payout => ({
+        id: String(r.id).slice(0, 8).toUpperCase(),
+        date: dateShortOf(r.created_at), time: timeOf(r.created_at),
+        amount: Number(r.amount), method: r.method, destination: r.destination ?? "",
+        status: r.status, note: r.note ?? undefined,
+      })));
+    };
+    const refetchConversions = async () => {
+      const { data } = await supabase.from("conversions").select("*").eq("user_id", userId).order("created_at", { ascending: false });
+      setConversions((data ?? []).map((r: any): Conversion => ({
+        id: String(r.id).slice(0, 8), time: timeOf(r.created_at), createdAt: r.created_at,
+        offerId: r.offer_id ?? "", offerName: r.offer_name,
+        amount: Number(r.amount), status: r.status as Conversion["status"],
+      })));
+    };
+    const refetchNotifs = async () => {
+      const { data } = await supabase.from("notifications").select("*").eq("user_id", userId).order("created_at", { ascending: false }).limit(50);
+      setNotifs((data ?? []).map((r: any): Notification => ({
+        id: r.id, kind: r.kind as NotifKind, title: r.title, body: r.body,
+        time: timeOf(r.created_at), amount: r.amount ?? undefined,
+        status: (r.status ?? undefined) as Notification["status"], read: r.read,
+      })));
+    };
+    const refetchOffers = async () => {
+      const { data } = await supabase.from("offers").select("*").eq("active", true).order("created_at", { ascending: false });
+      setOffers((data ?? []).map((r: any): Offer => ({
+        id: r.id, tag: r.tag, name: r.name,
+        category: r.category ?? r.tag ?? "Другое",
+        payout: r.payout, epc: r.epc, cr: Number(r.cr ?? 0),
+        isNew: Boolean(r.is_new), advertiser: r.advertiser ?? "",
+        geo: r.geo ? String(r.geo).split(/[,;\s]+/).filter(Boolean) : [],
+        hold: r.hold ?? "", goal: r.goal ?? "",
+        description: r.description ?? "",
+        requirements: r.requirements ? String(r.requirements).split(/\n+/).filter(Boolean) : [],
+        allowed: Array.isArray(r.allowed) ? r.allowed : [],
+        denied: Array.isArray(r.denied) ? r.denied : [],
+        landing: r.landing ?? "", image: r.image_url ?? undefined,
+        cityPayouts: Array.isArray(r.city_payouts)
+          ? (r.city_payouts as any[]).map((c) => ({ city: String(c?.city ?? ""), amount: Number(c?.amount ?? 0) })).filter((c) => c.city && c.amount > 0)
+          : [],
+      })));
+    };
+    const refetchProfile = async () => {
+      const { data } = await supabase.from("profiles").select("bank,display_name,avatar_url,email,settings,blocked,blocked_reason").eq("id", userId).maybeSingle();
+      const p = data as any;
+      if (!p) return;
+      if (p.blocked === true && !isAdmin) { await supabase.auth.signOut(); navigate({ to: "/blocked", replace: true }); return; }
+      if (p.bank) setBank(p.bank);
+      if (p.display_name || p.email) setUserName(p.display_name || p.email);
+      setUserAvatar(p.avatar_url ?? null);
+      if (p.settings) setPrefs((s) => ({ ...s, ...p.settings }));
+    };
+
+    const ch = supabase
+      .channel(`user:${userId}`)
+      .on("postgres_changes", { event: "*", schema: "public", table: "link_requests", filter: flt }, () => void refetchRequests())
+      .on("postgres_changes", { event: "*", schema: "public", table: "payout_requests", filter: flt }, () => void refetchPayouts())
+      .on("postgres_changes", { event: "*", schema: "public", table: "conversions", filter: flt }, () => void refetchConversions())
+      .on("postgres_changes", { event: "*", schema: "public", table: "notifications", filter: flt }, () => void refetchNotifs())
+      .on("postgres_changes", { event: "*", schema: "public", table: "offers" }, () => void refetchOffers())
+      .on("postgres_changes", { event: "UPDATE", schema: "public", table: "profiles", filter: `id=eq.${userId}` }, () => void refetchProfile())
+      .subscribe();
+    return () => { void supabase.removeChannel(ch); };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [userId]);
+
   // Seed level history once real balance is known
   useEffect(() => {
     if (!dataReady) return;
