@@ -931,8 +931,29 @@ function PayoutsTab() {
   }, [rows]);
 
   const setStatus = async (id: string, status: PayoutRow["status"]) => {
-    await supabase.from("payout_requests").update({ status }).eq("id", id); load();
+    const row = rows.find((r) => r.id === id);
+    await supabase.from("payout_requests").update({ status }).eq("id", id);
+    if (row && row.status !== status) {
+      const amountStr = Number(row.amount || 0).toLocaleString("ru-RU");
+      const meta: Record<PayoutRow["status"], { title: string; body: string; kind: string }> = {
+        pending:    { title: "Выплата: ожидает",     body: `Заявка на вывод ${amountStr} ₽ ожидает обработки.`, kind: "payout" },
+        processing: { title: "Выплата в обработке",  body: `Заявка на вывод ${amountStr} ₽ взята в работу.`, kind: "payout" },
+        paid:       { title: "Выплата одобрена",     body: `Вам выплачено ${amountStr} ₽. Сумма списана с баланса.`, kind: "payout" },
+        rejected:   { title: "Выплата отклонена",    body: `Заявка на вывод ${amountStr} ₽ отклонена. Средства возвращены на баланс.`, kind: "payout" },
+      };
+      const m = meta[status];
+      await supabase.from("notifications").insert({
+        user_id: row.user_id,
+        kind: m.kind,
+        title: m.title,
+        body: m.body,
+        amount: amountStr,
+        status,
+      });
+    }
+    load();
   };
+
   const del = async (id: string) => { if (!confirm("Удалить заявку?")) return; await supabase.from("payout_requests").delete().eq("id", id); load(); };
 
   if (loading) return <CenterLoader label="Загрузка выплат" />;

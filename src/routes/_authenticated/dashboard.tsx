@@ -564,16 +564,25 @@ function DashboardPage() {
   }, [prefs.language]);
 
 
-  // Earnings derived from real conversions and payouts
-  const balance = useMemo(
+  // Earnings derived from real conversions and payouts.
+  // Balance decreases only when a payout is actually approved (status = "paid").
+  // Pending/processing payouts are "reserved" and reduce `available`, but not `balance`.
+  const gross = useMemo(
     () => conversions.filter((c) => c.status === "ok").reduce((s, c) => s + c.amount, 0),
     [conversions],
   );
-  const spent = useMemo(
-    () => payouts.filter((p) => p.status !== "rejected").reduce((s, p) => s + p.amount, 0),
+  const paidOut = useMemo(
+    () => payouts.filter((p) => p.status === "paid").reduce((s, p) => s + p.amount, 0),
     [payouts],
   );
-  const available = Math.max(0, balance - spent);
+  const reserved = useMemo(
+    () => payouts.filter((p) => p.status === "pending" || p.status === "processing").reduce((s, p) => s + p.amount, 0),
+    [payouts],
+  );
+  const balance = Math.max(0, gross - paidOut);
+  const spent = paidOut + reserved;
+  const available = Math.max(0, gross - spent);
+
 
   const [levelToast, setLevelToast] = useState<Level | null>(null);
   const prevLevelIdxRef = useRef<number>(-1);
