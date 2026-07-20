@@ -616,6 +616,16 @@ function AuthDialog({ initialMode, onClose }: { initialMode: Mode; onClose: () =
             {mode === "login" ? "Войти" : "Создать аккаунт"}
           </button>
 
+          {mode === "register" && (
+            <p className="pt-1 text-center text-[11px] leading-relaxed text-muted-foreground">
+              Создавая аккаунт, вы соглашаетесь с{" "}
+              <a href="/terms" target="_blank" rel="noreferrer" className="font-bold text-primary hover:underline">офертой</a>
+              {" "}и{" "}
+              <a href="/privacy" target="_blank" rel="noreferrer" className="font-bold text-primary hover:underline">политикой конфиденциальности</a>.
+            </p>
+          )}
+
+
           <p className="pt-1 text-center text-[11px] text-muted-foreground">
             {mode === "login" ? (
               <>Нет аккаунта? <button type="button" onClick={() => setMode("register")} className="font-bold text-primary hover:underline">Зарегистрироваться</button></>
