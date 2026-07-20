@@ -6,8 +6,10 @@ import {
   Check, X, Plus, Pencil, Trash2, LogOut, LayoutDashboard, Bell,
   BarChart3, Search, Download, Copy, RefreshCw, Send, Filter, MoreHorizontal,
   TrendingUp, DollarSign, UserCheck, Activity, ChevronRight, Eye, Ban, Sparkles,
+  Headphones,
 } from "lucide-react";
 import { AdminAnalystTab } from "@/components/admin/analyst-tab";
+import { AdminSupportTab } from "@/components/admin/support-tab";
 
 export const Route = createFileRoute("/_authenticated/admin")({
   head: () => ({ meta: [{ title: "Админ-панель — КВАНТ" }] }),
@@ -15,7 +17,7 @@ export const Route = createFileRoute("/_authenticated/admin")({
 });
 
 /* =========================== TYPES =========================== */
-type TabId = "overview" | "users" | "offers" | "payouts" | "requests" | "conversions" | "broadcast" | "moderation" | "ai";
+type TabId = "overview" | "users" | "offers" | "payouts" | "requests" | "conversions" | "broadcast" | "moderation" | "support" | "ai";
 
 type Profile = {
   id: string; email: string | null; display_name: string | null;
@@ -65,6 +67,7 @@ function AdminPage() {
   const [accessError, setAccessError] = useState<string | null>(null);
   const [tab, setTab] = useState<TabId>("overview");
   const [moderationUnread, setModerationUnread] = useState(0);
+  const [supportUnread, setSupportUnread] = useState(0);
   const [meId, setMeId] = useState<string | null>(null);
 
   // ADMIN GUARD: надёжная проверка сессии и роли.
@@ -174,6 +177,7 @@ function AdminPage() {
     { id: "conversions", label: "Конверсии", Icon: Activity },
     { id: "broadcast", label: "Рассылка", Icon: Bell },
     { id: "moderation", label: "Модерация", Icon: Shield, badge: moderationUnread },
+    { id: "support", label: "Поддержка", Icon: Headphones, badge: supportUnread },
     { id: "ai", label: "AI-аналитик", Icon: Sparkles },
   ];
 
@@ -232,6 +236,7 @@ function AdminPage() {
         {tab === "conversions" && <ConversionsTab />}
         {tab === "broadcast" && <BroadcastTab />}
         {tab === "moderation" && <ModerationTab meId={meId} onCountChange={setModerationUnread} />}
+        {tab === "support" && <AdminSupportTab meId={meId} onCountChange={setSupportUnread} />}
         {tab === "ai" && <AdminAnalystTab />}
       </main>
     </div>

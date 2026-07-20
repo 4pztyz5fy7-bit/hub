@@ -3,6 +3,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { AssistantTab } from "@/components/dashboard/assistant-tab";
 import { ProfileTab } from "@/components/dashboard/profile-tab";
+import { SupportTab } from "@/components/dashboard/support-tab";
 import { LogOut } from "lucide-react";
 import {
   LayoutGrid,
@@ -60,7 +61,7 @@ export const Route = createFileRoute("/_authenticated/dashboard")({
 
 /* ================================ Types ================================ */
 
-type Tab = "info" | "offers" | "stats" | "payouts" | "ai" | "requests" | "profile";
+type Tab = "info" | "offers" | "stats" | "payouts" | "ai" | "requests" | "profile" | "support";
 
 export type UserPrefs = {
   notify_email: boolean;
@@ -1030,6 +1031,7 @@ function DashboardPage() {
           />
         )}
         {active === "ai" && <AssistantTab />}
+        {active === "support" && <SupportTab />}
         {active === "requests" && <RequestsTab requests={requests} />}
         {active === "profile" && (
           <ProfileTab
@@ -1115,6 +1117,7 @@ function DashboardPage() {
             { id: "stats", label: "Стата", Icon: BarChart3 },
             { id: "payouts", label: "Выплаты", Icon: Wallet },
             { id: "ai", label: "AI", Icon: Sparkles },
+            { id: "support", label: "Помощь", Icon: Headphones },
           ] as const
         ).map(({ id, label, Icon }) => (
           <button
