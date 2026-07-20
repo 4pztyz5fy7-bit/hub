@@ -2,7 +2,7 @@
 @source "../src";
 @import "tw-animate-css";
 
-@custom-variant dark (&:is(.dark *));
+@custom-variant dark (&:where(.dark, .dark *));
 
 @theme inline {
   --radius-sm: calc(var(--radius) - 4px);
@@ -57,6 +57,31 @@
   --ring: hsl(221 83% 53%);
   --success: hsl(142 71% 40%);
   --warning: hsl(38 92% 50%);
+}
+
+.dark {
+  --background: hsl(0 0% 7%);
+  --foreground: hsl(0 0% 98%);
+  --card: hsl(0 0% 10%);
+  --card-foreground: hsl(0 0% 98%);
+  --popover: hsl(0 0% 10%);
+  --popover-foreground: hsl(0 0% 98%);
+  --primary: hsl(221 83% 60%);
+  --primary-foreground: hsl(0 0% 100%);
+  --secondary: hsl(0 0% 14%);
+  --secondary-foreground: hsl(0 0% 98%);
+  --muted: hsl(0 0% 16%);
+  --muted-foreground: hsl(0 0% 65%);
+  --accent: hsl(0 0% 18%);
+  --accent-foreground: hsl(0 0% 98%);
+  --destructive: hsl(0 72% 55%);
+  --destructive-foreground: hsl(0 0% 100%);
+  --border: hsl(0 0% 100% / 0.10);
+  --input: hsl(0 0% 100% / 0.10);
+  --ring: hsl(221 83% 60%);
+  --success: hsl(142 71% 45%);
+  --warning: hsl(38 92% 55%);
+  color-scheme: dark;
 }
 
 @layer base {
