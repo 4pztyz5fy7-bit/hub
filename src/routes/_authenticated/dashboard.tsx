@@ -2785,6 +2785,13 @@ function NotificationsSheet({
   onClose: () => void;
 }) {
   const filtered = filter === "all" ? notifs : notifs.filter((n) => n.kind === filter);
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const selected = selectedId ? notifs.find((n) => n.id === selectedId) ?? null : null;
+  const openNotif = (n: Notification) => {
+    setSelectedId(n.id);
+    if (!n.read) onToggleRead(n.id);
+  };
+  const selectedMeta = selected ? notifMeta(selected) : null;
   return (
     <div className="fixed inset-0 z-50 flex items-end justify-center bg-foreground/40 backdrop-blur-sm sm:items-center">
       <div className="animate-in-up flex max-h-[92vh] w-full max-w-[440px] flex-col overflow-hidden rounded-t-2xl border border-border bg-background sm:rounded-2xl">
