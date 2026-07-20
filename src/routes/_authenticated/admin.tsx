@@ -1599,6 +1599,7 @@ function ConversionsTab() {
     setLoading(false);
   }, []);
   useEffect(() => { load(); }, [load]);
+  useRealtimeReload(["conversions"], load, "rt:conversions");
 
   const filtered = useMemo(() => {
     const query = q.trim().toLowerCase();
