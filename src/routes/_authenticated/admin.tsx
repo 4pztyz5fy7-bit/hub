@@ -1096,7 +1096,8 @@ function RequestsTab() {
       const notes: any[] = [];
       for (const t of targets) {
         const off = t.offer_id ? offersMap.get(t.offer_id) : null;
-        const per = off ? Number(String(off.payout ?? "").replace(/[^\d.]/g, "")) || Number(off.payout_max) || Number(off.payout_min) || 0 : 0;
+        const offerPer = off ? Number(String(off.payout ?? "").replace(/[^\d.]/g, "")) || Number(off.payout_max) || Number(off.payout_min) || 0 : 0;
+        const per = t.payout_override != null && t.payout_override > 0 ? Number(t.payout_override) : offerPer;
         const qty = Math.max(1, t.orders_count || 1);
         const amount = per * qty;
         if (amount > 0) {
