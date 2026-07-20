@@ -2275,26 +2275,34 @@ function StatsTab({ conversions, offers, requests }: { conversions: Conversion[]
           <h3 className="text-[11px] font-bold uppercase tracking-[0.1em] text-muted-foreground">
             По офферам
           </h3>
-          <span className="font-mono text-[10px] text-muted-foreground">{byOffer.length} активных</span>
+          <span className="font-mono text-[10px] text-muted-foreground">{activeOffers} активных</span>
         </div>
         <div className="divide-y divide-border overflow-hidden rounded-lg border border-border bg-card">
-          {byOffer.map((row) => (
-            <div key={row.offer.id} className="flex items-center gap-3 p-3">
-              <OfferTag tag={row.offer.tag} />
-              <div className="min-w-0 flex-1">
-                <p className="truncate text-xs font-bold leading-none">{row.offer.name}</p>
-                <p className="mt-1 font-mono text-[10px] text-muted-foreground">
-                  {row.conv} конв. • EPC {fmt(row.offer.epc)} ₽
-                </p>
+          {byOffer.length === 0 && (
+            <div className="p-4 text-center text-[11px] text-muted-foreground">Пока нет данных за период</div>
+          )}
+          {byOffer.map((row) => {
+            const rowCr = row.reqCount > 0 ? (row.conv / row.reqCount) * 100 : 0;
+            const rowEpc = row.conv > 0 ? Math.round(row.income / row.conv) : 0;
+            return (
+              <div key={row.offer.id} className="flex items-center gap-3 p-3">
+                <OfferTag tag={row.offer.tag} />
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-xs font-bold leading-none">{row.offer.name}</p>
+                  <p className="mt-1 font-mono text-[10px] text-muted-foreground">
+                    {row.conv} конв. • {row.reqCount} заявок • EPC {fmt(rowEpc)} ₽
+                  </p>
+                </div>
+                <div className="shrink-0 text-right">
+                  <p className="font-mono text-xs font-bold tabular-nums">{fmt(row.income)} ₽</p>
+                  <p className="font-mono text-[9px] uppercase text-[color:var(--success)]">
+                    CR {rowCr.toFixed(1)}%
+                  </p>
+                </div>
               </div>
-              <div className="shrink-0 text-right">
-                <p className="font-mono text-xs font-bold tabular-nums">{fmt(row.income)} ₽</p>
-                <p className="font-mono text-[9px] uppercase text-[color:var(--success)]">
-                  CR {row.offer.cr.toFixed(1)}%
-                </p>
-              </div>
-            </div>
-          ))}
+            );
+          })}
+
         </div>
       </section>
 
