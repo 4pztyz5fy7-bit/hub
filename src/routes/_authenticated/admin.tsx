@@ -1184,7 +1184,17 @@ function PayoutsTab() {
     load();
   };
 
-  const del = async (id: string) => { if (!confirm("Удалить заявку?")) return; await supabase.from("payout_requests").delete().eq("id", id); load(); };
+  const del = async (id: string) => {
+    const row = rows.find((r) => r.id === id);
+    const wasPaid = row?.status === "paid";
+    const msg = wasPaid
+      ? "Удалить выплату? Сумма будет возвращена на баланс партнёра."
+      : "Удалить заявку на выплату?";
+    if (!confirm(msg)) return;
+    const { error } = await supabase.rpc("admin_delete_payout", { _id: id });
+    if (error) { alert("Не удалось удалить: " + error.message); return; }
+    load();
+  };
 
   if (loading) return <CenterLoader label="Загрузка выплат" />;
 

@@ -582,6 +582,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      admin_delete_payout: { Args: { _id: string }; Returns: Json }
       admin_set_link_request_status: {
         Args: {
           _new_status: Database["public"]["Enums"]["link_status"]
