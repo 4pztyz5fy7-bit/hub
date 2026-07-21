@@ -137,13 +137,37 @@ export function AdminCompetitionsTab() {
                 <button onClick={() => remove(c.id)} className="grid size-7 place-items-center rounded-md text-destructive hover:bg-destructive/10"><Trash2 className="size-3.5" /></button>
               </div>
             </div>
-            <div className="flex flex-wrap gap-3 text-[11px] text-muted-foreground">
+            <div className="flex flex-wrap items-center gap-3 text-[11px] text-muted-foreground">
               <span>Фонд: <span className="font-bold text-foreground">{fmtRub(c.prize_pool)}</span></span>
               <span>Призов: <span className="font-bold text-foreground">{c.prizes.length}</span></span>
               <span className={finished ? "text-destructive" : c.active ? "text-emerald-500" : "text-muted-foreground"}>
                 {finished ? "завершено" : c.active ? "активно" : "выключено"}
               </span>
+              {c.settled_at ? (
+                <span className="inline-flex items-center gap-1 rounded-full border border-emerald-500/40 bg-emerald-500/10 px-2 py-0.5 text-[10px] font-bold text-emerald-500">
+                  <Coins className="size-3" /> Призы выплачены · {c.winners.length}
+                </span>
+              ) : finished && c.prizes.length > 0 ? (
+                <button
+                  onClick={() => settle(c)}
+                  disabled={settling === c.id}
+                  className="inline-flex items-center gap-1 rounded-full border border-cyan-500/40 bg-cyan-500/10 px-2 py-1 text-[10px] font-bold text-cyan-300 hover:bg-cyan-500/20 disabled:opacity-60"
+                >
+                  {settling === c.id ? <Loader2 className="size-3 animate-spin" /> : <Coins className="size-3" />}
+                  Выплатить призы
+                </button>
+              ) : null}
             </div>
+            {c.settled_at && c.winners.length > 0 && (
+              <div className="mt-2 space-y-1 border-t border-border pt-2 text-[11px]">
+                {c.winners.slice().sort((a, b) => a.place - b.place).map((w) => (
+                  <div key={w.place} className="flex items-center justify-between text-muted-foreground">
+                    <span>#{w.place} · <span className="font-mono">{w.user_id.slice(0, 8)}</span></span>
+                    <span className="font-mono font-bold text-emerald-500">{fmtRub(w.amount)}</span>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         );
       })}
