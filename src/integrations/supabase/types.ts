@@ -129,9 +129,12 @@ export type Database = {
           prize_pool: number
           prizes: Json
           rules: string | null
+          settled_at: string | null
+          settled_by: string | null
           starts_at: string
           title: string
           updated_at: string
+          winners: Json
         }
         Insert: {
           active?: boolean
@@ -146,9 +149,12 @@ export type Database = {
           prize_pool?: number
           prizes?: Json
           rules?: string | null
+          settled_at?: string | null
+          settled_by?: string | null
           starts_at?: string
           title: string
           updated_at?: string
+          winners?: Json
         }
         Update: {
           active?: boolean
@@ -163,9 +169,12 @@ export type Database = {
           prize_pool?: number
           prizes?: Json
           rules?: string | null
+          settled_at?: string | null
+          settled_by?: string | null
           starts_at?: string
           title?: string
           updated_at?: string
+          winners?: Json
         }
         Relationships: []
       }
@@ -175,6 +184,7 @@ export type Database = {
           base_amount: number | null
           bonus_amount: number | null
           bonus_pct: number | null
+          competition_id: string | null
           created_at: string
           id: string
           offer_id: string | null
@@ -187,6 +197,7 @@ export type Database = {
           base_amount?: number | null
           bonus_amount?: number | null
           bonus_pct?: number | null
+          competition_id?: string | null
           created_at?: string
           id?: string
           offer_id?: string | null
@@ -199,6 +210,7 @@ export type Database = {
           base_amount?: number | null
           bonus_amount?: number | null
           bonus_pct?: number | null
+          competition_id?: string | null
           created_at?: string
           id?: string
           offer_id?: string | null
@@ -207,6 +219,13 @@ export type Database = {
           user_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "conversions_competition_id_fkey"
+            columns: ["competition_id"]
+            isOneToOne: false
+            referencedRelation: "competitions"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "conversions_offer_id_fkey"
             columns: ["offer_id"]
@@ -677,6 +696,7 @@ export type Database = {
         }
         Returns: Json
       }
+      auto_settle_competitions: { Args: never; Returns: number }
       award_achievements: {
         Args: never
         Returns: {
@@ -721,6 +741,7 @@ export type Database = {
         Args: { _tier: Database["public"]["Enums"]["level_tier"] }
         Returns: number
       }
+      settle_competition: { Args: { _id: string }; Returns: Json }
       touch_streak: {
         Args: never
         Returns: {
