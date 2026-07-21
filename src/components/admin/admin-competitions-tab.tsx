@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Plus, Trash2, Pencil, X, Trophy, Check, Ban, Coins, Loader2 } from "lucide-react";
+import { translateError } from "@/lib/errors-ru";
 
 type Tier = "start" | "silver" | "gold" | "platinum" | "diamond";
 type Metric = "earned" | "conversions" | "requests";
@@ -85,7 +86,7 @@ export function AdminCompetitionsTab() {
       }
       await load();
     } catch (e: any) {
-      toast.error(e?.message ?? "Ошибка");
+      toast.error(translateError(e));
     } finally {
       setSettling(null);
     }
@@ -242,7 +243,7 @@ function CompetitionEditor({ comp, onClose, onSaved }: { comp: Competition | nul
       ? await supabase.from("competitions").update(payload).eq("id", comp.id)
       : await supabase.from("competitions").insert(payload);
     setSaving(false);
-    if (error) { setErr(error.message); return; }
+    if (error) { setErr(translateError(error)); return; }
     onSaved();
   };
 

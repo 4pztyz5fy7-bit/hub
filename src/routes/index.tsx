@@ -3,6 +3,7 @@ import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { z } from "zod";
 import {
+import { translateError } from "@/lib/errors-ru";
   Loader2, Mail, Lock, User, Rocket, ShieldCheck, TrendingUp, Zap, Trophy,
   X, ArrowRight, Wallet, BarChart3, Headphones, Star, Check, Menu, Sparkles,
   Clock, Users, Target, Gift, MessageCircle, CreditCard, Globe, Award,
@@ -594,7 +595,7 @@ function AuthDialog({ initialMode, onClose }: { initialMode: Mode; onClose: () =
       }
     } catch (e: unknown) {
       const msg = e instanceof z.ZodError ? e.errors[0]?.message : e instanceof Error ? e.message : "Ошибка";
-      setError(msg ?? "Ошибка");
+      setError(translateError(e, msg ?? "Ошибка"));
     } finally {
       setLoading(false);
     }

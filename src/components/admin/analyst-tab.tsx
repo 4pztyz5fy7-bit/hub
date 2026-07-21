@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import {
+import { translateError } from "@/lib/errors-ru";
   Sparkles, Send, Loader2, Users, Package, DollarSign, Wallet,
   TrendingUp, AlertTriangle, RefreshCw, Trophy, Activity,
 } from "lucide-react";
@@ -51,7 +52,7 @@ export function AdminAnalystTab() {
       const res = await askFn({ data: { messages: next } });
       setMessages([...next, { role: "assistant", content: res.answer }]);
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Не удалось получить ответ");
+      setError(translateError(e, "Не удалось получить ответ"));
     } finally {
       setSending(false);
     }
