@@ -86,6 +86,35 @@ export type Database = {
         }
         Relationships: []
       }
+      competition_participants: {
+        Row: {
+          competition_id: string
+          id: string
+          joined_at: string
+          user_id: string
+        }
+        Insert: {
+          competition_id: string
+          id?: string
+          joined_at?: string
+          user_id: string
+        }
+        Update: {
+          competition_id?: string
+          id?: string
+          joined_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "competition_participants_competition_id_fkey"
+            columns: ["competition_id"]
+            isOneToOne: false
+            referencedRelation: "competitions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       competitions: {
         Row: {
           active: boolean
@@ -686,6 +715,7 @@ export type Database = {
         Returns: boolean
       }
       is_admin: { Args: never; Returns: boolean }
+      join_competition: { Args: { _competition_id: string }; Returns: Json }
       level_bonus_pct: { Args: { _earned: number }; Returns: number }
       level_min_earned: {
         Args: { _tier: Database["public"]["Enums"]["level_tier"] }
