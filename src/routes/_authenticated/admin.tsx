@@ -1710,11 +1710,37 @@ function RequestRowControls({ row, onReload }: { row: LinkRow; onReload: () => v
           placeholder="напр. 3500"
           className="mt-0.5 w-full rounded-lg border border-border bg-background px-3 py-1.5 text-sm outline-none focus:ring-2 focus:ring-primary/40"
         />
-        {priceNum != null && priceNum > 0 && (
-          <span className="mt-1 block text-[10px] font-bold uppercase tracking-wider text-emerald-500">
-            К начислению: {priceNum.toLocaleString("ru-RU")} ₽
-          </span>
-        )}
+        {priceNum != null && priceNum > 0 && (() => {
+          const bp = partnerEarned == null ? null : levelBonusPct(partnerEarned);
+          const bonus = bp ? Math.round(priceNum * bp) / 100 * 100 : 0;
+          const bonusAmt = bp ? Math.round((priceNum * bp) / 100 * 100) / 100 : 0;
+          const total = priceNum + bonusAmt;
+          return (
+            <div className="mt-1 space-y-0.5 rounded-md border border-border/60 bg-muted/30 px-2 py-1.5">
+              <div className="flex items-center justify-between text-[10px] font-bold uppercase tracking-wider">
+                <span className="text-muted-foreground">База</span>
+                <span className="tabular-nums">{priceNum.toLocaleString("ru-RU")} ₽</span>
+              </div>
+              <div className="flex items-center justify-between text-[10px] font-bold uppercase tracking-wider">
+                <span className="text-muted-foreground">
+                  Бонус уровня{partnerEarned != null ? ` «${levelName(bp!)}»` : ""}
+                </span>
+                <span className={bp ? "tabular-nums text-primary" : "tabular-nums text-muted-foreground"}>
+                  {partnerEarned == null ? "…" : bp ? `+${bp}% · +${bonusAmt.toLocaleString("ru-RU")} ₽` : "—"}
+                </span>
+              </div>
+              <div className="mt-1 flex items-center justify-between border-t border-border/60 pt-1 text-[11px] font-bold uppercase tracking-wider text-emerald-500">
+                <span>Итого партнёру</span>
+                <span className="tabular-nums">{total.toLocaleString("ru-RU")} ₽</span>
+              </div>
+              {partnerEarned != null && (
+                <p className="pt-0.5 text-[9px] font-medium normal-case text-muted-foreground">
+                  Заработано партнёром всего: {partnerEarned.toLocaleString("ru-RU")} ₽
+                </p>
+              )}
+            </div>
+          );
+        })()}
       </label>
       <label className="block">
         <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Партнёрская ссылка (её копирует пользователь)</span>
