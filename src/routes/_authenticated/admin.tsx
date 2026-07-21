@@ -1500,8 +1500,14 @@ function RequestDetailSheet({ row, profile, statusLabel, badgeClass, onClose, on
       >
         <header className="flex items-start gap-3 border-b border-border p-4">
           <div className="min-w-0 flex-1">
-            <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Заявка #{row.id.slice(0, 8)}</p>
-            <h3 className="mt-0.5 truncate text-base font-bold">{row.offer_name}</h3>
+            <div className="flex items-center gap-2">
+              <span className="rounded-md bg-primary/10 px-2 py-0.5 font-mono text-[11px] font-bold text-primary">{row.code}</span>
+              <button onClick={() => copyValue("code", row.code)} className="grid size-6 place-items-center rounded text-muted-foreground hover:bg-accent hover:text-foreground" aria-label="Копировать код">
+                {copied === "code" ? <Check className="size-3 text-emerald-500" /> : <Copy className="size-3" />}
+              </button>
+              <span className="text-[10px] text-muted-foreground">#{row.id.slice(0, 8)}</span>
+            </div>
+            <h3 className="mt-1 truncate text-base font-bold">{row.offer_name}</h3>
             <div className="mt-1 flex flex-wrap items-center gap-2">
               <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold uppercase ${badgeClass}`}>{statusLabel}</span>
               <span className="text-[11px] text-muted-foreground">{dt(row.created_at)}</span>
