@@ -1,74 +1,132 @@
-# КВАНТ — деплой на VPS (максимально подробно)
+# КВАНТ — как перенести сайт на свой сервер (простая инструкция)
 
-Гайд для человека, который **никогда не работал с Linux-сервером**. Копируйте команды блоками — они выполняются друг за другом. Всё, что в `< >` — заменить на своё значение (без угловых скобок).
+Инструкция для человека, который **никогда не работал с серверами**. Читайте по порядку — сверху вниз, ничего не пропуская. Каждый шаг = одно действие. Копируйте команды блоками в чёрное окно (терминал) — они выполнятся сами.
 
-**Итог**: сайт `https://kvantm.tech` работает 24/7, HTTPS, автозапуск при перезагрузке, автообновление сертификата.
+**Что получите в итоге:** сайт `https://kvantm.tech` работает круглосуточно, ваш, без Lovable.
 
----
+**Порядок действий:**
+1. Купить сервер (VPS) в reg.ru
+2. Подключиться к нему с компьютера
+3. Настроить сервер (одна пачка команд)
+4. Настроить домен `kvantm.tech`
+5. Подготовить вашу базу данных Supabase
+6. Скачать код проекта из Lovable
+7. Залить код на сервер и запустить
+8. Включить HTTPS (замочек в браузере)
+9. Настроить админку и почту
+10. Готово, дальше только обновления
 
-## 0. Что купить и подготовить
-
-| Что | Где | Стоимость |
-|---|---|---|
-| VPS Ubuntu 22.04, 2 CPU / 2 ГБ RAM / 20 ГБ SSD | reg.ru → «Виртуальные серверы» → **VPS-2** и выше | ~450 ₽/мес |
-| Домен `kvantm.tech` | Уже есть | — |
-| Supabase проект | Уже есть (`eazrhjenaxpzuxfyoeoy`) | Free |
-| Почтовый ящик `noreply@kvantm.tech` | reg.ru → «Почта для домена» | Бесплатно с доменом |
-| SSH-клиент | Windows: **MobaXterm** или **Windows Terminal**. macOS/Linux: терминал | Бесплатно |
-
-При заказе VPS **не берите** ISPmanager (лишние 200 ₽/мес, будем работать через SSH напрямую). ОС: **Ubuntu 22.04 LTS**.
-
-После оплаты reg.ru пришлёт письмо с:
-- **IP-адрес** сервера (например `194.87.xxx.xxx`)
-- **root-пароль**
+Общее время: **2–3 часа**, если делать без спешки.
 
 ---
 
-## 1. Первое подключение к серверу
+## Шаг 1. Купить сервер (VPS)
 
-### 1.1 Windows
+### Что это
 
-Скачать **MobaXterm Home Edition** → https://mobaxterm.mobatek.net/download.html
-1. Открыть → **Session** → **SSH**.
-2. `Remote host` = IP сервера, `Specify username` = `root`.
-3. **OK** → ввести пароль (при вводе символы не отображаются — это норма) → **Enter**.
+**VPS** — это ваш маленький компьютер в интернете. Работает 24/7. Именно на нём будет жить сайт.
 
-### 1.2 macOS / Linux
+### Как купить
+
+1. Зайти на **reg.ru**.
+2. Меню сверху → **Хостинг и серверы** → **VPS / Виртуальные серверы**.
+3. Выбрать тариф **VPS-2** (2 ядра, 2 ГБ памяти, ~450 ₽/мес). Меньше — будет тормозить.
+4. При заказе:
+   - Операционная система → **Ubuntu 22.04**
+   - Панель управления → **Без панели** (нам она не нужна)
+   - Резервные копии → включить (рекомендую)
+5. Оплатить.
+
+### Что придёт
+
+Через 5–10 минут на почту придёт письмо от reg.ru. В нём:
+- **IP-адрес** — набор цифр через точки, например `194.87.123.45`
+- **Пароль от root** — длинная строка букв и цифр
+
+**Запишите оба значения** — они понадобятся дальше. Не потеряйте.
+
+---
+
+## Шаг 2. Подключиться к серверу с вашего компьютера
+
+Работать с сервером мы будем через программу-терминал. Это чёрное окно, куда пишутся команды.
+
+### Если у вас Windows
+
+1. Скачать **MobaXterm** (бесплатно): https://mobaxterm.mobatek.net/download.html → **Home Edition** → **Installer edition**.
+2. Установить, запустить.
+3. Слева сверху нажать **Session** → выбрать **SSH**.
+4. Заполнить:
+   - `Remote host` → **IP-адрес** из письма reg.ru
+   - `Specify username` → поставить галочку → написать `root`
+5. Нажать **OK**.
+6. Появится чёрное окно. Спросит пароль → вставить пароль от root из письма (**Ctrl+V не работает, кликните правой кнопкой мыши, выберите Paste**). Символы при вводе не показываются — это нормально. Нажать **Enter**.
+
+### Если у вас macOS или Linux
+
+1. Открыть **Терминал** (стандартное приложение).
+2. Написать:
+   ```
+   ssh root@194.87.123.45
+   ```
+   (замените `194.87.123.45` на ваш IP).
+3. Ответить `yes` на вопрос.
+4. Вставить пароль → **Enter**.
+
+### Как понять, что подключились
+
+В окне появится строка вида `root@ubuntu-xxx:~#`. Всё, вы «внутри» сервера. Все следующие команды пишутся в это окно.
+
+---
+
+## Шаг 3. Настроить сервер (просто скопируйте команды)
+
+### 3.1 Сменить пароль (обязательно)
+
+Пароль из письма reg.ru — временный. Сделайте свой.
 
 ```bash
-ssh root@<IP-сервера>
-# yes на вопрос про fingerprint
-# пароль из письма
+passwd
 ```
 
-Если видите `root@ubuntu-2gb-xxx:~#` — вы внутри сервера. Дальше все команды выполняются здесь.
+Ввести новый пароль два раза (символы не видны). **Запишите его в надёжное место.**
 
----
-
-## 2. Базовая настройка сервера
-
-### 2.1 Обновление системы
+### 3.2 Обновить систему
 
 ```bash
 apt update && apt upgrade -y
 ```
 
-(если попросит выбрать что-то про конфиг-файлы — жмите Enter, оставляя значения по умолчанию).
+Идёт 1–3 минуты. Если попросит подтверждение — жмите **Enter**.
 
-### 2.2 Смена пароля root (обязательно)
+### 3.3 Поставить всё нужное одной командой
 
-```bash
-passwd
-# ввести новый пароль дважды (символы не видны)
-```
-
-### 2.3 Часовой пояс
+Скопируйте весь блок целиком и вставьте в терминал:
 
 ```bash
-timedatectl set-timezone Europe/Moscow
+curl -fsSL https://deb.nodesource.com/setup_20.x | bash -
+apt install -y nodejs git nginx certbot python3-certbot-nginx build-essential ufw fail2ban htop
+curl -fsSL https://bun.sh/install | bash
+export PATH="$HOME/.bun/bin:$PATH"
+echo 'export PATH="$HOME/.bun/bin:$PATH"' >> ~/.bashrc
+npm install -g pm2
 ```
 
-### 2.4 Swap-файл (страховка от нехватки памяти)
+Идёт 3–5 минут. Установились: Node.js, Git, Nginx (веб-сервер), certbot (для HTTPS), Bun (быстрый сборщик), PM2 (чтобы сайт не падал).
+
+### 3.4 Включить защиту (файрвол)
+
+```bash
+ufw allow OpenSSH
+ufw allow 'Nginx Full'
+ufw --force enable
+```
+
+Теперь только нужные порты открыты, остальное закрыто от чужих.
+
+### 3.5 Добавить страховку памяти
+
+Чтобы сервер не падал при сборке:
 
 ```bash
 fallocate -l 2G /swapfile
@@ -78,275 +136,228 @@ swapon /swapfile
 echo '/swapfile none swap sw 0 0' >> /etc/fstab
 ```
 
-Проверить: `free -h` — в строке `Swap` должно быть `2.0Gi`.
-
-### 2.5 Firewall
+### 3.6 Часовой пояс
 
 ```bash
-apt install -y ufw
-ufw allow OpenSSH
-ufw allow 'Nginx Full'
-ufw --force enable
-ufw status
+timedatectl set-timezone Europe/Moscow
 ```
 
-Должно быть: `Status: active`, разрешены порты 22, 80, 443.
+**Готово, сервер настроен.** Не закрывайте окно — оно ещё пригодится.
 
 ---
 
-## 3. Установка стека (Node.js, Git, Nginx, PM2, Bun)
+## Шаг 4. Настроить домен `kvantm.tech`
 
-Выполнить одним блоком:
+Нужно, чтобы `kvantm.tech` показывал на ваш сервер.
 
-```bash
-# Node.js 20 LTS
-curl -fsSL https://deb.nodesource.com/setup_20.x | bash -
-apt install -y nodejs git nginx certbot python3-certbot-nginx build-essential
+1. Открыть **reg.ru** в браузере, зайти в личный кабинет.
+2. **Мои домены** → нажать на `kvantm.tech`.
+3. Выбрать **Управление DNS-серверами и зоной** (иногда называется «DNS-зона»).
+4. Если увидите старые записи типа **A** для `@` или `www` — удалить их.
+5. Нажать **Добавить запись**:
+   ```
+   Тип:      A
+   Поддомен: @
+   Значение: IP-адрес вашего сервера (например 194.87.123.45)
+   TTL:      600
+   ```
+   Сохранить.
+6. Ещё раз **Добавить запись**:
+   ```
+   Тип:      A
+   Поддомен: www
+   Значение: тот же IP
+   TTL:      600
+   ```
+   Сохранить.
 
-# Проверка
-node -v      # должно быть v20.x
-npm -v
-nginx -v
-git --version
+Подождать **10–30 минут** (иногда до 2 часов), пока интернет узнает о новом адресе.
 
-# Bun (быстрее npm)
-curl -fsSL https://bun.sh/install | bash
-source /root/.bashrc
-bun -v       # должно быть 1.x
+### Проверить, что домен «переключился»
 
-# PM2 (менеджер Node-процессов)
-npm install -g pm2
-pm2 -v
+На своём компьютере в терминале (не на сервере, а у себя!):
+
 ```
-
-Если `bun -v` не сработал:
-```bash
-export PATH="$HOME/.bun/bin:$PATH"
-echo 'export PATH="$HOME/.bun/bin:$PATH"' >> ~/.bashrc
-```
-
----
-
-## 4. Настройка DNS домена
-
-В **личном кабинете reg.ru**:
-
-1. **Мои домены** → `kvantm.tech` → **Управление DNS-серверами и зоной**.
-2. Убедитесь, что DNS = `ns1.hosting.reg.ru` / `ns2.hosting.reg.ru`.
-3. **Ресурсные записи** → удалите старые A-записи для `@` и `www` (если есть).
-4. **Добавить запись**:
-   ```
-   Тип:       A
-   Поддомен:  @
-   IP:        <IP-VPS>
-   TTL:       600
-   ```
-5. Ещё одна:
-   ```
-   Тип:       A
-   Поддомен:  www
-   IP:        <IP-VPS>
-   TTL:       600
-   ```
-6. Сохранить. Ждать 5–30 минут.
-
-Проверка с локального ПК:
-```bash
 ping kvantm.tech
-# должен показать <IP-VPS>
 ```
 
-Пока DNS не резолвится — дальше по SSL не идти.
+Если в ответах видите **свой IP** — всё готово, идите дальше. Если старый IP или ошибка — ждите ещё.
 
 ---
 
-## 5. Подготовка вашей Supabase
+## Шаг 5. Подготовить вашу Supabase (базу данных)
 
-### 5.1 Ключи
+### 5.1 Взять ключи
 
-**Supabase Dashboard** → ваш проект → **Project Settings** → **API**:
+1. Открыть **supabase.com** → войти → открыть свой проект `eazrhjenaxpzuxfyoeoy`.
+2. Слева внизу шестерёнка → **Project Settings** → **API**.
+3. Записать в блокнот три значения:
+   - **Project URL** → `https://eazrhjenaxpzuxfyoeoy.supabase.co`
+   - **anon public** → длинная строка `eyJhbGciOiJI...`
+   - **service_role** → тоже `eyJhbGciOiJI...` (это **секретная**, никому не показывать)
 
-- `Project URL` → скопировать (уже знаем: `https://eazrhjenaxpzuxfyoeoy.supabase.co`)
-- `anon public` → длинная строка, начинается с `eyJ...`
-- `service_role` → **секретная**, тоже `eyJ...`
+### 5.2 Загрузить структуру базы (таблицы, правила)
 
-Сохраните все три в блокнот.
+1. В Lovable откройте папку `supabase/migrations/` — там файлы `.sql` с датами в имени.
+2. В Supabase слева → значок молнии → **SQL Editor** → **New query**.
+3. Открыть **первый по дате** файл в Lovable, скопировать всё содержимое.
+4. Вставить в SQL Editor Supabase → нажать зелёную кнопку **Run** внизу.
+5. Если ответ **Success** — идёте к следующему файлу. Если ошибка `already exists` — **пропустите** этот файл, идите дальше.
+6. Повторить для **всех файлов по порядку дат**.
 
-### 5.2 Применение миграций
+Проверить: слева меню → **Table Editor** → должны появиться таблицы `profiles`, `offers`, `link_requests`, `notifications`, `email_settings` и другие.
 
-**Способ А (простой, через SQL Editor):**
+### 5.3 Включить обновление данных в реальном времени
 
-1. В Lovable откройте папку `supabase/migrations/` в редакторе кода.
-2. Supabase → **SQL Editor** → **New query**.
-3. По одному, **в порядке возрастания даты в имени файла**, копируйте содержимое каждого `.sql` и жмите **Run**.
-4. Ошибка `already exists` — пропустить и идти дальше.
+1. Слева → **Database** → **Replication**.
+2. Найти `supabase_realtime`, нажать на него.
+3. Включить галочки для таблиц:
+   `notifications`, `link_requests`, `payout_requests`, `support_tickets`, `support_messages`, `banners`, `news_posts`, `competitions`, `profiles`, `conversions`.
 
-**Способ Б (через Supabase CLI на VPS):**
+### 5.4 Настроить регистрацию
 
-```bash
-# на VPS
-curl -sSf https://raw.githubusercontent.com/supabase/cli/main/install.sh | sh
-# перелогиниться в SSH или:
-source ~/.bashrc
+1. Слева → **Authentication** → **Providers** → **Email**.
+2. `Enable Email provider` — **ON**.
+3. `Confirm email` — на выбор: **ON** = требовать подтверждение почты, **OFF** = мгновенный вход.
 
-supabase login   # откроет ссылку → авторизоваться в браузере
-cd /var/www/kvantom  # (после шага 7)
-supabase link --project-ref eazrhjenaxpzuxfyoeoy
-supabase db push
-```
-
-### 5.3 Realtime
-
-**Database** → **Replication** → **supabase_realtime** → включить тумблеры на:
-`notifications`, `link_requests`, `payout_requests`, `support_tickets`, `support_messages`, `banners`, `news_posts`, `competitions`, `profiles`, `conversions`.
-
-### 5.4 Auth
-
-**Authentication → Providers → Email**:
-- `Enable Email provider` — **ON**.
-- `Confirm email` — на выбор (ON = требовать подтверждение, OFF = мгновенный вход).
-
-**Authentication → URL Configuration**:
+Теперь **URL Configuration** (в том же разделе Auth):
 - `Site URL` = `https://kvantm.tech`
-- `Redirect URLs`: добавить строки:
+- `Redirect URLs` → добавить:
   - `https://kvantm.tech/**`
   - `https://kvantm.tech/auth/callback`
-  - `http://localhost:8080/**` (для локальной разработки)
 
-### 5.5 Google OAuth (если нужен)
+Сохранить.
 
-1. **Google Cloud Console** → https://console.cloud.google.com/ → создать проект → **APIs & Services** → **OAuth consent screen** → заполнить.
-2. **Credentials** → **Create Credentials** → **OAuth client ID** → **Web application**.
-3. `Authorized redirect URIs` = `https://eazrhjenaxpzuxfyoeoy.supabase.co/auth/v1/callback`
-4. Скопируйте **Client ID** и **Client Secret**.
-5. Supabase → **Authentication → Providers → Google** → включить → вставить ID и Secret → **Save**.
+### 5.5 Настроить отправку писем от Supabase
 
-### 5.6 SMTP для Auth-писем (сброс пароля, подтверждение регистрации)
+Это для писем «подтвердите email», «сбросить пароль».
 
-**Project Settings → Auth → SMTP Settings → Enable Custom SMTP**:
+1. **Project Settings** → **Auth** → прокрутить до **SMTP Settings**.
+2. Включить **Enable Custom SMTP**.
+3. Заполнить (для reg.ru mail или Yandex 360):
+   ```
+   Sender email:  noreply@kvantm.tech
+   Sender name:   КВАНТ
+   Host:          smtp.reg.ru        (или smtp.yandex.ru)
+   Port:          465
+   Username:      noreply@kvantm.tech
+   Password:      пароль от почтового ящика
+   ```
+4. **Save** → нажать **Send test email** → написать свой email → проверить, что пришло.
 
-```
-Sender email:  noreply@kvantm.tech
-Sender name:   КВАНТ
-Host:          smtp.yandex.ru        (или smtp.reg.ru)
-Port:          465
-Username:      noreply@kvantm.tech
-Password:      <пароль ящика>
-Minimum interval: 60
-```
-
-**Save** → **Send test email** → проверьте, что письмо пришло.
+Если ящика `noreply@kvantm.tech` ещё нет — создать его: reg.ru → **Почта для домена**.
 
 ---
 
-## 6. Экспорт проекта из Lovable в GitHub
+## Шаг 6. Скачать код проекта из Lovable
 
-1. В Lovable вверху слева в чате: **Плюс (+) → GitHub → Connect project**.
-2. Авторизуйте Lovable в GitHub → выберите свой аккаунт → **Create Repository**.
-3. Название репозитория, например `kvantom`. Готово: код теперь в `github.com/<ваш-логин>/kvantom`.
+1. В Lovable слева снизу в чате: значок **плюс (+)** → **GitHub** → **Connect project**.
+2. Авторизоваться в GitHub → выбрать свой аккаунт → **Create Repository**.
+3. Имя, например `kvantom`. Готово — код теперь у вас в GitHub.
+4. Сделайте репозиторий **приватным**: на странице репо → **Settings** → внизу **Change visibility** → **Private**.
 
-Сделайте репозиторий приватным (в GitHub → Settings → Change visibility → Private).
+### Создать «ключ» для скачивания на сервер
+
+Так как репо приватный, серверу нужен пропуск:
+
+1. GitHub → нажать на свою аватарку справа сверху → **Settings**.
+2. Слева внизу → **Developer settings**.
+3. **Personal access tokens** → **Tokens (classic)** → **Generate new token (classic)**.
+4. Заполнить:
+   - `Note`: `vps-kvantom`
+   - `Expiration`: `90 days`
+   - Галочка на пункте **`repo`** (все подпункты)
+5. **Generate token** → **скопировать** появившийся `ghp_...` в блокнот. Второй раз его не покажут.
 
 ---
 
-## 7. Деплой кода на VPS
+## Шаг 7. Залить код на сервер и запустить
 
-Возвращаемся в SSH-сессию на сервере.
+Возвращаемся в чёрное окно, где мы работаем с сервером.
 
-### 7.1 Клонирование
-
-Приватный репозиторий требует токен GitHub:
-
-1. GitHub → **Settings** (аватарка справа сверху) → **Developer settings** → **Personal access tokens** → **Tokens (classic)** → **Generate new token (classic)**.
-2. `Note`: `vps-kvantom`, `Expiration`: 90 days, галочка **repo**. Сгенерировать → **скопировать токен** (`ghp_...`).
+### 7.1 Скачать код
 
 ```bash
 mkdir -p /var/www
 cd /var/www
-git clone https://<ваш-логин>:<токен>@github.com/<ваш-логин>/kvantom.git
+git clone https://ВАШЛОГИН:ВАШТОКЕН@github.com/ВАШЛОГИН/kvantom.git
 cd kvantom
 ```
 
-### 7.2 Файл `.env`
+Замените:
+- `ВАШЛОГИН` → ваш логин GitHub
+- `ВАШТОКЕН` → тот `ghp_...` из шага 6
+
+### 7.2 Прописать настройки (файл `.env`)
 
 ```bash
 nano .env
 ```
 
-Вставить (заменив ключи):
+Откроется простой редактор. Вставьте (правой кнопкой мыши в MobaXterm):
 
-```env
+```
 NODE_ENV=production
 PORT=3000
 
 SUPABASE_URL=https://eazrhjenaxpzuxfyoeoy.supabase.co
-SUPABASE_PUBLISHABLE_KEY=<ваш anon public>
-SUPABASE_SERVICE_ROLE_KEY=<ваш service_role>
+SUPABASE_PUBLISHABLE_KEY=вставить_anon_public_ключ
+SUPABASE_SERVICE_ROLE_KEY=вставить_service_role_ключ
 SUPABASE_PROJECT_ID=eazrhjenaxpzuxfyoeoy
 
 VITE_SUPABASE_URL=https://eazrhjenaxpzuxfyoeoy.supabase.co
-VITE_SUPABASE_PUBLISHABLE_KEY=<ваш anon public>
+VITE_SUPABASE_PUBLISHABLE_KEY=вставить_anon_public_ключ
 VITE_SUPABASE_PROJECT_ID=eazrhjenaxpzuxfyoeoy
 ```
 
+Замените плейсхолдеры на реальные ключи из шага 5.1.
+
 Сохранить: **Ctrl+O** → **Enter** → **Ctrl+X**.
 
-Защитить файл:
+Защитить файл, чтобы никто чужой не прочитал:
 ```bash
 chmod 600 .env
 ```
 
-### 7.3 Установка зависимостей и сборка
+### 7.3 Собрать проект
 
 ```bash
 bun install
 bun run build
 ```
 
-Сборка идёт 1–3 минуты. В конце должно быть `Built in ...ms` без красных ошибок.
+Идёт 2–5 минут. В конце должна быть строка `Built in ...ms` без красных ошибок.
 
-### 7.4 Первый запуск (проверка)
-
-```bash
-bun run start
-```
-
-В другом SSH-окне (или локально):
-```bash
-curl http://<IP-VPS>:3000
-```
-
-Должен вернуться HTML. Останавливаем: в окне с `bun run start` нажать **Ctrl+C**.
-
-### 7.5 Запуск через PM2 (навсегда)
+### 7.4 Запустить сайт навсегда
 
 ```bash
 pm2 start "bun run start" --name kvantom --cwd /var/www/kvantom
 pm2 save
 pm2 startup systemd
-# он выведет команду вида: sudo env PATH=... /usr/lib/node_modules/pm2/bin/pm2 startup systemd -u root --hp /root
-# скопировать и выполнить эту команду
 ```
 
-Проверка:
+Последняя команда выведет ещё одну команду (начинается с `sudo env PATH=...`). **Скопируйте её и выполните** — это включит автозапуск сайта при перезагрузке сервера.
+
+Проверить, что работает:
 ```bash
-pm2 status         # kvantom: online
-pm2 logs kvantom   # смотреть логи, Ctrl+C для выхода
+pm2 status
 ```
 
-При перезагрузке сервера (`reboot`) PM2 сам поднимет процесс.
+Должна быть строка `kvantom | online`. Если `errored` — смотреть `pm2 logs kvantom`.
 
 ---
 
-## 8. Nginx как reverse-proxy
+## Шаг 8. Открыть сайт миру через Nginx + HTTPS
 
-### 8.1 Конфиг
+Пока сайт крутится на сервере, но снаружи не виден. Настроим «витрину».
+
+### 8.1 Настроить Nginx
 
 ```bash
 nano /etc/nginx/sites-available/kvantm
 ```
 
-Вставить:
+Вставить целиком:
 
 ```nginx
 server {
@@ -356,230 +367,151 @@ server {
 
     client_max_body_size 20M;
 
-    # Realtime WebSockets для Supabase не идут через nginx, но пусть будет
-    proxy_read_timeout 300s;
-    proxy_send_timeout 300s;
-
     location / {
         proxy_pass http://127.0.0.1:3000;
         proxy_http_version 1.1;
-
         proxy_set_header Host              $host;
         proxy_set_header X-Real-IP         $remote_addr;
         proxy_set_header X-Forwarded-For   $proxy_add_x_forwarded_for;
         proxy_set_header X-Forwarded-Proto $scheme;
-        proxy_set_header X-Forwarded-Host  $host;
-
         proxy_set_header Upgrade           $http_upgrade;
         proxy_set_header Connection        "upgrade";
-        proxy_cache_bypass                 $http_upgrade;
-
         proxy_buffering off;
     }
 
-    # gzip
     gzip on;
-    gzip_types text/plain text/css text/javascript application/javascript application/json application/xml image/svg+xml;
+    gzip_types text/plain text/css application/javascript application/json image/svg+xml;
     gzip_min_length 1024;
 }
 ```
 
-Сохранить, активировать:
+Сохранить: **Ctrl+O** → **Enter** → **Ctrl+X**.
 
+Активировать:
 ```bash
 ln -s /etc/nginx/sites-available/kvantm /etc/nginx/sites-enabled/
 rm -f /etc/nginx/sites-enabled/default
-nginx -t                # должно быть "syntax is ok" + "test is successful"
+nginx -t
 systemctl reload nginx
 ```
 
-Проверка: откройте в браузере `http://kvantm.tech` — должен открыться сайт.
+Строка `nginx -t` должна ответить `syntax is ok` и `test is successful`.
 
-### 8.2 HTTPS (бесплатный сертификат Let's Encrypt)
+Открыть в браузере `http://kvantm.tech` — сайт должен показаться (пока без замочка).
+
+### 8.2 Включить HTTPS (замочек)
 
 ```bash
 certbot --nginx -d kvantm.tech -d www.kvantm.tech
 ```
 
-Ответы:
-- `Enter email` — ваш email (для уведомлений о продлении).
-- `Agree to terms` — **A**.
-- `Share email` — **N**.
-- `Redirect HTTP to HTTPS` — **2** (обязательно перенаправлять).
+Ответы на вопросы:
+- Email → ваш email (сюда будут приходить уведомления о продлении)
+- Согласие → **A**
+- Делиться email с EFF → **N**
+- Redirect → **2** (весь трафик через HTTPS)
 
-Готово: `https://kvantm.tech` работает с зелёным замком.
+Готово. Открыть `https://kvantm.tech` — должен появиться замочек 🔒.
 
-Автопродление уже настроено. Проверить:
-```bash
-certbot renew --dry-run
-```
+Сертификат бесплатный и продлевается автоматически.
 
 ---
 
-## 9. Первый вход и настройки в приложении
+## Шаг 9. Первый вход и настройка почты в приложении
 
-### 9.1 Создать первого администратора
+### 9.1 Стать администратором
 
-Зарегистрируйтесь на `https://kvantm.tech` обычным способом (например `luxmailu@mail.ru`).
+1. Открыть `https://kvantm.tech` → зарегистрироваться обычным способом (например `luxmailu@mail.ru`).
+2. Supabase → **SQL Editor** → **New query** → вставить:
+   ```sql
+   INSERT INTO public.user_roles (user_id, role)
+   SELECT id, 'admin' FROM auth.users WHERE email = 'luxmailu@mail.ru'
+   ON CONFLICT DO NOTHING;
+   ```
+3. Заменить `luxmailu@mail.ru` на свой email → **Run**.
+4. На сайте обновить страницу (F5) → в шапке появится значок админки.
 
-Затем в Supabase → **SQL Editor**:
+### 9.2 Настроить SMTP для писем приложения
 
-```sql
-INSERT INTO public.user_roles (user_id, role)
-SELECT id, 'admin' FROM auth.users WHERE email = 'luxmailu@mail.ru'
-ON CONFLICT DO NOTHING;
-```
+Это письма от самого сайта: уведомления, поддержка.
 
-Обновите страницу — иконка админки появится в шапке.
-
-### 9.2 SMTP для писем приложения
-
-Админ-панель → **Почта / SMTP**:
-
-```
-Пресет:          reg.ru (или Yandex)
-SMTP host:       smtp.reg.ru
-Порт:            465
-Логин:           noreply@kvantm.tech
-Пароль:          <пароль ящика>
-From email:      noreply@kvantm.tech
-From name:       КВАНТ
-Reply-To:        support@kvantm.tech
-SSL/TLS:         ✔
-Включить:        ✔
-```
-
-**Сохранить** → тестовое письмо на свой email → **Отправить тест**.
+1. Зайти в **админ-панель** → вкладка **Почта / SMTP**.
+2. Нажать кнопку-пресет **reg.ru** (или **Yandex 360**).
+3. Дозаполнить:
+   ```
+   Логин:       noreply@kvantm.tech
+   Пароль:      пароль от почтового ящика
+   From email:  noreply@kvantm.tech
+   From name:   КВАНТ
+   Reply-To:    support@kvantm.tech
+   Галочки:     SSL/TLS  ✔    Включить отправку  ✔
+   ```
+4. **Сохранить**.
+5. В блоке «Тестовое письмо» вписать свой email → **Отправить тест** → проверить почту.
 
 ---
 
-## 10. Обновление проекта (когда что-то меняется в Lovable)
+## Шаг 10. Всё готово. Что делать, когда обновляете код?
 
-Скрипт-однострочник:
+Когда в Lovable вы сделали изменения — они автоматически попадут в GitHub. Осталось обновить сервер.
+
+Одна команда, которая делает всё:
 
 ```bash
-cd /var/www/kvantom && git pull && bun install && bun run build && pm2 restart kvantom && pm2 logs kvantom --lines 30
+cd /var/www/kvantom && git pull && bun install && bun run build && pm2 restart kvantom
 ```
 
-Через 10–30 секунд обновлённая версия работает на проде.
+Займёт 30–60 секунд. Всё, новая версия на проде.
 
-Для удобства сохраните алиас:
+Чтобы не набирать эту простыню каждый раз, один раз сделайте:
 ```bash
-echo "alias deploy-kvantom='cd /var/www/kvantom && git pull && bun install && bun run build && pm2 restart kvantom'" >> ~/.bashrc
+echo "alias update='cd /var/www/kvantom && git pull && bun install && bun run build && pm2 restart kvantom'" >> ~/.bashrc
 source ~/.bashrc
 ```
 
-Теперь просто: `deploy-kvantom`.
-
----
-
-## 11. Мониторинг и логи
-
+Теперь для обновления сайта — просто одно слово:
 ```bash
-pm2 status                    # состояние процессов
-pm2 logs kvantom              # логи Node (Ctrl+C — выход)
-pm2 logs kvantom --err        # только ошибки
-pm2 monit                     # интерактивный монитор CPU/RAM
-
-tail -f /var/log/nginx/access.log   # логи запросов
-tail -f /var/log/nginx/error.log    # ошибки nginx
-
-htop                          # общая нагрузка (apt install htop)
-df -h                         # место на диске
-free -h                       # оперативка
+update
 ```
 
 ---
 
-## 12. Резервные копии
+## Полезные команды на каждый день
 
-### 12.1 База (Supabase)
-
-**Supabase → Database → Backups** — на Free плане ежедневные бэкапы 7 дней. Для срочного:
-
-**Database → Backups → Download backup** или через CLI:
-```bash
-supabase db dump -f backup-$(date +%F).sql
-```
-
-### 12.2 Файлы VPS
-
-reg.ru → панель VPS → **Резервные копии** → включить ежедневные.
-
-Или вручную (на VPS):
-```bash
-tar -czf /root/kvantom-backup-$(date +%F).tar.gz /var/www/kvantom /etc/nginx/sites-available
-```
-
-Периодически скачивайте `/root/kvantom-backup-*.tar.gz` на локальный ПК через WinSCP/FileZilla.
-
----
-
-## 13. Безопасность (обязательный минимум)
-
-### 13.1 Отключить вход root-паролем (после того, как настроите SSH-ключ)
-
-Пока пропустите, если не работали с SSH-ключами. Можно вернуться позже.
-
-### 13.2 Автообновления безопасности
-
-```bash
-apt install -y unattended-upgrades
-dpkg-reconfigure --priority=low unattended-upgrades
-# на вопрос — Yes
-```
-
-### 13.3 Защита от брутфорса SSH
-
-```bash
-apt install -y fail2ban
-systemctl enable --now fail2ban
-fail2ban-client status sshd
-```
-
----
-
-## 14. Частые проблемы
-
-| Симптом | Решение |
+| Что нужно | Команда |
 |---|---|
-| `502 Bad Gateway` | `pm2 logs kvantom` — читать ошибку. Часто: не хватает памяти при `bun run build` → добавить swap (шаг 2.4) или собирать локально и заливать `dist/`. |
-| `504 Gateway Timeout` | Node-процесс висит: `pm2 restart kvantom`. |
-| Сайт открывается, но при логине белый экран | `.env` собран со старыми `VITE_*`. Пересобрать: `bun run build && pm2 restart kvantom`. |
-| Google-вход: `Unsupported provider` | В Supabase не заполнены Google ID/Secret (шаг 5.5). |
-| `Failed to fetch` в консоли браузера | В Supabase → Auth → URL Configuration не добавили `https://kvantm.tech/**`. |
-| Письма не приходят | 1) Supabase SMTP не настроен (шаг 5.6). 2) reg.ru mail: проверить логин/пароль ящика. 3) Порт 465 закрыт — попробовать 587. |
-| Realtime не работает (нет живых обновлений) | Не включили таблицы в Supabase Replication (шаг 5.3). |
-| После `git pull` конфликт | `git reset --hard origin/main && git pull`. **Внимание**: убьёт локальные правки на VPS (их и не должно быть). |
-| PM2 не поднялся после reboot | `pm2 startup systemd` — выполнить выведенную команду ещё раз, потом `pm2 save`. |
+| Посмотреть, работает ли сайт | `pm2 status` |
+| Посмотреть свежие ошибки | `pm2 logs kvantom` (выход — Ctrl+C) |
+| Перезапустить сайт | `pm2 restart kvantom` |
+| Занятое место на диске | `df -h` |
+| Сколько памяти занято | `free -h` |
+| Общий монитор нагрузки | `htop` (выход — q) |
 
 ---
 
-## 15. Дополнительно: домен через Cloudflare (рекомендуется)
+## Что делать, если что-то сломалось
 
-Бесплатно, ускоряет сайт и защищает от DDoS.
-
-1. Регистрация на https://cloudflare.com/ (бесплатный план).
-2. **Add site** → `kvantm.tech` → **Free**.
-3. Cloudflare покажет 2 NS-сервера (например `xxx.ns.cloudflare.com`).
-4. В reg.ru → **Мои домены** → `kvantm.tech` → **DNS-серверы** → заменить на 2 сервера от Cloudflare.
-5. В Cloudflare DNS: добавить A-запись `@` → `<IP-VPS>` (Proxied ✔).
-6. **SSL/TLS** → режим **Full (strict)**.
-
-Через 5–60 минут домен работает через Cloudflare CDN.
+| Проблема | Что сделать |
+|---|---|
+| Сайт не открывается вообще | `pm2 status` → если `errored` → `pm2 logs kvantom` → прочитать красную ошибку |
+| Показывает `502 Bad Gateway` | Node упал: `pm2 restart kvantom`. Если снова — читать `pm2 logs kvantom` |
+| Логин не работает, белый экран | В `.env` не те ключи Supabase. Проверить → `bun run build && pm2 restart kvantom` |
+| Ошибка `Failed to fetch` в браузере | В Supabase → Authentication → URL Configuration не добавили `https://kvantm.tech/**` |
+| Google-вход выдаёт `Unsupported provider` | В Supabase → Auth → Providers → Google не заполнили Client ID и Secret |
+| Письма подтверждения не приходят | Supabase → Project Settings → Auth → SMTP не настроен |
+| Уведомления сайта не приходят | В админке КВАНТа → Почта/SMTP не поставлена галочка «Включить отправку» |
+| После `git pull` конфликт | `git reset --hard origin/main && git pull` (это сотрёт правки на сервере, которых и не должно быть) |
+| Сервер перегружен, всё тормозит | `htop` → посмотреть, что жрёт память. Обычно помогает `pm2 restart kvantom` |
 
 ---
 
-## Готово
+## Итог
 
-Итого получите:
-- `https://kvantm.tech` работает 24/7
-- Своя Supabase (все данные — ваши)
-- Auth-письма через ваш SMTP
-- App-письма (уведомления/поддержка) через SMTP в админке
-- Автозапуск при перезагрузке
-- HTTPS с автопродлением
-- Автообновление безопасности
-- Fail2ban против брутфорса
+Что вы получили:
+- Сайт `https://kvantm.tech` работает 24/7
+- HTTPS с замочком, продлевается сам
+- Автозапуск при перезагрузке сервера
+- Ваша Supabase, ваши данные, ваши письма
+- Обновление в одну команду
 
-**Стоимость ежемесячно**: ~450 ₽ (VPS) + 0 ₽ (Supabase Free) + 0 ₽ (домен уже оплачен) + 0 ₽ (Cloudflare Free) ≈ **450 ₽/мес**.
+**Оплата в месяц:** ~450 ₽ (VPS reg.ru) + 0 ₽ (Supabase Free) + 0 ₽ (домен уже оплачен) = **~450 ₽/мес**.
