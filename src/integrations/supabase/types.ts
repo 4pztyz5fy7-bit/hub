@@ -853,6 +853,7 @@ export type Database = {
       }
       is_admin: { Args: never; Returns: boolean }
       is_leadership: { Args: { _uid?: string }; Returns: boolean }
+      is_team_member: { Args: { _uid?: string }; Returns: boolean }
       join_competition: { Args: { _competition_id: string }; Returns: Json }
       level_bonus_pct: { Args: { _earned: number }; Returns: number }
       level_min_earned: {
