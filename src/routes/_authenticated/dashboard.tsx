@@ -776,7 +776,7 @@ function DashboardPage() {
       const { data } = await supabase.from("link_requests").select("*").eq("user_id", userId).order("created_at", { ascending: false });
       const rows = data ?? [];
       setRequests(rows.map((r: any): LinkRequest => ({
-        id: String(r.id).slice(0, 8).toUpperCase(),
+        id: r.code || String(r.id).slice(0, 8).toUpperCase(),
         offerId: r.offer_id ?? "", offerName: r.offer_name, offerTag: r.offer_tag ?? "",
         createdAt: `${new Date(r.created_at).toLocaleDateString("ru-RU")}, ${timeOf(r.created_at)}`,
         source: r.source ?? "", sub: r.sub ?? "", link: r.link ?? "",
