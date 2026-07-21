@@ -229,7 +229,7 @@ function AdminPage() {
     );
   }
 
-  const tabs: { id: TabId; label: string; Icon: typeof Users; badge?: number }[] = [
+  const allTabs: { id: TabId; label: string; Icon: typeof Users; badge?: number }[] = [
     { id: "overview", label: "Обзор", Icon: LayoutDashboard },
     { id: "users", label: "Пользователи", Icon: Users },
     { id: "offers", label: "Офферы", Icon: Package },
@@ -244,7 +244,25 @@ function AdminPage() {
     { id: "competitions", label: "Соревнования", Icon: Trophy },
     { id: "ai", label: "AI-аналитик", Icon: Sparkles },
     { id: "email", label: "Почта / SMTP", Icon: Mail },
+    { id: "team", label: "Команда", Icon: UserCog },
   ];
+
+  const hasAll = perms.is_leadership || perms.permissions.includes("*");
+  const allowed = new Set(perms.permissions);
+  const tabs = allTabs.filter((t) => {
+    if (t.id === "team") return perms.is_leadership;
+    if (hasAll) return true;
+    return allowed.has(t.id);
+  });
+
+  // If current tab is no longer allowed, snap to first available
+  useEffect(() => {
+    if (!tabs.length) return;
+    if (!tabs.some((t) => t.id === tab)) setTab(tabs[0].id);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [perms.position_code]);
+
+  const canRender = (id: TabId) => hasAll || allowed.has(id) || (id === "team" && perms.is_leadership);
 
   return (
     <div className="min-h-screen bg-background text-foreground">
