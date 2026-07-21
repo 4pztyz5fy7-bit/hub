@@ -590,7 +590,7 @@ function AuthDialog({ initialMode, onClose }: { initialMode: Mode; onClose: () =
         if (signUpData.user) {
           try { await supabase.from("profiles").update({ avatar_url: avatar }).eq("id", signUpData.user.id); } catch { /* ignore */ }
         }
-        setInfo("Регистрация прошла успешно. Если email-подтверждение включено — проверьте почту.");
+        setInfo("Регистрация прошла успешно. Проверьте почту — мы отправили ссылку для подтверждения email.");
       }
     } catch (e: unknown) {
       const msg = e instanceof z.ZodError ? e.errors[0]?.message : e instanceof Error ? e.message : "Ошибка";
