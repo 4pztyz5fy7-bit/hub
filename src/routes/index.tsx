@@ -53,6 +53,7 @@ function LandingPage() {
 
   const initialStats = Route.useLoaderData() as LandingStats | null;
   const [stats, setStats] = useState<LandingStats | null>(initialStats);
+  const onlineCount = useOnlineCount();
 
   useEffect(() => {
     let cancelled = false;
