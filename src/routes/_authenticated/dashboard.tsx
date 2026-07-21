@@ -8,6 +8,7 @@ import { RewardsTab } from "@/components/dashboard/rewards-tab";
 import { BannerBoard } from "@/components/dashboard/banner-board";
 import { t } from "@/lib/i18n";
 import { randomAvatarUrl } from "@/lib/avatars";
+import { useTrackOnline } from "@/lib/online-presence";
 import { LogOut } from "lucide-react";
 import {
   LayoutGrid,
