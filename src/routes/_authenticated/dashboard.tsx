@@ -2124,6 +2124,13 @@ function OffersTab({
                         NEW
                       </span>
                     )}
+                    {o.minLevel !== "start" && (
+                      <span className={`inline-flex items-center gap-0.5 rounded px-1.5 py-0.5 font-mono text-[8px] font-bold uppercase ${
+                        locked ? "bg-amber-500/15 text-amber-500" : "bg-emerald-500/15 text-emerald-500"
+                      }`}>
+                        <Lock className="size-2.5" /> {TIER_NAME[o.minLevel]}+
+                      </span>
+                    )}
                   </div>
                   <p className="mt-1 text-[10px] text-muted-foreground">
                     {o.category} • {o.advertiser}
