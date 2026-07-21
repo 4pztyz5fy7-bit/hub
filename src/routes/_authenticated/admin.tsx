@@ -1403,7 +1403,7 @@ function RequestsTab() {
       <div className="flex flex-wrap items-center gap-2">
         <div className="relative min-w-[180px] flex-1">
           <Search className="pointer-events-none absolute left-2.5 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground" />
-          <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Поиск: оффер, email, tg, source, sub, id"
+          <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Поиск: код KV-…, email, tg, оффер, source, sub"
             className="w-full rounded-lg border border-border bg-background pl-8 pr-3 py-1.5 text-sm" />
         </div>
         <select value={statusF} onChange={(e) => setStatusF(e.target.value as any)} className="rounded-lg border border-border bg-background px-2 py-1.5 text-xs">
