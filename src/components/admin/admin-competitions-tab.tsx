@@ -70,6 +70,26 @@ export function AdminCompetitionsTab() {
     await supabase.from("competitions").update({ active: !c.active }).eq("id", c.id);
     void load();
   };
+  const [settling, setSettling] = useState<string | null>(null);
+  const settle = async (c: Competition) => {
+    if (!confirm(`Выплатить призы победителям турнира «${c.title}»? Действие нельзя отменить.`)) return;
+    setSettling(c.id);
+    try {
+      const { data, error } = await supabase.rpc("settle_competition" as any, { _id: c.id });
+      if (error) throw error;
+      const res = data as { ok: boolean; error?: string; count?: number; total?: number } | null;
+      if (!res?.ok) {
+        toast.error(res?.error === "already_settled" ? "Призы уже выплачены" : "Не удалось выплатить призы");
+      } else {
+        toast.success(`Выплачено призов: ${res.count ?? 0} на ${Math.round(res.total ?? 0).toLocaleString("ru-RU")} ₽`);
+      }
+      await load();
+    } catch (e: any) {
+      toast.error(e?.message ?? "Ошибка");
+    } finally {
+      setSettling(null);
+    }
+  };
 
   if (loading) return <div className="py-10 text-center text-sm text-muted-foreground">Загрузка…</div>;
 
