@@ -838,6 +838,7 @@ function DashboardPage() {
         cityPayouts: Array.isArray(r.city_payouts)
           ? (r.city_payouts as any[]).map((c) => ({ city: String(c?.city ?? ""), amount: Number(c?.amount ?? 0) })).filter((c) => c.city && c.amount > 0)
           : [],
+        minLevel: (r.min_level ?? "start") as Offer["minLevel"],
       })));
     };
     const refetchProfile = async () => {
