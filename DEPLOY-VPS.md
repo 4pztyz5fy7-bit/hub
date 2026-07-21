@@ -124,43 +124,53 @@ apt install -y nodejs git nginx certbot python3-certbot-nginx build-essential uf
 
 Идёт 2–4 минуты. Установятся: Node.js, Git, Nginx (веб-сервер), certbot (для HTTPS), компилятор, файрвол, защита от брутфорса и монитор.
 
-### 3.6 Установить Bun (сборщик проекта)
+### 3.6 Установить unzip (нужно для установки Bun)
+
+```bash
+apt install -y unzip
+```
+
+> Если на этом шаге пишет `unzip is already installed` — просто идите дальше.
+
+### 3.7 Установить Bun (сборщик проекта)
 
 ```bash
 curl -fsSL https://bun.sh/install | bash
 ```
 
-### 3.7 Добавить Bun в PATH (чтобы система нашла команду `bun`)
+Идёт 10–30 секунд. Должно закончиться сообщением `Bun was installed successfully`.
+
+### 3.8 Добавить Bun в PATH (чтобы система нашла команду `bun`)
 
 ```bash
 export PATH="$HOME/.bun/bin:$PATH"
 ```
 
-### 3.8 Сохранить PATH в настройках
+### 3.9 Сохранить PATH в настройках
 
 ```bash
 echo 'export PATH="$HOME/.bun/bin:$PATH"' >> ~/.bashrc
 ```
 
-### 3.9 Установить PM2 (чтобы сайт работал постоянно)
+### 3.10 Установить PM2 (чтобы сайт работал постоянно)
 
 ```bash
 npm install -g pm2
 ```
 
-### 3.10 Разрешить SSH в файрволе
+### 3.11 Разрешить SSH в файрволе
 
 ```bash
 ufw allow OpenSSH
 ```
 
-### 3.11 Разрешить Nginx в файрволе
+### 3.12 Разрешить Nginx в файрволе
 
 ```bash
 ufw allow 'Nginx Full'
 ```
 
-### 3.12 Включить файрвол
+### 3.13 Включить файрвол
 
 ```bash
 ufw --force enable
