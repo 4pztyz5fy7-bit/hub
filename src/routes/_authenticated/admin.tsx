@@ -43,7 +43,7 @@ function useRealtimeReload(tables: string[], reload: () => void, channelKey?: st
 }
 
 /* =========================== TYPES =========================== */
-type TabId = "overview" | "users" | "offers" | "payouts" | "requests" | "conversions" | "broadcast" | "banners" | "news" | "moderation" | "support" | "ai";
+type TabId = "overview" | "users" | "offers" | "payouts" | "requests" | "conversions" | "broadcast" | "banners" | "news" | "moderation" | "support" | "ai" | "competitions";
 
 type Profile = {
   id: string; email: string | null; display_name: string | null;
