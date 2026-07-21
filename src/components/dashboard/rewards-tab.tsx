@@ -193,6 +193,9 @@ export function RewardsTab({
         </div>
       </div>
 
+      {/* Competitions (Diamond+) */}
+      <CompetitionsSection earned={earned} />
+
       {/* Tabs */}
       <div className="flex items-center gap-1 rounded-xl border border-border bg-secondary/40 p-1">
         {([
