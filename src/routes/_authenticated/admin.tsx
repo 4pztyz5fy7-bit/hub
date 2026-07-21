@@ -44,7 +44,9 @@ function useRealtimeReload(tables: string[], reload: () => void, channelKey?: st
 }
 
 /* =========================== TYPES =========================== */
-type TabId = "overview" | "users" | "offers" | "payouts" | "requests" | "conversions" | "broadcast" | "banners" | "news" | "moderation" | "support" | "ai" | "competitions" | "email";
+type TabId = "overview" | "users" | "offers" | "payouts" | "requests" | "conversions" | "broadcast" | "banners" | "news" | "moderation" | "support" | "ai" | "competitions" | "email" | "team";
+
+type TeamPerms = { position_code: string | null; position_name: string | null; is_leadership: boolean; permissions: string[] };
 
 type Profile = {
   id: string; email: string | null; display_name: string | null;
