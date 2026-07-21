@@ -21,6 +21,8 @@ type Competition = {
   banner_url: string | null;
   rules: string | null;
   created_at: string;
+  settled_at: string | null;
+  winners: Array<{ place: number; user_id: string; amount: number; score: number }>;
 };
 
 const TIER_LABEL: Record<Tier, string> = {
