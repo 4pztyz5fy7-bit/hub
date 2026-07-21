@@ -243,7 +243,7 @@ function LandingPage() {
           {/* Big stats */}
           <div className="mt-8 grid grid-cols-2 gap-3 md:grid-cols-4">
             {[
-              { v: stats ? formatCount(stats.partners) : "—", l: "партнёров в сети", Icon: Users },
+              { v: formatCount(onlineCount), l: "партнёров в сети", Icon: Users },
               { v: stats ? formatRub(stats.totalPaid) : "—", l: "выплачено партнёрам", Icon: Wallet },
               { v: stats ? formatCount(stats.completedConversions) : "—", l: "подтверждённых конверсий", Icon: TrendingUp },
               { v: stats ? formatCount(stats.offersCount) : "—", l: "активных офферов", Icon: Rocket },
