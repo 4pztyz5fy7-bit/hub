@@ -1573,6 +1573,17 @@ function DetailRow({ label, value, mono, onCopy, copied }: { label: string; valu
   );
 }
 
+function levelBonusPct(earned: number): number {
+  if (earned >= 1_500_000) return 12;
+  if (earned >= 500_000) return 8;
+  if (earned >= 150_000) return 5;
+  if (earned >= 50_000) return 2;
+  return 0;
+}
+function levelName(pct: number): string {
+  return pct >= 12 ? "Elite" : pct >= 8 ? "Platinum" : pct >= 5 ? "Gold" : pct >= 2 ? "Silver" : "Bronze";
+}
+
 function RequestRowControls({ row, onReload }: { row: LinkRow; onReload: () => void }) {
   const [link, setLink] = useState(row.link ?? "");
   const [note, setNote] = useState(row.note ?? "");
@@ -1580,6 +1591,7 @@ function RequestRowControls({ row, onReload }: { row: LinkRow; onReload: () => v
   const [price, setPrice] = useState<string>(row.payout_override != null ? String(row.payout_override) : "");
   const [saving, setSaving] = useState(false);
   const [savedFlash, setSavedFlash] = useState(false);
+  const [partnerEarned, setPartnerEarned] = useState<number | null>(null);
   const ordersNum = Math.max(0, Number(orders) || 0);
   const priceNum = price.trim() === "" ? null : Math.max(0, Number(price) || 0);
   const dirty =
@@ -1589,11 +1601,27 @@ function RequestRowControls({ row, onReload }: { row: LinkRow; onReload: () => v
     priceNum !== (row.payout_override ?? null);
 
   useEffect(() => {
+    let cancel = false;
+    (async () => {
+      const { data } = await supabase
+        .from("conversions")
+        .select("amount")
+        .eq("user_id", row.user_id)
+        .eq("status", "ok");
+      if (cancel) return;
+      const sum = (data ?? []).reduce((a: number, r: any) => a + Number(r.amount || 0), 0);
+      setPartnerEarned(sum);
+    })();
+    return () => { cancel = true; };
+  }, [row.user_id]);
+
+  useEffect(() => {
     setLink(row.link ?? "");
     setNote(row.note ?? "");
     setOrders(String(row.orders_count ?? 0));
     setPrice(row.payout_override != null ? String(row.payout_override) : "");
   }, [row.id, row.link, row.note, row.orders_count, row.payout_override]);
+
 
   const change = async (patch: Partial<Pick<LinkRow, "status" | "link" | "note" | "orders_count" | "payout_override">>) => {
     setSaving(true);
@@ -1682,11 +1710,37 @@ function RequestRowControls({ row, onReload }: { row: LinkRow; onReload: () => v
           placeholder="напр. 3500"
           className="mt-0.5 w-full rounded-lg border border-border bg-background px-3 py-1.5 text-sm outline-none focus:ring-2 focus:ring-primary/40"
         />
-        {priceNum != null && priceNum > 0 && (
-          <span className="mt-1 block text-[10px] font-bold uppercase tracking-wider text-emerald-500">
-            К начислению: {priceNum.toLocaleString("ru-RU")} ₽
-          </span>
-        )}
+        {priceNum != null && priceNum > 0 && (() => {
+          const bp = partnerEarned == null ? null : levelBonusPct(partnerEarned);
+          const bonus = bp ? Math.round(priceNum * bp) / 100 * 100 : 0;
+          const bonusAmt = bp ? Math.round((priceNum * bp) / 100 * 100) / 100 : 0;
+          const total = priceNum + bonusAmt;
+          return (
+            <div className="mt-1 space-y-0.5 rounded-md border border-border/60 bg-muted/30 px-2 py-1.5">
+              <div className="flex items-center justify-between text-[10px] font-bold uppercase tracking-wider">
+                <span className="text-muted-foreground">База</span>
+                <span className="tabular-nums">{priceNum.toLocaleString("ru-RU")} ₽</span>
+              </div>
+              <div className="flex items-center justify-between text-[10px] font-bold uppercase tracking-wider">
+                <span className="text-muted-foreground">
+                  Бонус уровня{partnerEarned != null ? ` «${levelName(bp!)}»` : ""}
+                </span>
+                <span className={bp ? "tabular-nums text-primary" : "tabular-nums text-muted-foreground"}>
+                  {partnerEarned == null ? "…" : bp ? `+${bp}% · +${bonusAmt.toLocaleString("ru-RU")} ₽` : "—"}
+                </span>
+              </div>
+              <div className="mt-1 flex items-center justify-between border-t border-border/60 pt-1 text-[11px] font-bold uppercase tracking-wider text-emerald-500">
+                <span>Итого партнёру</span>
+                <span className="tabular-nums">{total.toLocaleString("ru-RU")} ₽</span>
+              </div>
+              {partnerEarned != null && (
+                <p className="pt-0.5 text-[9px] font-medium normal-case text-muted-foreground">
+                  Заработано партнёром всего: {partnerEarned.toLocaleString("ru-RU")} ₽
+                </p>
+              )}
+            </div>
+          );
+        })()}
       </label>
       <label className="block">
         <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Партнёрская ссылка (её копирует пользователь)</span>

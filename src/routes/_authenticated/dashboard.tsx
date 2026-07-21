@@ -200,6 +200,9 @@ type Conversion = {
   offerName: string;
   amount: number;
   status: "ok" | "pending" | "rejected";
+  baseAmount?: number | null;
+  bonusPct?: number | null;
+  bonusAmount?: number | null;
 };
 
 type PayoutStatus = "pending" | "processing" | "paid" | "rejected";
@@ -752,6 +755,9 @@ function DashboardPage() {
         offerName: r.offer_name,
         amount: Number(r.amount),
         status: r.status as Conversion["status"],
+        baseAmount: r.base_amount != null ? Number(r.base_amount) : null,
+        bonusPct: r.bonus_pct != null ? Number(r.bonus_pct) : null,
+        bonusAmount: r.bonus_amount != null ? Number(r.bonus_amount) : null,
       })));
 
       setNotifs((notifRes.data ?? []).map((r: any): Notification => ({
@@ -800,6 +806,9 @@ function DashboardPage() {
         id: String(r.id).slice(0, 8), time: timeOf(r.created_at), createdAt: r.created_at,
         offerId: r.offer_id ?? "", offerName: r.offer_name,
         amount: Number(r.amount), status: r.status as Conversion["status"],
+        baseAmount: r.base_amount != null ? Number(r.base_amount) : null,
+        bonusPct: r.bonus_pct != null ? Number(r.bonus_pct) : null,
+        bonusAmount: r.bonus_amount != null ? Number(r.bonus_amount) : null,
       })));
     };
     const refetchNotifs = async () => {
@@ -2645,32 +2654,45 @@ function StatsTab({ conversions, offers, requests }: { conversions: Conversion[]
           </h3>
         </div>
         <div className="divide-y divide-border overflow-hidden rounded-lg border border-border bg-card">
-          {conversions.map((c) => (
-            <div key={c.id} className="flex items-center justify-between p-3">
-              <div className="min-w-0">
-                <p className="truncate text-[11px] font-bold">{c.time} • {c.offerName}</p>
-                <p className="font-mono text-[10px] text-muted-foreground">ID: {c.id}</p>
+          {conversions.map((c) => {
+            const hasBonus = (c.bonusPct ?? 0) > 0 && (c.bonusAmount ?? 0) > 0;
+            return (
+              <div key={c.id} className="flex items-start justify-between p-3">
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-[11px] font-bold">{c.time} • {c.offerName}</p>
+                  <p className="font-mono text-[10px] text-muted-foreground">ID: {c.id}</p>
+                  {hasBonus && (
+                    <p className="mt-1 font-mono text-[10px] tabular-nums text-[color:var(--success)]">
+                      База {fmt(Number(c.baseAmount))} ₽ + бонус уровня {c.bonusPct}% (+{fmt(Number(c.bonusAmount))} ₽)
+                    </p>
+                  )}
+                  {!hasBonus && c.baseAmount != null && (
+                    <p className="mt-1 font-mono text-[10px] text-muted-foreground">
+                      База {fmt(Number(c.baseAmount))} ₽ • бонус уровня 0%
+                    </p>
+                  )}
+                </div>
+                <div className="ml-2 flex items-center gap-2">
+                  <span
+                    className={`font-mono text-xs font-medium tabular-nums ${
+                      c.status === "rejected" ? "text-muted-foreground line-through" : ""
+                    }`}
+                  >
+                    {fmt(c.amount)} ₽
+                  </span>
+                  <div
+                    className={`size-1.5 rounded-full ${
+                      c.status === "ok"
+                        ? "bg-[color:var(--success)]"
+                        : c.status === "pending"
+                          ? "bg-[color:var(--warning)]"
+                          : "bg-destructive"
+                    }`}
+                  />
+                </div>
               </div>
-              <div className="flex items-center gap-2">
-                <span
-                  className={`font-mono text-xs font-medium tabular-nums ${
-                    c.status === "rejected" ? "text-muted-foreground line-through" : ""
-                  }`}
-                >
-                  {fmt(c.amount)} ₽
-                </span>
-                <div
-                  className={`size-1.5 rounded-full ${
-                    c.status === "ok"
-                      ? "bg-[color:var(--success)]"
-                      : c.status === "pending"
-                        ? "bg-[color:var(--warning)]"
-                        : "bg-destructive"
-                  }`}
-                />
-              </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </section>
     </>
