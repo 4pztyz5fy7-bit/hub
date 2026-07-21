@@ -22,8 +22,8 @@ import {
 export const Route = createFileRoute("/_authenticated/competitions")({
   head: () => ({
     meta: [
-      { title: "Соревнования · KVANTOM" },
-      { name: "description", content: "Активные соревнования партнёрской программы KVANTOM." },
+      { title: "Соревнования · КВАНТ" },
+      { name: "description", content: "Активные соревнования партнёрской программы КВАНТ." },
     ],
   }),
   component: CompetitionsPage,
@@ -172,7 +172,7 @@ function CompetitionsPage() {
           </Link>
           <div className="min-w-0 flex-1">
             <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
-              KVANTOM · Партнёрам
+              КВАНТ · Партнёрам
             </p>
             <h1 className="flex items-center gap-2 text-lg font-extrabold">
               <Trophy className="size-5 text-cyan-400" /> Соревнования
