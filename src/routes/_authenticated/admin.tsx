@@ -1340,7 +1340,7 @@ function RequestsTab() {
       if (query) {
         const u = profiles[r.user_id];
         const hay = [
-          r.offer_name, r.source, r.sub, r.link, r.id,
+          r.code, r.offer_name, r.source, r.sub, r.link, r.id,
           u?.email, u?.display_name, u?.telegram, r.user_id,
         ].filter(Boolean).join(" ").toLowerCase();
         if (!hay.includes(query)) return false;
