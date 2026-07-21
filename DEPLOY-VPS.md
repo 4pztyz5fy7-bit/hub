@@ -178,31 +178,31 @@ ufw --force enable
 
 > ⚠️ В панели Timeweb Cloud у сервера может быть **свой Firewall/Security Group**. Проверьте: карточка сервера → раздел **Файрвол / Сеть** → должны быть открыты порты **22 (SSH)**, **80 (HTTP)**, **443 (HTTPS)**. Если их нет — добавьте, иначе сайт не откроется снаружи.
 
-### 3.13 Создать файл подкачки (swap)
+### 3.14 Создать файл подкачки (swap)
 
 ```bash
 fallocate -l 2G /swapfile
 ```
 
-### 3.14 Закрыть доступ к swap для всех, кроме root
+### 3.15 Закрыть доступ к swap для всех, кроме root
 
 ```bash
 chmod 600 /swapfile
 ```
 
-### 3.15 Пометить файл как swap
+### 3.16 Пометить файл как swap
 
 ```bash
 mkswap /swapfile
 ```
 
-### 3.16 Включить swap
+### 3.17 Включить swap
 
 ```bash
 swapon /swapfile
 ```
 
-### 3.17 Сделать swap постоянным
+### 3.18 Сделать swap постоянным
 
 ```bash
 echo '/swapfile none swap sw 0 0' >> /etc/fstab
