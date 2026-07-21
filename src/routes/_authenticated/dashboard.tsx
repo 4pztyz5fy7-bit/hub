@@ -1615,7 +1615,7 @@ function InfoTab({
     { label: "Заказы", value: fmt(totalOrders), delta: `Σ заявок ${fmt(requests.length)}`, positive: totalOrders > 0 },
     { label: "Оплачено", value: fmt(paidCount), delta: paidCount > 0 ? "заявок" : "—", positive: paidCount > 0 },
   ];
-  const refLink = "kvantom.pro/p/user772/ref";
+  const refLink = "kvantm.tech/p/user772/ref";
   const copy = async () => {
     try {
       await navigator.clipboard.writeText(`https://${refLink}`);
