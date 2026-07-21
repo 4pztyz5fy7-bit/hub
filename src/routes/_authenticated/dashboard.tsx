@@ -2157,14 +2157,22 @@ function OffersTab({
                     <FileText className="size-3" />
                   </button>
                   <button
-                    onClick={() => onCopyLink(o)}
+                    onClick={() => { if (!locked) onCopyLink(o); }}
+                    disabled={locked}
+                    title={locked ? `Доступно с уровня «${TIER_NAME[o.minLevel]}»` : undefined}
                     className={`flex items-center gap-1 rounded-md px-3 py-2 text-[11px] font-bold uppercase tracking-wider transition-colors active:scale-95 ${
-                      isCopied
+                      locked
+                        ? "cursor-not-allowed bg-secondary text-muted-foreground"
+                        : isCopied
                         ? "bg-[color:var(--success)]/15 text-[color:var(--success)]"
                         : "bg-foreground text-background"
                     }`}
                   >
-                    {isCopied ? (
+                    {locked ? (
+                      <>
+                        <Lock className="size-3" /> {TIER_NAME[o.minLevel]}
+                      </>
+                    ) : isCopied ? (
                       <>
                         <Check className="size-3" /> Скопировано
                       </>
