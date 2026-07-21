@@ -704,6 +704,7 @@ function DashboardPage() {
               .map((c) => ({ city: String(c?.city ?? ""), amount: Number(c?.amount ?? 0) }))
               .filter((c) => c.city && c.amount > 0)
           : [],
+        minLevel: (r.min_level ?? "start") as Offer["minLevel"],
       })));
 
       const pRow = profileRes.data as { bank?: BankDetails | null; display_name?: string | null; avatar_url?: string | null; email?: string | null; settings?: Partial<UserPrefs> | null } | null;
