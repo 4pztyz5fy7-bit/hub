@@ -171,7 +171,7 @@ function LandingPage() {
                 <span className="absolute inset-0 animate-ping rounded-full bg-primary opacity-75" />
                 <span className="relative inline-flex size-2 rounded-full bg-primary" />
               </span>
-              {stats ? `${formatCount(stats.partners)} партнёров в сети` : "Партнёрская сеть КВАНТ"}
+              {`${formatCount(onlineCount)} партнёров в сети`}
             </div>
             <h1 className="mt-5 text-4xl font-black leading-[1.05] tracking-tight sm:text-5xl md:text-[64px]">
               Зарабатывайте на рекомендациях с{" "}
