@@ -102,6 +102,7 @@ function AdminPage() {
   const [moderationUnread, setModerationUnread] = useState(0);
   const [supportUnread, setSupportUnread] = useState(0);
   const [meId, setMeId] = useState<string | null>(null);
+  const [perms, setPerms] = useState<TeamPerms>({ position_code: null, position_name: null, is_leadership: false, permissions: [] });
 
   // ADMIN GUARD: надёжная проверка сессии и роли.
   // - Ждём валидную сессию с access_token (учитываем гонку с onAuthStateChange).
