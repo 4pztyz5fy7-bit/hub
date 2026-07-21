@@ -741,6 +741,7 @@ export type Database = {
         Args: { _tier: Database["public"]["Enums"]["level_tier"] }
         Returns: number
       }
+      notify_competition_ranks: { Args: never; Returns: number }
       settle_competition: { Args: { _id: string }; Returns: Json }
       touch_streak: {
         Args: never
