@@ -806,6 +806,9 @@ function DashboardPage() {
         id: String(r.id).slice(0, 8), time: timeOf(r.created_at), createdAt: r.created_at,
         offerId: r.offer_id ?? "", offerName: r.offer_name,
         amount: Number(r.amount), status: r.status as Conversion["status"],
+        baseAmount: r.base_amount != null ? Number(r.base_amount) : null,
+        bonusPct: r.bonus_pct != null ? Number(r.bonus_pct) : null,
+        bonusAmount: r.bonus_amount != null ? Number(r.bonus_amount) : null,
       })));
     };
     const refetchNotifs = async () => {
