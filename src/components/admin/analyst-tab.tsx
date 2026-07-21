@@ -1,7 +1,7 @@
+import { translateError } from "@/lib/errors-ru";
 import { useEffect, useRef, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import {
-import { translateError } from "@/lib/errors-ru";
   Sparkles, Send, Loader2, Users, Package, DollarSign, Wallet,
   TrendingUp, AlertTriangle, RefreshCw, Trophy, Activity,
 } from "lucide-react";

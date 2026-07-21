@@ -1,8 +1,8 @@
+import { translateError } from "@/lib/errors-ru";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Plus, Trash2, Pencil, X, Trophy, Check, Ban, Coins, Loader2 } from "lucide-react";
-import { translateError } from "@/lib/errors-ru";
 
 type Tier = "start" | "silver" | "gold" | "platinum" | "diamond";
 type Metric = "earned" | "conversions" | "requests";

@@ -1,8 +1,8 @@
+import { translateError } from "@/lib/errors-ru";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import {
-import { translateError } from "@/lib/errors-ru";
   Shield, Users, Package, Wallet, ClipboardList, Loader2, ArrowLeft,
   Check, X, Plus, Pencil, Trash2, LogOut, LayoutDashboard, Bell,
   BarChart3, Search, Download, Copy, RefreshCw, Send, Filter, MoreHorizontal,

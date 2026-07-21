@@ -1,9 +1,9 @@
+import { translateError } from "@/lib/errors-ru";
 import { useEffect, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
 import { Mail, Save, Send, Loader2, Info } from "lucide-react";
 import {
-import { translateError } from "@/lib/errors-ru";
   getEmailSettings,
   saveEmailSettings,
   sendTestAppEmail,

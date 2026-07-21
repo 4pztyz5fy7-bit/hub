@@ -1,8 +1,8 @@
+import { translateError } from "@/lib/errors-ru";
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { t } from "@/lib/i18n";
 import {
-import { translateError } from "@/lib/errors-ru";
   User as UserIcon,
   Mail,
   Phone,

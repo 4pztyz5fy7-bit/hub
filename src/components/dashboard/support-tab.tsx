@@ -1,7 +1,7 @@
+import { translateError } from "@/lib/errors-ru";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import {
-import { translateError } from "@/lib/errors-ru";
   Headphones, Send, Plus, ArrowLeft, Loader2, MessageSquare,
   CheckCircle2, Clock, AlertCircle,
 } from "lucide-react";

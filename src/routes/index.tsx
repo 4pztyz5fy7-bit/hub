@@ -1,9 +1,9 @@
+import { translateError } from "@/lib/errors-ru";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { z } from "zod";
 import {
-import { translateError } from "@/lib/errors-ru";
   Loader2, Mail, Lock, User, Rocket, ShieldCheck, TrendingUp, Zap, Trophy,
   X, ArrowRight, Wallet, BarChart3, Headphones, Star, Check, Menu, Sparkles,
   Clock, Users, Target, Gift, MessageCircle, CreditCard, Globe, Award,

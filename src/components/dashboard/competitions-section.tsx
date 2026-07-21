@@ -1,8 +1,8 @@
+import { translateError } from "@/lib/errors-ru";
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { supabase } from "@/integrations/supabase/client";
 import { Trophy, Gem, Lock, Users, Calendar, Coins, Crown, Medal, Sparkles, TrendingUp, ArrowUpRight } from "lucide-react";
-import { translateError } from "@/lib/errors-ru";
 
 /* ============================ Types ============================ */
 
