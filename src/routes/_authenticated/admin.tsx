@@ -1439,9 +1439,14 @@ function RequestsTab() {
               <div className="flex items-start gap-2">
                 <input type="checkbox" checked={selected.has(r.id)} onChange={() => toggleSel(r.id)} onClick={(e) => e.stopPropagation()} className="mt-1 shrink-0" aria-label="Выбрать" />
                 <button type="button" onClick={() => setOpenId(r.id)} className="min-w-0 flex-1 text-left">
-                  <p className="truncate text-sm font-bold">{r.offer_name}</p>
-                  <p className="mt-0.5 truncate text-[11px] text-muted-foreground">{who}{u?.telegram ? ` · ${u.telegram}` : ""}</p>
-                  <p className="mt-0.5 truncate text-[10px] text-muted-foreground">#{r.id.slice(0, 8)} · {dt(r.created_at)}</p>
+                  <div className="flex items-center gap-1.5">
+                    <span className="rounded-md bg-primary/10 px-1.5 py-0.5 font-mono text-[10px] font-bold text-primary">{r.code}</span>
+                    <p className="truncate text-sm font-bold">{r.offer_name}</p>
+                  </div>
+                  <p className="mt-0.5 truncate text-[11px] text-foreground/80">{u?.email ?? who}</p>
+                  <p className="mt-0.5 truncate text-[10px] text-muted-foreground">
+                    {u?.display_name ? `${u.display_name} · ` : ""}{u?.telegram ? `${u.telegram} · ` : ""}{dt(r.created_at)}
+                  </p>
                 </button>
                 <div className="flex shrink-0 flex-col items-end gap-1">
                   <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold uppercase ${badges[r.status]}`}>{statusLabels[r.status] ?? r.status}{r.status === "completed" && (r.orders_count ?? 0) > 0 ? ` · ${r.orders_count}` : ""}</span>
