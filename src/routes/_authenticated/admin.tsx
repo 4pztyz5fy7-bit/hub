@@ -7,13 +7,14 @@ import {
   BarChart3, Search, Download, Copy, RefreshCw, Send, Filter, MoreHorizontal,
   TrendingUp, DollarSign, UserCheck, Activity, ChevronRight, Eye, Ban, Sparkles,
   Headphones, Megaphone, Newspaper,
-  Trophy,
+  Trophy, Mail,
 } from "lucide-react";
 import { AdminAnalystTab } from "@/components/admin/analyst-tab";
 import { AdminSupportTab } from "@/components/admin/support-tab";
 import { AdminBannersTab } from "@/components/admin/banners-tab";
 import { AdminNewsTab } from "@/components/admin/news-tab";
 import { AdminCompetitionsTab } from "@/components/admin/admin-competitions-tab";
+import { AdminEmailSettingsTab } from "@/components/admin/email-settings-tab";
 
 export const Route = createFileRoute("/_authenticated/admin")({
   head: () => ({ meta: [{ title: "Админ-панель — КВАНТ" }] }),
@@ -43,7 +44,7 @@ function useRealtimeReload(tables: string[], reload: () => void, channelKey?: st
 }
 
 /* =========================== TYPES =========================== */
-type TabId = "overview" | "users" | "offers" | "payouts" | "requests" | "conversions" | "broadcast" | "banners" | "news" | "moderation" | "support" | "ai" | "competitions";
+type TabId = "overview" | "users" | "offers" | "payouts" | "requests" | "conversions" | "broadcast" | "banners" | "news" | "moderation" | "support" | "ai" | "competitions" | "email";
 
 type Profile = {
   id: string; email: string | null; display_name: string | null;
@@ -224,6 +225,7 @@ function AdminPage() {
     { id: "support", label: "Поддержка", Icon: Headphones, badge: supportUnread },
     { id: "competitions", label: "Соревнования", Icon: Trophy },
     { id: "ai", label: "AI-аналитик", Icon: Sparkles },
+    { id: "email", label: "Почта / SMTP", Icon: Mail },
   ];
 
   return (
@@ -286,6 +288,7 @@ function AdminPage() {
         {tab === "support" && <AdminSupportTab meId={meId} onCountChange={setSupportUnread} />}
         {tab === "ai" && <AdminAnalystTab />}
         {tab === "competitions" && <AdminCompetitionsTab />}
+        {tab === "email" && <AdminEmailSettingsTab />}
       </main>
     </div>
   );
