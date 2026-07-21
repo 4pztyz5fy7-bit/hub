@@ -20,7 +20,7 @@ const errorMiddleware = createMiddleware().server(async ({ next }) => {
 
 // Protect server functions from cross-site requests (same-origin RPC guard).
 const csrfMiddleware = createCsrfMiddleware({
-  filter: (ctx) => ctx.handlerType === "serverFn",
+  filter: (ctx: { handlerType: string }) => ctx.handlerType === "serverFn",
 });
 
 export const startInstance = createStart(() => ({
