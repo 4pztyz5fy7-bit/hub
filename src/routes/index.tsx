@@ -9,6 +9,7 @@ import {
 } from "lucide-react";
 import { getLandingStats, type LandingStats } from "@/lib/landing-stats.functions";
 import { randomAvatarUrl } from "@/lib/avatars";
+import { useOnlineCount } from "@/lib/online-presence";
 
 function formatRub(n: number): string {
   if (n >= 1_000_000_000) return `₽${(n / 1_000_000_000).toFixed(n >= 10_000_000_000 ? 0 : 1)} млрд`;
@@ -52,6 +53,7 @@ function LandingPage() {
 
   const initialStats = Route.useLoaderData() as LandingStats | null;
   const [stats, setStats] = useState<LandingStats | null>(initialStats);
+  const onlineCount = useOnlineCount();
 
   useEffect(() => {
     let cancelled = false;
@@ -169,7 +171,7 @@ function LandingPage() {
                 <span className="absolute inset-0 animate-ping rounded-full bg-primary opacity-75" />
                 <span className="relative inline-flex size-2 rounded-full bg-primary" />
               </span>
-              {stats ? `${formatCount(stats.partners)} партнёров в сети` : "Партнёрская сеть КВАНТ"}
+              {`${formatCount(onlineCount)} партнёров в сети`}
             </div>
             <h1 className="mt-5 text-4xl font-black leading-[1.05] tracking-tight sm:text-5xl md:text-[64px]">
               Зарабатывайте на рекомендациях с{" "}
@@ -241,7 +243,7 @@ function LandingPage() {
           {/* Big stats */}
           <div className="mt-8 grid grid-cols-2 gap-3 md:grid-cols-4">
             {[
-              { v: stats ? formatCount(stats.partners) : "—", l: "партнёров в сети", Icon: Users },
+              { v: formatCount(onlineCount), l: "партнёров в сети", Icon: Users },
               { v: stats ? formatRub(stats.totalPaid) : "—", l: "выплачено партнёрам", Icon: Wallet },
               { v: stats ? formatCount(stats.completedConversions) : "—", l: "подтверждённых конверсий", Icon: TrendingUp },
               { v: stats ? formatCount(stats.offersCount) : "—", l: "активных офферов", Icon: Rocket },

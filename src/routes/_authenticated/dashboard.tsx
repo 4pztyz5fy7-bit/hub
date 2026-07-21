@@ -8,6 +8,7 @@ import { RewardsTab } from "@/components/dashboard/rewards-tab";
 import { BannerBoard } from "@/components/dashboard/banner-board";
 import { t } from "@/lib/i18n";
 import { randomAvatarUrl } from "@/lib/avatars";
+import { useTrackOnline } from "@/lib/online-presence";
 import { LogOut } from "lucide-react";
 import {
   LayoutGrid,
@@ -559,6 +560,9 @@ function DashboardPage() {
   const [userName, setUserName] = useState<string>("");
   const [userAvatar, setUserAvatar] = useState<string | null>(null);
   const [prefs, setPrefs] = useState<UserPrefs>(DEFAULT_PREFS);
+
+  // Track this user as online on the shared presence channel
+  useTrackOnline(userId);
 
   // Apply theme
   useEffect(() => {
