@@ -2096,6 +2096,11 @@ function OffersTab({
           const isCopied = copiedOffer === o.id;
           const boosted = applyLevelBoost(o, level.bonusPct);
           const hasBoost = level.bonusPct > 0 && boosted.boostedPayout !== o.payout;
+          const TIER_ORDER = ["start", "silver", "gold", "platinum", "diamond"] as const;
+          const TIER_NAME = { start: "Старт", silver: "Серебро", gold: "Золото", platinum: "Платина", diamond: "Бриллиант" } as const;
+          const userTier = TIER_ORDER.indexOf(level.id);
+          const reqTier = TIER_ORDER.indexOf(o.minLevel);
+          const locked = userTier < reqTier;
           return (
             <div
               key={o.id}
