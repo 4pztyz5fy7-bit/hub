@@ -561,6 +561,9 @@ function DashboardPage() {
   const [userAvatar, setUserAvatar] = useState<string | null>(null);
   const [prefs, setPrefs] = useState<UserPrefs>(DEFAULT_PREFS);
 
+  // Track this user as online on the shared presence channel
+  useTrackOnline(userId);
+
   // Apply theme
   useEffect(() => {
     const root = document.documentElement;
