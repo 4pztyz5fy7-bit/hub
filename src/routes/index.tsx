@@ -1,3 +1,4 @@
+import { translateError } from "@/lib/errors-ru";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
@@ -594,7 +595,7 @@ function AuthDialog({ initialMode, onClose }: { initialMode: Mode; onClose: () =
       }
     } catch (e: unknown) {
       const msg = e instanceof z.ZodError ? e.errors[0]?.message : e instanceof Error ? e.message : "Ошибка";
-      setError(msg ?? "Ошибка");
+      setError(translateError(e, msg ?? "Ошибка"));
     } finally {
       setLoading(false);
     }

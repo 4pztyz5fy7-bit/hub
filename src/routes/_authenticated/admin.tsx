@@ -1,3 +1,4 @@
+import { translateError } from "@/lib/errors-ru";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
@@ -943,7 +944,7 @@ function OfferEditor({ offer, onClose, onSaved }: { offer: Offer | null; onClose
       ? await supabase.from("offers").update(payload).eq("id", offer.id)
       : await supabase.from("offers").insert(payload);
     setSaving(false);
-    if (error) { setErr(error.message); return; }
+    if (error) { setErr(translateError(error)); return; }
     onSaved();
   };
 
@@ -1255,7 +1256,7 @@ function PayoutsTab() {
       : "Удалить заявку на выплату?";
     if (!confirm(msg)) return;
     const { error } = await supabase.rpc("admin_delete_payout", { _id: id });
-    if (error) { alert("Не удалось удалить: " + error.message); return; }
+    if (error) { alert("Не удалось удалить: " + translateError(error)); return; }
     load();
   };
 
@@ -1728,7 +1729,7 @@ function RequestRowControls({ row, onReload }: { row: LinkRow; onReload: () => v
       }
     } catch (e) {
       console.error("change failed", e);
-      alert("Не удалось сохранить изменения: " + ((e as Error).message ?? "unknown"));
+      alert("Не удалось сохранить изменения: " + translateError(e));
     } finally {
       setSaving(false);
       setSavedFlash(true);
@@ -1959,7 +1960,7 @@ function AddConversion({ onClose, onSaved }: { onClose: () => void; onSaved: () 
       amount: Number(amount) || 0, status,
     });
     setSaving(false);
-    if (error) { setErr(error.message); return; }
+    if (error) { setErr(translateError(error)); return; }
     onSaved();
   };
 
@@ -2418,7 +2419,7 @@ function TeamTab() {
   const removeMember = async (userId: string) => {
     if (!confirm("Снять сотрудника с должности? Он потеряет доступ к админ-панели.")) return;
     const { error } = await supabase.from("team_members").delete().eq("user_id", userId);
-    if (error) alert("Ошибка: " + error.message); else load();
+    if (error) alert("Ошибка: " + translateError(error)); else load();
   };
 
   const deletePosition = async (id: string, isSystem: boolean) => {
@@ -2427,7 +2428,7 @@ function TeamTab() {
     if (inUse) { alert("На эту должность назначены сотрудники — сначала снимите их."); return; }
     if (!confirm("Удалить должность?")) return;
     const { error } = await supabase.from("team_positions").delete().eq("id", id);
-    if (error) alert("Ошибка: " + error.message); else load();
+    if (error) alert("Ошибка: " + translateError(error)); else load();
   };
 
   if (loading) return <CenterLoader label="Загрузка команды" />;
@@ -2566,7 +2567,7 @@ function AssignMemberSheet({ positions, members, onClose, onDone }: {
     const { error } = await supabase.from("team_members")
       .upsert({ user_id: selected.id, position_id: posId }, { onConflict: "user_id" });
     setSaving(false);
-    if (error) setErr(error.message); else onDone();
+    if (error) setErr(translateError(error)); else onDone();
   };
 
   return (
@@ -2655,7 +2656,7 @@ function PositionEditor({ position, onClose, onDone }: {
       ? await supabase.from("team_positions").insert(payload)
       : await supabase.from("team_positions").update(payload).eq("id", position!.id);
     setSaving(false);
-    if (error) setErr(error.message); else onDone();
+    if (error) setErr(translateError(error)); else onDone();
   };
 
   return (

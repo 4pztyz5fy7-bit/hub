@@ -1,3 +1,4 @@
+import { translateError } from "@/lib/errors-ru";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import {
@@ -139,12 +140,12 @@ function NewTicketModal({
       .insert({ user_id: meId, subject: subject.trim(), priority, status: "open" })
       .select("id")
       .single();
-    if (error || !ticket) { setBusy(false); setErr(error?.message ?? "Ошибка"); return; }
+    if (error || !ticket) { setBusy(false); setErr(translateError(error)); return; }
     const { error: e2 } = await supabase
       .from("support_messages")
       .insert({ ticket_id: ticket.id, author_id: meId, from_admin: false, text: text.trim() });
     setBusy(false);
-    if (e2) { setErr(e2.message); return; }
+    if (e2) { setErr(translateError(e2)); return; }
     onCreated(ticket.id);
   }
 
@@ -254,7 +255,7 @@ export function TicketView({
       ticket_id: ticket.id, author_id: meId, from_admin: isAdmin, text: body,
     }).select("*").maybeSingle();
     setBusy(false);
-    if (error) { setErr(error.message); return; }
+    if (error) { setErr(translateError(error)); return; }
     setText("");
     if (data) {
       setMessages((prev) => prev.some((x) => x.id === data.id) ? prev : [...prev, data as SupportMessage]);
@@ -271,7 +272,7 @@ export function TicketView({
     if (!ticket) return;
     setErr(null);
     const { error } = await supabase.from("support_tickets").update({ status }).eq("id", ticket.id);
-    if (error) { setErr(error.message); return; }
+    if (error) { setErr(translateError(error)); return; }
     setTicket({ ...ticket, status });
   }
 

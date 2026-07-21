@@ -1,3 +1,4 @@
+import { translateError } from "@/lib/errors-ru";
 import { useEffect, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
@@ -45,7 +46,7 @@ export function AdminEmailSettingsTab() {
         const row = await load();
         if (row) setS({ ...EMPTY, ...row });
       } catch (e: unknown) {
-        toast.error(e instanceof Error ? e.message : "Ошибка загрузки");
+        toast.error(translateError(e, "Ошибка загрузки"));
       } finally {
         setLoading(false);
       }
@@ -60,7 +61,7 @@ export function AdminEmailSettingsTab() {
       await save({ data: s });
       toast.success("Настройки сохранены");
     } catch (e: unknown) {
-      toast.error(e instanceof Error ? e.message : "Не удалось сохранить");
+      toast.error(translateError(e, "Не удалось сохранить"));
     } finally {
       setSaving(false);
     }
@@ -74,7 +75,7 @@ export function AdminEmailSettingsTab() {
       await sendTest({ data: { to: testTo } });
       toast.success("Тестовое письмо отправлено");
     } catch (e: unknown) {
-      toast.error(e instanceof Error ? e.message : "Ошибка отправки");
+      toast.error(translateError(e, "Ошибка отправки"));
     } finally {
       setSending(false);
     }

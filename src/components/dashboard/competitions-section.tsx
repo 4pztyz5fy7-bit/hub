@@ -1,3 +1,4 @@
+import { translateError } from "@/lib/errors-ru";
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { supabase } from "@/integrations/supabase/client";
@@ -186,7 +187,7 @@ function CompetitionCard({ c }: { c: Competition }) {
       _competition_id: c.id,
       _limit: 50,
     });
-    if (error) setError(error.message);
+    if (error) setError(translateError(error));
     setBoard(((data ?? []) as any[]) as LbRow[]);
     setLoading(false);
   };

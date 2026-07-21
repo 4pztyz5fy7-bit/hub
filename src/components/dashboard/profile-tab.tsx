@@ -1,3 +1,4 @@
+import { translateError } from "@/lib/errors-ru";
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { t } from "@/lib/i18n";
@@ -169,7 +170,7 @@ export function ProfileTab({
     const { error } = await supabase.from("profiles").update(payload as any).eq("id", userId);
     setSaving(false);
     if (error) {
-      setErr(error.message);
+      setErr(translateError(error));
       return;
     }
     setP((prev) => (prev ? { ...prev, ...(payload as any) } : prev));
@@ -197,7 +198,7 @@ export function ProfileTab({
     setPwSaving(true);
     const { error } = await supabase.auth.updateUser({ password: pwNew });
     setPwSaving(false);
-    if (error) { setPwMsg(error.message); return; }
+    if (error) { setPwMsg(translateError(error)); return; }
     setPwMsg("Пароль обновлён");
     setPwNew(""); setPwConfirm("");
     setTimeout(() => { setPwOpen(false); setPwMsg(null); }, 1400);

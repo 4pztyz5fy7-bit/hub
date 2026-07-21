@@ -1,3 +1,4 @@
+import { translateError } from "@/lib/errors-ru";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
@@ -501,7 +502,7 @@ function CompetitionDialog({
       setJoined(true);
       await loadAll();
     } catch (e: any) {
-      toast.error(e?.message ?? "Ошибка");
+      toast.error(translateError(e));
     } finally {
       setBusy(false);
     }
@@ -520,7 +521,7 @@ function CompetitionDialog({
       setJoined(false);
       await loadAll();
     } catch (e: any) {
-      toast.error(e?.message ?? "Ошибка");
+      toast.error(translateError(e));
     } finally {
       setBusy(false);
     }
