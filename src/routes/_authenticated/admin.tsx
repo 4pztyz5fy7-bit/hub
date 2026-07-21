@@ -154,7 +154,22 @@ function AdminPage() {
       await new Promise((r) => setTimeout(r, 400 * (i + 1)));
     }
 
-    if (verdict === "admin") { setChecking(false); return; }
+    if (verdict === "admin") {
+      // Load team permissions
+      try {
+        const { data } = await supabase.rpc("current_team_permissions");
+        if (data && typeof data === "object") {
+          const d = data as any;
+          setPerms({
+            position_code: d.position_code ?? null,
+            position_name: d.position_name ?? null,
+            is_leadership: !!d.is_leadership,
+            permissions: Array.isArray(d.permissions) ? d.permissions : [],
+          });
+        }
+      } catch { /* keep defaults */ }
+      setChecking(false); return;
+    }
     if (verdict === "not_admin") { navigate({ to: "/dashboard", replace: true }); return; }
     setAccessError("Сервис ролей временно недоступен. Мы не выполнили редирект — повторите проверку.");
     setChecking(false);
