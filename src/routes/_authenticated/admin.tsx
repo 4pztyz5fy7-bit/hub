@@ -840,6 +840,7 @@ function OfferEditor({ offer, onClose, onSaved }: { offer: Offer | null; onClose
     active: offer?.active ?? true,
     is_new: offer?.is_new ?? false,
     image_url: offer?.image_url ?? "",
+    min_level: (offer?.min_level ?? "start") as "start" | "silver" | "gold" | "platinum" | "diamond",
   });
   const [cityPayouts, setCityPayouts] = useState<CityPayout[]>(
     Array.isArray(offer?.city_payouts) ? (offer!.city_payouts as CityPayout[]) : []
