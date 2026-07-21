@@ -439,33 +439,111 @@ bun run build
 
 Идёт 2–5 минут. Ожидаемо: `Built in ...ms` без красных ошибок.
 
-### 7.9 Запустить сайт через PM2
+### 7.9 Запустить сайт (выберите один способ)
+
+Есть несколько способов держать сайт запущенным. Выберите один и следуйте только ему.
+
+#### Способ А — PM2 (проще всего, рекомендуется)
 
 ```bash
-pm2 start "bun run start" --name kvantom --cwd /var/www/kvantom
-```
-
-### 7.10 Сохранить список процессов
-
-```bash
+pm2 start "bun run start" --name kvantm --cwd /var/www/kvantm
 pm2 save
-```
-
-### 7.11 Настроить автозапуск
-
-```bash
 pm2 startup systemd
 ```
 
 Последняя команда выведет ещё одну команду (`sudo env PATH=...`). **Скопируйте её и выполните** — автозапуск при перезагрузке.
 
-### 7.12 Проверить статус
+Проверить статус:
 
 ```bash
 pm2 status
 ```
 
-Должно быть `kvantom | online`.
+Должно быть `kvantm | online`.
+
+#### Способ Б — systemd-сервис (без PM2)
+
+Если не хотите ставить PM2, создайте родной сервис Ubuntu.
+
+```bash
+nano /etc/systemd/system/kvantm.service
+```
+
+Вставьте:
+
+```ini
+[Unit]
+Description=КВАНТ сайт
+After=network.target
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/var/www/kvantm
+Environment=PORT=3000
+ExecStart=/usr/local/bin/bun run start
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
+```
+
+Активировать и запустить:
+
+```bash
+systemctl daemon-reload
+systemctl enable kvantm
+systemctl start kvantm
+systemctl status kvantm
+```
+
+Должно быть `active (running)`.
+
+#### Способ В — Docker (если любите контейнеры)
+
+Создайте `Dockerfile` в корне проекта:
+
+```dockerfile
+FROM oven/bun:latest
+WORKDIR /app
+COPY package.json bun.lockb ./
+RUN bun install
+COPY . .
+RUN bun run build
+EXPOSE 3000
+CMD ["bun", "run", "start"]
+```
+
+Собрать и запустить:
+
+```bash
+docker build -t kvantm .
+docker run -d --name kvantm -p 3000:3000 --env-file /var/www/kvantm/.env --restart unless-stopped kvantm
+```
+
+Проверить:
+
+```bash
+docker ps
+```
+
+#### Способ Г — ручной запуск (только для теста, не для постоянной работы)
+
+```bash
+cd /var/www/kvantm
+nohup bun run start > /var/log/kvantm.log 2>&1 &
+```
+
+Или через `screen`:
+
+```bash
+screen -S kvantm
+cd /var/www/kvantm && bun run start
+# выйти из screen без остановки: Ctrl+A, затем D
+```
+
+После перезагрузки сервера сайт **не запустится сам** — используйте только для проверки.
 
 ---
 
