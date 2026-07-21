@@ -212,6 +212,40 @@ function AdminPage() {
 
   const signOut = async () => { await supabase.auth.signOut(); navigate({ to: "/" }); };
 
+  const allTabs = useMemo<{ id: TabId; label: string; Icon: typeof Users; badge?: number }[]>(() => [
+    { id: "overview", label: "Обзор", Icon: LayoutDashboard },
+    { id: "users", label: "Пользователи", Icon: Users },
+    { id: "offers", label: "Офферы", Icon: Package },
+    { id: "payouts", label: "Выплаты", Icon: Wallet },
+    { id: "requests", label: "Заявки", Icon: ClipboardList },
+    { id: "conversions", label: "Конверсии", Icon: Activity },
+    { id: "broadcast", label: "Рассылка", Icon: Bell },
+    { id: "banners", label: "Баннеры", Icon: Megaphone },
+    { id: "news", label: "Новости", Icon: Newspaper },
+    { id: "moderation", label: "Модерация", Icon: Shield, badge: moderationUnread },
+    { id: "support", label: "Поддержка", Icon: Headphones, badge: supportUnread },
+    { id: "competitions", label: "Соревнования", Icon: Trophy },
+    { id: "ai", label: "AI-аналитик", Icon: Sparkles },
+    { id: "email", label: "Почта / SMTP", Icon: Mail },
+    { id: "team", label: "Команда", Icon: UserCog },
+  ], [moderationUnread, supportUnread]);
+
+  const hasAll = perms.is_leadership || perms.permissions.includes("*");
+  const allowed = useMemo(() => new Set(perms.permissions), [perms.permissions]);
+  const tabs = useMemo(() => allTabs.filter((t) => {
+    if (t.id === "team") return perms.is_leadership;
+    if (hasAll) return true;
+    return allowed.has(t.id);
+  }), [allTabs, hasAll, allowed, perms.is_leadership]);
+
+  // If current tab is no longer allowed, snap to first available
+  useEffect(() => {
+    if (!tabs.length) return;
+    if (!tabs.some((t) => t.id === tab)) setTab(tabs[0].id);
+  }, [tabs, tab]);
+
+  const canRender = (id: TabId) => hasAll || allowed.has(id) || (id === "team" && perms.is_leadership);
+
   if (checking) return <CenterLoader label="Проверка доступа" />;
   if (accessError) {
     return (
@@ -228,41 +262,6 @@ function AdminPage() {
       </div>
     );
   }
-
-  const allTabs: { id: TabId; label: string; Icon: typeof Users; badge?: number }[] = [
-    { id: "overview", label: "Обзор", Icon: LayoutDashboard },
-    { id: "users", label: "Пользователи", Icon: Users },
-    { id: "offers", label: "Офферы", Icon: Package },
-    { id: "payouts", label: "Выплаты", Icon: Wallet },
-    { id: "requests", label: "Заявки", Icon: ClipboardList },
-    { id: "conversions", label: "Конверсии", Icon: Activity },
-    { id: "broadcast", label: "Рассылка", Icon: Bell },
-    { id: "banners", label: "Баннеры", Icon: Megaphone },
-    { id: "news", label: "Новости", Icon: Newspaper },
-    { id: "moderation", label: "Модерация", Icon: Shield, badge: moderationUnread },
-    { id: "support", label: "Поддержка", Icon: Headphones, badge: supportUnread },
-    { id: "competitions", label: "Соревнования", Icon: Trophy },
-    { id: "ai", label: "AI-аналитик", Icon: Sparkles },
-    { id: "email", label: "Почта / SMTP", Icon: Mail },
-    { id: "team", label: "Команда", Icon: UserCog },
-  ];
-
-  const hasAll = perms.is_leadership || perms.permissions.includes("*");
-  const allowed = new Set(perms.permissions);
-  const tabs = allTabs.filter((t) => {
-    if (t.id === "team") return perms.is_leadership;
-    if (hasAll) return true;
-    return allowed.has(t.id);
-  });
-
-  // If current tab is no longer allowed, snap to first available
-  useEffect(() => {
-    if (!tabs.length) return;
-    if (!tabs.some((t) => t.id === tab)) setTab(tabs[0].id);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [perms.position_code]);
-
-  const canRender = (id: TabId) => hasAll || allowed.has(id) || (id === "team" && perms.is_leadership);
 
   return (
     <div className="min-h-screen bg-background text-foreground">
