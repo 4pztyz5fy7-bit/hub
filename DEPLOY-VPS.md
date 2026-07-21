@@ -124,21 +124,43 @@ apt install -y nodejs git nginx certbot python3-certbot-nginx build-essential uf
 
 Идёт 2–4 минуты. Установятся: Node.js, Git, Nginx (веб-сервер), certbot (для HTTPS), компилятор, файрвол, защита от брутфорса и монитор.
 
-### 3.6 Установить unzip (нужно для установки Bun)
+### 3.6 Установить Bun напрямую (без unzip, без bun.sh/install)
+
+Если официальный скрипт `curl https://bun.sh/install | bash` падает с ошибкой распаковки — ставим Bun напрямую с GitHub Releases одной командой.
+
+Скачать и распаковать бинарник (для обычного VPS x86_64):
 
 ```bash
-apt install -y unzip
+curl -fsSL https://github.com/oven-sh/bun/releases/latest/download/bun-linux-x64.zip -o /tmp/bun.zip
 ```
-
-> Если на этом шаге пишет `unzip is already installed` — просто идите дальше.
-
-### 3.7 Установить Bun (сборщик проекта)
 
 ```bash
-curl -fsSL https://bun.sh/install | bash
+apt install -y unzip && unzip -o /tmp/bun.zip -d /tmp/
 ```
 
-Идёт 10–30 секунд. Должно закончиться сообщением `Bun was installed successfully`.
+Переместить в системную папку:
+
+```bash
+mkdir -p /root/.bun/bin && mv /tmp/bun-linux-x64/bun /root/.bun/bin/bun && chmod +x /root/.bun/bin/bun
+```
+
+Создать симлинк, чтобы `bun` был доступен из любого места:
+
+```bash
+ln -sf /root/.bun/bin/bun /usr/local/bin/bun
+```
+
+Проверить установку:
+
+```bash
+bun --version
+```
+
+Должно вывести версию, например `1.1.34`. Если пишет `command not found` — команда `ln -sf` выше не сработала, повторите её.
+
+> Для сервера с ARM-процессором (Timeweb Cloud обычно x86_64, но если у вас aarch64 — проверьте командой `uname -m`) замените в первой команде `bun-linux-x64.zip` на `bun-linux-aarch64.zip`.
+
+
 
 ### 3.8 Добавить Bun в PATH (чтобы система нашла команду `bun`)
 
