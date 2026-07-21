@@ -200,6 +200,9 @@ type Conversion = {
   offerName: string;
   amount: number;
   status: "ok" | "pending" | "rejected";
+  baseAmount?: number | null;
+  bonusPct?: number | null;
+  bonusAmount?: number | null;
 };
 
 type PayoutStatus = "pending" | "processing" | "paid" | "rejected";
