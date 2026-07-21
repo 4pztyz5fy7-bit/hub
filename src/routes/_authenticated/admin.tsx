@@ -65,6 +65,7 @@ type Offer = {
   payout_min: number | null;
   payout_max: number | null;
   city_payouts: CityPayout[];
+  min_level: "start" | "silver" | "gold" | "platinum" | "diamond";
   created_at: string;
 };
 
