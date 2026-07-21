@@ -65,11 +65,40 @@ function LandingPage() {
   }, [navigate]);
 
   useEffect(() => {
-    if (initialStats) return; // SSR already delivered
     let cancelled = false;
-    getLandingStats().then((s) => { if (!cancelled) setStats(s); }).catch(() => {});
-    return () => { cancelled = true; };
-  }, [initialStats]);
+    let timer: ReturnType<typeof setTimeout> | null = null;
+    const refresh = () => {
+      getLandingStats().then((s) => { if (!cancelled) setStats(s); }).catch(() => {});
+    };
+    const schedule = () => {
+      if (timer) return;
+      timer = setTimeout(() => { timer = null; refresh(); }, 800);
+    };
+    // Initial refetch to bypass edge cache after hydration
+    refresh();
+    // Realtime: any change on stat-driving tables triggers a debounced refetch
+    const channel = supabase
+      .channel("landing-stats")
+      .on("postgres_changes", { event: "*", schema: "public", table: "profiles" }, schedule)
+      .on("postgres_changes", { event: "*", schema: "public", table: "conversions" }, schedule)
+      .on("postgres_changes", { event: "*", schema: "public", table: "payout_requests" }, schedule)
+      .on("postgres_changes", { event: "*", schema: "public", table: "offers" }, schedule)
+      .on("postgres_changes", { event: "*", schema: "public", table: "link_requests" }, schedule)
+      .subscribe();
+    // Fallback poll every 30s in case Realtime is unavailable for anon
+    const poll = setInterval(refresh, 30000);
+    // Refresh when tab becomes visible again
+    const onVis = () => { if (document.visibilityState === "visible") refresh(); };
+    document.addEventListener("visibilitychange", onVis);
+    return () => {
+      cancelled = true;
+      if (timer) clearTimeout(timer);
+      clearInterval(poll);
+      document.removeEventListener("visibilitychange", onVis);
+      supabase.removeChannel(channel);
+    };
+  }, []);
+
 
   const openAuth = (m: Mode) => { setInitialMode(m); setAuthOpen(true); setMenuOpen(false); };
 
