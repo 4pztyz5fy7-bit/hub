@@ -543,9 +543,8 @@ function UsersTab() {
               <p className="truncate text-[11px] text-muted-foreground">{p.email} · {p.telegram || "без tg"} · {dt(p.created_at)}</p>
             </button>
             <button onClick={() => copy(p.email || "")} title="Копировать email" className="grid size-7 place-items-center rounded-md hover:bg-accent"><Copy className="size-3.5" /></button>
-            <button disabled={busy === p.id} onClick={() => toggleAdmin(p.id, !isAdmin)}
-              className={`rounded-lg border px-3 py-1.5 text-[11px] font-bold transition ${isAdmin ? "border-destructive/40 text-destructive hover:bg-destructive/10" : "border-primary/40 text-primary hover:bg-primary/10"}`}>
-              {busy === p.id ? "…" : isAdmin ? "Снять" : "Admin"}
+            <button onClick={() => setDetail(p)} className="rounded-lg border border-border px-3 py-1.5 text-[11px] font-bold text-muted-foreground hover:bg-accent">
+              Открыть
             </button>
           </div>
         );
