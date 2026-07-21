@@ -439,7 +439,7 @@ function UsersTab() {
   const [rows, setRows] = useState<Profile[]>([]);
   const [roles, setRoles] = useState<Record<string, Set<string>>>({});
   const [loading, setLoading] = useState(true);
-  const [busy, setBusy] = useState<string | null>(null);
+  
   const [q, setQ] = useState("");
   const [roleFilter, setRoleFilter] = useState<"all" | "admin" | "user">("all");
   const [statusFilter, setStatusFilter] = useState<"all" | "blocked" | "warned" | "ok">("all");
