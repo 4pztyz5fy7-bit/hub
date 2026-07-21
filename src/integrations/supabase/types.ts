@@ -126,6 +126,7 @@ export type Database = {
       }
       link_requests: {
         Row: {
+          code: string
           created_at: string
           credit_conversion_id: string | null
           credited_at: string | null
@@ -144,6 +145,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          code?: string
           created_at?: string
           credit_conversion_id?: string | null
           credited_at?: string | null
@@ -162,6 +164,7 @@ export type Database = {
           user_id: string
         }
         Update: {
+          code?: string
           created_at?: string
           credit_conversion_id?: string | null
           credited_at?: string | null

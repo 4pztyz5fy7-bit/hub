@@ -730,7 +730,7 @@ function DashboardPage() {
 
       const rows = reqsRes.data ?? [];
       setRequests(rows.map((r: any): LinkRequest => ({
-        id: String(r.id).slice(0, 8).toUpperCase(),
+        id: r.code || String(r.id).slice(0, 8).toUpperCase(),
         offerId: r.offer_id ?? "",
         offerName: r.offer_name,
         offerTag: r.offer_tag ?? "",
@@ -776,7 +776,7 @@ function DashboardPage() {
       const { data } = await supabase.from("link_requests").select("*").eq("user_id", userId).order("created_at", { ascending: false });
       const rows = data ?? [];
       setRequests(rows.map((r: any): LinkRequest => ({
-        id: String(r.id).slice(0, 8).toUpperCase(),
+        id: r.code || String(r.id).slice(0, 8).toUpperCase(),
         offerId: r.offer_id ?? "", offerName: r.offer_name, offerTag: r.offer_tag ?? "",
         createdAt: `${new Date(r.created_at).toLocaleDateString("ru-RU")}, ${timeOf(r.created_at)}`,
         source: r.source ?? "", sub: r.sub ?? "", link: r.link ?? "",
@@ -1010,7 +1010,7 @@ function DashboardPage() {
     setCopiedOffer(offer.id);
     setTimeout(() => setCopiedOffer((c) => (c === offer.id ? null : c)), 1600);
     const req: LinkRequest = {
-      id: String(data.id).slice(0, 8).toUpperCase(),
+      id: (data as any).code || String(data.id).slice(0, 8).toUpperCase(),
       offerId: data.offer_id ?? offer.id,
       offerName: data.offer_name,
       offerTag: data.offer_tag ?? offer.tag,
@@ -1026,7 +1026,7 @@ function DashboardPage() {
     pushNotif({
       kind: "offer",
       title: "Ссылка скопирована",
-      body: `${offer.name} • ${req.id} — заявка создана, админ отслеживает выполнение.`,
+      body: `${offer.name} • Заявка ${req.id} создана. Сохраните этот номер — по нему админ отслеживает выплату.`,
     });
   };
 
