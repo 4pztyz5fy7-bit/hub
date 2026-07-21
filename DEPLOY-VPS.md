@@ -565,18 +565,24 @@ certbot --nginx -d kvantm.tech -d www.kvantm.tech
 3. Заменить email на свой → **Run**.
 4. На сайте F5 → в шапке появится админка.
 
-### 9.2 SMTP для писем приложения
+### 9.2 SMTP для писем приложения — Timeweb Cloud
 
-Админ-панель → **Почта / SMTP** → пресет **reg.ru** (или **Yandex 360**) → дозаполнить:
+Админ-панель КВАНТа → **Почта / SMTP** → заполнить вручную (или выбрать пресет **Timeweb**, если он есть в списке):
+
 ```
-Логин:       noreply@kvantm.tech
-Пароль:      пароль от почтового ящика
-From email:  noreply@kvantm.tech
-From name:   КВАНТ
-Reply-To:    support@kvantm.tech
-Галочки:     SSL/TLS  ✔    Включить отправку  ✔
+Хост (Host):    smtp.timeweb.ru
+Порт (Port):    465
+Логин:          noreply@kvantm.tech
+Пароль:         пароль от почтового ящика Timeweb Cloud
+From email:     noreply@kvantm.tech
+From name:      КВАНТ
+Reply-To:       support@kvantm.tech
+Галочки:        SSL/TLS  ✔    Включить отправку  ✔
 ```
+
 **Сохранить** → тестовое письмо на свой email.
+
+> Если письма уходят в «Спам» — проверьте в **Timeweb Cloud → Почта → домен `kvantm.tech`**, что записи **SPF**, **DKIM** и **DMARC** созданы и статус зелёный. Timeweb делает это автоматически, но иногда нужно нажать «Проверить DNS».
 
 ---
 
