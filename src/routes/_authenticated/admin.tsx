@@ -285,6 +285,7 @@ function AdminPage() {
         {tab === "moderation" && <ModerationTab meId={meId} onCountChange={setModerationUnread} />}
         {tab === "support" && <AdminSupportTab meId={meId} onCountChange={setSupportUnread} />}
         {tab === "ai" && <AdminAnalystTab />}
+        {tab === "competitions" && <AdminCompetitionsTab />}
       </main>
     </div>
   );
