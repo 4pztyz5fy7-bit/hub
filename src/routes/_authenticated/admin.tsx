@@ -7,7 +7,7 @@ import {
   BarChart3, Search, Download, Copy, RefreshCw, Send, Filter, MoreHorizontal,
   TrendingUp, DollarSign, UserCheck, Activity, ChevronRight, Eye, Ban, Sparkles,
   Headphones, Megaphone, Newspaper,
-  Trophy, Mail,
+  Trophy, Mail, UserCog, Crown,
 } from "lucide-react";
 import { AdminAnalystTab } from "@/components/admin/analyst-tab";
 import { AdminSupportTab } from "@/components/admin/support-tab";
@@ -44,7 +44,9 @@ function useRealtimeReload(tables: string[], reload: () => void, channelKey?: st
 }
 
 /* =========================== TYPES =========================== */
-type TabId = "overview" | "users" | "offers" | "payouts" | "requests" | "conversions" | "broadcast" | "banners" | "news" | "moderation" | "support" | "ai" | "competitions" | "email";
+type TabId = "overview" | "users" | "offers" | "payouts" | "requests" | "conversions" | "broadcast" | "banners" | "news" | "moderation" | "support" | "ai" | "competitions" | "email" | "team";
+
+type TeamPerms = { position_code: string | null; position_name: string | null; is_leadership: boolean; permissions: string[] };
 
 type Profile = {
   id: string; email: string | null; display_name: string | null;
@@ -100,6 +102,7 @@ function AdminPage() {
   const [moderationUnread, setModerationUnread] = useState(0);
   const [supportUnread, setSupportUnread] = useState(0);
   const [meId, setMeId] = useState<string | null>(null);
+  const [perms, setPerms] = useState<TeamPerms>({ position_code: null, position_name: null, is_leadership: false, permissions: [] });
 
   // ADMIN GUARD: надёжная проверка сессии и роли.
   // - Ждём валидную сессию с access_token (учитываем гонку с onAuthStateChange).
@@ -151,7 +154,22 @@ function AdminPage() {
       await new Promise((r) => setTimeout(r, 400 * (i + 1)));
     }
 
-    if (verdict === "admin") { setChecking(false); return; }
+    if (verdict === "admin") {
+      // Load team permissions
+      try {
+        const { data } = await supabase.rpc("current_team_permissions");
+        if (data && typeof data === "object") {
+          const d = data as any;
+          setPerms({
+            position_code: d.position_code ?? null,
+            position_name: d.position_name ?? null,
+            is_leadership: !!d.is_leadership,
+            permissions: Array.isArray(d.permissions) ? d.permissions : [],
+          });
+        }
+      } catch { /* keep defaults */ }
+      setChecking(false); return;
+    }
     if (verdict === "not_admin") { navigate({ to: "/dashboard", replace: true }); return; }
     setAccessError("Сервис ролей временно недоступен. Мы не выполнили редирект — повторите проверку.");
     setChecking(false);
@@ -211,7 +229,7 @@ function AdminPage() {
     );
   }
 
-  const tabs: { id: TabId; label: string; Icon: typeof Users; badge?: number }[] = [
+  const allTabs: { id: TabId; label: string; Icon: typeof Users; badge?: number }[] = [
     { id: "overview", label: "Обзор", Icon: LayoutDashboard },
     { id: "users", label: "Пользователи", Icon: Users },
     { id: "offers", label: "Офферы", Icon: Package },
@@ -226,7 +244,25 @@ function AdminPage() {
     { id: "competitions", label: "Соревнования", Icon: Trophy },
     { id: "ai", label: "AI-аналитик", Icon: Sparkles },
     { id: "email", label: "Почта / SMTP", Icon: Mail },
+    { id: "team", label: "Команда", Icon: UserCog },
   ];
+
+  const hasAll = perms.is_leadership || perms.permissions.includes("*");
+  const allowed = new Set(perms.permissions);
+  const tabs = allTabs.filter((t) => {
+    if (t.id === "team") return perms.is_leadership;
+    if (hasAll) return true;
+    return allowed.has(t.id);
+  });
+
+  // If current tab is no longer allowed, snap to first available
+  useEffect(() => {
+    if (!tabs.length) return;
+    if (!tabs.some((t) => t.id === tab)) setTab(tabs[0].id);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [perms.position_code]);
+
+  const canRender = (id: TabId) => hasAll || allowed.has(id) || (id === "team" && perms.is_leadership);
 
   return (
     <div className="min-h-screen bg-background text-foreground">
@@ -275,20 +311,24 @@ function AdminPage() {
       </nav>
 
       <main className="mx-auto max-w-5xl px-4 py-4">
-        {tab === "overview" && <OverviewTab />}
-        {tab === "users" && <UsersTab />}
-        {tab === "offers" && <OffersTab />}
-        {tab === "payouts" && <PayoutsTab />}
-        {tab === "requests" && <RequestsTab />}
-        {tab === "conversions" && <ConversionsTab />}
-        {tab === "broadcast" && <BroadcastTab />}
-        {tab === "banners" && <AdminBannersTab />}
-        {tab === "news" && <AdminNewsTab />}
-        {tab === "moderation" && <ModerationTab meId={meId} onCountChange={setModerationUnread} />}
-        {tab === "support" && <AdminSupportTab meId={meId} onCountChange={setSupportUnread} />}
-        {tab === "ai" && <AdminAnalystTab />}
-        {tab === "competitions" && <AdminCompetitionsTab />}
-        {tab === "email" && <AdminEmailSettingsTab />}
+        {tabs.length === 0 && (
+          <EmptyState text={`Ваша должность: ${perms.position_name ?? "—"}. У вас нет доступных разделов панели.`} />
+        )}
+        {tab === "overview" && canRender("overview") && <OverviewTab />}
+        {tab === "users" && canRender("users") && <UsersTab />}
+        {tab === "offers" && canRender("offers") && <OffersTab />}
+        {tab === "payouts" && canRender("payouts") && <PayoutsTab />}
+        {tab === "requests" && canRender("requests") && <RequestsTab />}
+        {tab === "conversions" && canRender("conversions") && <ConversionsTab />}
+        {tab === "broadcast" && canRender("broadcast") && <BroadcastTab />}
+        {tab === "banners" && canRender("banners") && <AdminBannersTab />}
+        {tab === "news" && canRender("news") && <AdminNewsTab />}
+        {tab === "moderation" && canRender("moderation") && <ModerationTab meId={meId} onCountChange={setModerationUnread} />}
+        {tab === "support" && canRender("support") && <AdminSupportTab meId={meId} onCountChange={setSupportUnread} />}
+        {tab === "ai" && canRender("ai") && <AdminAnalystTab />}
+        {tab === "competitions" && canRender("competitions") && <AdminCompetitionsTab />}
+        {tab === "email" && canRender("email") && <AdminEmailSettingsTab />}
+        {tab === "team" && perms.is_leadership && <TeamTab />}
       </main>
     </div>
   );
@@ -399,7 +439,7 @@ function UsersTab() {
   const [rows, setRows] = useState<Profile[]>([]);
   const [roles, setRoles] = useState<Record<string, Set<string>>>({});
   const [loading, setLoading] = useState(true);
-  const [busy, setBusy] = useState<string | null>(null);
+  
   const [q, setQ] = useState("");
   const [roleFilter, setRoleFilter] = useState<"all" | "admin" | "user">("all");
   const [statusFilter, setStatusFilter] = useState<"all" | "blocked" | "warned" | "ok">("all");
@@ -440,12 +480,8 @@ function UsersTab() {
     return list;
   }, [rows, roles, q, roleFilter, statusFilter, sort]);
 
-  const toggleAdmin = async (userId: string, makeAdmin: boolean) => {
-    setBusy(userId);
-    if (makeAdmin) await supabase.from("user_roles").insert({ user_id: userId, role: "admin" });
-    else await supabase.from("user_roles").delete().eq("user_id", userId).eq("role", "admin");
-    setBusy(null); load();
-  };
+  // Admin role is now assigned exclusively via team positions (Команда). No direct toggling.
+
 
   if (loading) return <CenterLoader label="Загрузка пользователей" />;
 
@@ -507,9 +543,8 @@ function UsersTab() {
               <p className="truncate text-[11px] text-muted-foreground">{p.email} · {p.telegram || "без tg"} · {dt(p.created_at)}</p>
             </button>
             <button onClick={() => copy(p.email || "")} title="Копировать email" className="grid size-7 place-items-center rounded-md hover:bg-accent"><Copy className="size-3.5" /></button>
-            <button disabled={busy === p.id} onClick={() => toggleAdmin(p.id, !isAdmin)}
-              className={`rounded-lg border px-3 py-1.5 text-[11px] font-bold transition ${isAdmin ? "border-destructive/40 text-destructive hover:bg-destructive/10" : "border-primary/40 text-primary hover:bg-primary/10"}`}>
-              {busy === p.id ? "…" : isAdmin ? "Снять" : "Admin"}
+            <button onClick={() => setDetail(p)} className="rounded-lg border border-border px-3 py-1.5 text-[11px] font-bold text-muted-foreground hover:bg-accent">
+              Открыть
             </button>
           </div>
         );
@@ -2326,6 +2361,355 @@ function ModerationTab({ meId, onCountChange }: { meId: string | null; onCountCh
           </div>
         </div>
       )}
+    </div>
+  );
+}
+
+/* =========================== TEAM =========================== */
+type TeamPosition = {
+  id: string; code: string; name: string; description: string | null;
+  permissions: string[]; is_leadership: boolean; is_system: boolean;
+  sort_order: number;
+};
+type TeamMember = {
+  user_id: string; position_id: string; assigned_at: string;
+  assigned_by: string | null;
+};
+
+const TAB_LABELS: Record<string, string> = {
+  overview: "Обзор", users: "Пользователи", offers: "Офферы", payouts: "Выплаты",
+  requests: "Заявки", conversions: "Конверсии", broadcast: "Рассылка",
+  banners: "Баннеры", news: "Новости", moderation: "Модерация", support: "Поддержка",
+  competitions: "Соревнования", ai: "AI-аналитик", email: "Почта / SMTP",
+};
+const ALL_PERM_KEYS = Object.keys(TAB_LABELS);
+
+function TeamTab() {
+  const [positions, setPositions] = useState<TeamPosition[]>([]);
+  const [members, setMembers] = useState<TeamMember[]>([]);
+  const [profiles, setProfiles] = useState<Record<string, Profile>>({});
+  const [loading, setLoading] = useState(true);
+  const [showAssign, setShowAssign] = useState(false);
+  const [editPos, setEditPos] = useState<TeamPosition | null>(null);
+  const [showNewPos, setShowNewPos] = useState(false);
+
+  const load = useCallback(async () => {
+    setLoading(true);
+    const [{ data: pos }, { data: mem }] = await Promise.all([
+      supabase.from("team_positions").select("*").order("sort_order"),
+      supabase.from("team_members").select("*").order("assigned_at", { ascending: false }),
+    ]);
+    setPositions((pos ?? []) as TeamPosition[]);
+    setMembers((mem ?? []) as TeamMember[]);
+    const ids = Array.from(new Set([...(mem ?? []).map((m: any) => m.user_id), ...(mem ?? []).map((m: any) => m.assigned_by).filter(Boolean)]));
+    if (ids.length) {
+      const { data: prof } = await supabase.from("profiles")
+        .select("id,email,display_name,telegram,created_at")
+        .in("id", ids);
+      const map: Record<string, Profile> = {};
+      for (const p of (prof ?? []) as Profile[]) map[p.id] = p;
+      setProfiles(map);
+    }
+    setLoading(false);
+  }, []);
+
+  useEffect(() => { void load(); }, [load]);
+  useRealtimeReload(["team_positions", "team_members"], load, "rt:team");
+
+  const removeMember = async (userId: string) => {
+    if (!confirm("Снять сотрудника с должности? Он потеряет доступ к админ-панели.")) return;
+    const { error } = await supabase.from("team_members").delete().eq("user_id", userId);
+    if (error) alert("Ошибка: " + error.message); else load();
+  };
+
+  const deletePosition = async (id: string, isSystem: boolean) => {
+    if (isSystem) { alert("Системную должность нельзя удалить."); return; }
+    const inUse = members.some((m) => m.position_id === id);
+    if (inUse) { alert("На эту должность назначены сотрудники — сначала снимите их."); return; }
+    if (!confirm("Удалить должность?")) return;
+    const { error } = await supabase.from("team_positions").delete().eq("id", id);
+    if (error) alert("Ошибка: " + error.message); else load();
+  };
+
+  if (loading) return <CenterLoader label="Загрузка команды" />;
+
+  const membersByPos = new Map<string, TeamMember[]>();
+  for (const m of members) {
+    const arr = membersByPos.get(m.position_id) ?? [];
+    arr.push(m);
+    membersByPos.set(m.position_id, arr);
+  }
+
+  return (
+    <div className="space-y-4">
+      <div className="rounded-2xl border border-primary/40 bg-primary/5 p-4">
+        <div className="flex items-start gap-2">
+          <Crown className="mt-0.5 size-4 shrink-0 text-primary" />
+          <div className="min-w-0 flex-1">
+            <p className="text-sm font-bold">Команда проекта</p>
+            <p className="mt-1 text-[11px] text-muted-foreground">
+              Управление должностями и составом. Доступно только Руководству. При назначении сотрудник получает доступ в админ-панель по разрешениям должности.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <div className="flex flex-wrap gap-2">
+        <button onClick={() => setShowAssign(true)} className="inline-flex items-center gap-1.5 rounded-lg bg-primary px-3 py-2 text-xs font-bold uppercase text-primary-foreground hover:opacity-90">
+          <Plus className="size-3.5" /> Назначить сотрудника
+        </button>
+        <button onClick={() => setShowNewPos(true)} className="inline-flex items-center gap-1.5 rounded-lg border border-border px-3 py-2 text-xs font-bold uppercase hover:bg-accent">
+          <Plus className="size-3.5" /> Новая должность
+        </button>
+      </div>
+
+      <div className="grid gap-3">
+        {positions.map((p) => {
+          const memList = membersByPos.get(p.id) ?? [];
+          return (
+            <div key={p.id} className="rounded-2xl border border-border bg-card p-4">
+              <div className="flex items-start justify-between gap-3">
+                <div className="min-w-0 flex-1">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <h3 className="text-sm font-bold">{p.name}</h3>
+                    {p.is_leadership && <span className="inline-flex items-center gap-1 rounded-full bg-primary/15 px-2 py-0.5 text-[9px] font-bold uppercase text-primary"><Crown className="size-2.5" /> руководство</span>}
+                    {p.is_system && <span className="rounded-full bg-secondary px-2 py-0.5 text-[9px] font-bold uppercase text-muted-foreground">системная</span>}
+                    <span className="rounded-full bg-secondary px-2 py-0.5 text-[9px] font-bold uppercase text-muted-foreground">{memList.length} чел.</span>
+                  </div>
+                  {p.description && <p className="mt-1 text-[11px] text-muted-foreground">{p.description}</p>}
+                  <div className="mt-2 flex flex-wrap gap-1">
+                    {p.permissions.includes("*") ? (
+                      <span className="rounded-md bg-primary/10 px-2 py-0.5 text-[10px] font-bold uppercase text-primary">все разделы</span>
+                    ) : p.permissions.length === 0 ? (
+                      <span className="text-[10px] text-muted-foreground">без доступа к разделам</span>
+                    ) : p.permissions.map((k) => (
+                      <span key={k} className="rounded-md bg-secondary px-2 py-0.5 text-[10px] font-semibold text-muted-foreground">
+                        {TAB_LABELS[k] ?? k}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+                <div className="flex shrink-0 gap-1">
+                  <button onClick={() => setEditPos(p)} title="Редактировать" className="grid size-8 place-items-center rounded-md text-muted-foreground hover:bg-accent hover:text-foreground">
+                    <Pencil className="size-3.5" />
+                  </button>
+                  {!p.is_system && (
+                    <button onClick={() => deletePosition(p.id, p.is_system)} title="Удалить" className="grid size-8 place-items-center rounded-md text-destructive hover:bg-destructive/10">
+                      <Trash2 className="size-3.5" />
+                    </button>
+                  )}
+                </div>
+              </div>
+
+              {memList.length > 0 && (
+                <div className="mt-3 space-y-1.5 border-t border-border pt-3">
+                  {memList.map((m) => {
+                    const prof = profiles[m.user_id];
+                    return (
+                      <div key={m.user_id} className="flex items-center justify-between gap-2 rounded-lg bg-background/60 px-2.5 py-1.5">
+                        <div className="min-w-0 flex-1">
+                          <p className="truncate text-[12.5px] font-semibold">{prof?.display_name || prof?.email || m.user_id}</p>
+                          <p className="truncate text-[10px] text-muted-foreground">{prof?.email ?? m.user_id} · назначен {dt(m.assigned_at)}</p>
+                        </div>
+                        <button onClick={() => removeMember(m.user_id)} className="inline-flex items-center gap-1 rounded-md border border-destructive/40 px-2 py-1 text-[10px] font-bold text-destructive hover:bg-destructive/10">
+                          <X className="size-3" /> Снять
+                        </button>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          );
+        })}
+      </div>
+
+      {showAssign && <AssignMemberSheet positions={positions} members={members} onClose={() => setShowAssign(false)} onDone={load} />}
+      {(editPos || showNewPos) && (
+        <PositionEditor
+          position={editPos}
+          onClose={() => { setEditPos(null); setShowNewPos(false); }}
+          onDone={() => { setEditPos(null); setShowNewPos(false); load(); }}
+        />
+      )}
+    </div>
+  );
+}
+
+function AssignMemberSheet({ positions, members, onClose, onDone }: {
+  positions: TeamPosition[]; members: TeamMember[];
+  onClose: () => void; onDone: () => void;
+}) {
+  const [q, setQ] = useState("");
+  const [results, setResults] = useState<Profile[]>([]);
+  const [posId, setPosId] = useState(positions[0]?.id ?? "");
+  const [selected, setSelected] = useState<Profile | null>(null);
+  const [saving, setSaving] = useState(false);
+  const [err, setErr] = useState<string | null>(null);
+  const assignedIds = useMemo(() => new Set(members.map((m) => m.user_id)), [members]);
+
+  useEffect(() => {
+    const t = setTimeout(async () => {
+      const query = q.trim();
+      if (query.length < 2) { setResults([]); return; }
+      const { data } = await supabase.from("profiles")
+        .select("id,email,display_name,telegram,created_at")
+        .or(`email.ilike.%${query}%,display_name.ilike.%${query}%`)
+        .limit(15);
+      setResults((data ?? []) as Profile[]);
+    }, 200);
+    return () => clearTimeout(t);
+  }, [q]);
+
+  const submit = async () => {
+    if (!selected || !posId) return;
+    setSaving(true); setErr(null);
+    const { error } = await supabase.from("team_members")
+      .upsert({ user_id: selected.id, position_id: posId }, { onConflict: "user_id" });
+    setSaving(false);
+    if (error) setErr(error.message); else onDone();
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 grid place-items-end bg-black/50 sm:place-items-center" onClick={onClose}>
+      <div className="w-full max-w-md rounded-t-2xl border border-border bg-background p-4 sm:rounded-2xl" onClick={(e) => e.stopPropagation()}>
+        <div className="mb-3 flex items-center justify-between">
+          <h3 className="text-sm font-bold">Назначить сотрудника</h3>
+          <button onClick={onClose} className="grid size-8 place-items-center rounded-md hover:bg-accent"><X className="size-4" /></button>
+        </div>
+
+        <label className="text-[10.5px] font-semibold uppercase tracking-wider text-muted-foreground">Должность</label>
+        <select value={posId} onChange={(e) => setPosId(e.target.value)} className="mt-1 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm">
+          {positions.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
+        </select>
+
+        <label className="mt-3 block text-[10.5px] font-semibold uppercase tracking-wider text-muted-foreground">Поиск пользователя</label>
+        <div className="relative mt-1">
+          <Search className="pointer-events-none absolute left-2.5 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground" />
+          <input value={q} onChange={(e) => { setQ(e.target.value); setSelected(null); }} placeholder="Email или имя" className="w-full rounded-lg border border-border bg-background pl-8 pr-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/40" />
+        </div>
+
+        {selected ? (
+          <div className="mt-2 flex items-center justify-between gap-2 rounded-lg border border-primary/40 bg-primary/5 p-2">
+            <div className="min-w-0">
+              <p className="truncate text-sm font-bold">{selected.display_name || selected.email}</p>
+              <p className="truncate text-[11px] text-muted-foreground">{selected.email}</p>
+            </div>
+            <button onClick={() => setSelected(null)} className="grid size-7 place-items-center rounded-md hover:bg-accent"><X className="size-3.5" /></button>
+          </div>
+        ) : (
+          <div className="mt-2 max-h-56 space-y-1 overflow-y-auto">
+            {results.map((p) => (
+              <button key={p.id} onClick={() => setSelected(p)} className="flex w-full items-center justify-between gap-2 rounded-lg border border-border bg-background/60 px-2.5 py-1.5 text-left hover:bg-accent">
+                <div className="min-w-0">
+                  <p className="truncate text-[12.5px] font-semibold">{p.display_name || p.email}</p>
+                  <p className="truncate text-[10px] text-muted-foreground">{p.email}</p>
+                </div>
+                {assignedIds.has(p.id) && <span className="rounded-full bg-secondary px-2 py-0.5 text-[9px] font-bold uppercase text-muted-foreground">в команде</span>}
+              </button>
+            ))}
+            {q.trim().length >= 2 && results.length === 0 && <p className="p-2 text-center text-xs text-muted-foreground">Ничего не найдено</p>}
+          </div>
+        )}
+
+        {err && <p className="mt-2 text-[11px] text-destructive">{err}</p>}
+
+        <button disabled={!selected || !posId || saving} onClick={submit}
+          className="mt-4 flex w-full items-center justify-center gap-1.5 rounded-lg bg-primary px-3 py-2.5 text-xs font-bold uppercase tracking-wider text-primary-foreground disabled:opacity-50">
+          {saving ? <Loader2 className="size-3.5 animate-spin" /> : <Check className="size-3.5" />}
+          Назначить
+        </button>
+        <p className="mt-2 text-center text-[10px] text-muted-foreground">
+          Если пользователь уже в команде, его должность будет заменена.
+        </p>
+      </div>
+    </div>
+  );
+}
+
+function PositionEditor({ position, onClose, onDone }: {
+  position: TeamPosition | null; onClose: () => void; onDone: () => void;
+}) {
+  const isNew = !position;
+  const [name, setName] = useState(position?.name ?? "");
+  const [code, setCode] = useState(position?.code ?? "");
+  const [description, setDescription] = useState(position?.description ?? "");
+  const [permissions, setPermissions] = useState<string[]>(position?.permissions ?? []);
+  const [isLeadership, setIsLeadership] = useState(position?.is_leadership ?? false);
+  const [saving, setSaving] = useState(false);
+  const [err, setErr] = useState<string | null>(null);
+
+  const toggle = (k: string) => setPermissions((s) => s.includes(k) ? s.filter((x) => x !== k) : [...s, k]);
+  const hasAll = permissions.includes("*") || isLeadership;
+
+  const submit = async () => {
+    setSaving(true); setErr(null);
+    const finalCode = (code || name).trim().toLowerCase().replace(/[^a-z0-9_]+/g, "_") || `pos_${Date.now()}`;
+    const payload = {
+      name: name.trim(),
+      code: finalCode,
+      description: description.trim() || null,
+      permissions: isLeadership ? ["*"] : permissions.filter((p) => p !== "*"),
+      is_leadership: isLeadership,
+    };
+    const { error } = isNew
+      ? await supabase.from("team_positions").insert(payload)
+      : await supabase.from("team_positions").update(payload).eq("id", position!.id);
+    setSaving(false);
+    if (error) setErr(error.message); else onDone();
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 grid place-items-end bg-black/50 sm:place-items-center" onClick={onClose}>
+      <div className="max-h-[90vh] w-full max-w-md overflow-y-auto rounded-t-2xl border border-border bg-background p-4 sm:rounded-2xl" onClick={(e) => e.stopPropagation()}>
+        <div className="mb-3 flex items-center justify-between">
+          <h3 className="text-sm font-bold">{isNew ? "Новая должность" : "Редактировать должность"}</h3>
+          <button onClick={onClose} className="grid size-8 place-items-center rounded-md hover:bg-accent"><X className="size-4" /></button>
+        </div>
+
+        <div className="space-y-3">
+          <div>
+            <label className="text-[10.5px] font-semibold uppercase tracking-wider text-muted-foreground">Название</label>
+            <input value={name} onChange={(e) => setName(e.target.value)} className="mt-1 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm" />
+          </div>
+          <div>
+            <label className="text-[10.5px] font-semibold uppercase tracking-wider text-muted-foreground">Код (латиница)</label>
+            <input value={code} onChange={(e) => setCode(e.target.value)} placeholder="например: qa_lead" disabled={!!position?.is_system}
+              className="mt-1 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm disabled:opacity-60" />
+          </div>
+          <div>
+            <label className="text-[10.5px] font-semibold uppercase tracking-wider text-muted-foreground">Описание</label>
+            <textarea value={description} onChange={(e) => setDescription(e.target.value)} rows={2}
+              className="mt-1 w-full resize-none rounded-lg border border-border bg-background px-3 py-2 text-sm" />
+          </div>
+
+          <label className="flex items-center gap-2 rounded-lg border border-border bg-background/60 px-3 py-2 text-sm">
+            <input type="checkbox" checked={isLeadership} onChange={(e) => setIsLeadership(e.target.checked)} />
+            <span className="font-semibold">Руководство (полный доступ и управление командой)</span>
+          </label>
+
+          <div>
+            <p className="mb-1.5 text-[10.5px] font-semibold uppercase tracking-wider text-muted-foreground">Доступные разделы</p>
+            <div className="grid grid-cols-2 gap-1.5">
+              {ALL_PERM_KEYS.map((k) => (
+                <label key={k} className={`flex items-center gap-2 rounded-md border px-2 py-1.5 text-[12px] ${hasAll ? "border-primary/40 bg-primary/5 text-muted-foreground" : "border-border"}`}>
+                  <input type="checkbox" disabled={hasAll} checked={hasAll || permissions.includes(k)} onChange={() => toggle(k)} />
+                  <span>{TAB_LABELS[k]}</span>
+                </label>
+              ))}
+            </div>
+            {hasAll && <p className="mt-1 text-[10px] text-primary">Руководство имеет доступ ко всем разделам автоматически.</p>}
+          </div>
+
+          {err && <p className="text-[11px] text-destructive">{err}</p>}
+
+          <button disabled={!name.trim() || saving} onClick={submit}
+            className="flex w-full items-center justify-center gap-1.5 rounded-lg bg-primary px-3 py-2.5 text-xs font-bold uppercase tracking-wider text-primary-foreground disabled:opacity-50">
+            {saving ? <Loader2 className="size-3.5 animate-spin" /> : <Check className="size-3.5" />}
+            Сохранить
+          </button>
+        </div>
+      </div>
     </div>
   );
 }
