@@ -17,6 +17,7 @@ import {
   Calendar,
   type LucideIcon,
 } from "lucide-react";
+import { CompetitionsSection } from "./competitions-section";
 
 /* =========================== Types =========================== */
 
