@@ -438,7 +438,7 @@ function CompetitionDialog({
       .select("user_id, joined_at")
       .eq("competition_id", c.id)
       .order("joined_at", { ascending: false });
-    const rows = (parts ?? []) as { user_id: string; joined_at: string }[];
+    const rows = ((parts ?? []) as unknown) as { user_id: string; joined_at: string }[];
     if (rows.length) {
       const ids = rows.map((r) => r.user_id);
       const { data: profs } = await supabase
