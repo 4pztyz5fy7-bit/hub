@@ -311,20 +311,24 @@ function AdminPage() {
       </nav>
 
       <main className="mx-auto max-w-5xl px-4 py-4">
-        {tab === "overview" && <OverviewTab />}
-        {tab === "users" && <UsersTab />}
-        {tab === "offers" && <OffersTab />}
-        {tab === "payouts" && <PayoutsTab />}
-        {tab === "requests" && <RequestsTab />}
-        {tab === "conversions" && <ConversionsTab />}
-        {tab === "broadcast" && <BroadcastTab />}
-        {tab === "banners" && <AdminBannersTab />}
-        {tab === "news" && <AdminNewsTab />}
-        {tab === "moderation" && <ModerationTab meId={meId} onCountChange={setModerationUnread} />}
-        {tab === "support" && <AdminSupportTab meId={meId} onCountChange={setSupportUnread} />}
-        {tab === "ai" && <AdminAnalystTab />}
-        {tab === "competitions" && <AdminCompetitionsTab />}
-        {tab === "email" && <AdminEmailSettingsTab />}
+        {tabs.length === 0 && (
+          <EmptyState text={`Ваша должность: ${perms.position_name ?? "—"}. У вас нет доступных разделов панели.`} />
+        )}
+        {tab === "overview" && canRender("overview") && <OverviewTab />}
+        {tab === "users" && canRender("users") && <UsersTab />}
+        {tab === "offers" && canRender("offers") && <OffersTab />}
+        {tab === "payouts" && canRender("payouts") && <PayoutsTab />}
+        {tab === "requests" && canRender("requests") && <RequestsTab />}
+        {tab === "conversions" && canRender("conversions") && <ConversionsTab />}
+        {tab === "broadcast" && canRender("broadcast") && <BroadcastTab />}
+        {tab === "banners" && canRender("banners") && <AdminBannersTab />}
+        {tab === "news" && canRender("news") && <AdminNewsTab />}
+        {tab === "moderation" && canRender("moderation") && <ModerationTab meId={meId} onCountChange={setModerationUnread} />}
+        {tab === "support" && canRender("support") && <AdminSupportTab meId={meId} onCountChange={setSupportUnread} />}
+        {tab === "ai" && canRender("ai") && <AdminAnalystTab />}
+        {tab === "competitions" && canRender("competitions") && <AdminCompetitionsTab />}
+        {tab === "email" && canRender("email") && <AdminEmailSettingsTab />}
+        {tab === "team" && perms.is_leadership && <TeamTab />}
       </main>
     </div>
   );
