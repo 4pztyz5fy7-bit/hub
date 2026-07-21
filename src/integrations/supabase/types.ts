@@ -680,6 +680,77 @@ export type Database = {
         }
         Relationships: []
       }
+      team_members: {
+        Row: {
+          assigned_at: string
+          assigned_by: string | null
+          position_id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          assigned_at?: string
+          assigned_by?: string | null
+          position_id: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          assigned_at?: string
+          assigned_by?: string | null
+          position_id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "team_members_position_id_fkey"
+            columns: ["position_id"]
+            isOneToOne: false
+            referencedRelation: "team_positions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      team_positions: {
+        Row: {
+          code: string
+          created_at: string
+          description: string | null
+          id: string
+          is_leadership: boolean
+          is_system: boolean
+          name: string
+          permissions: string[]
+          sort_order: number
+          updated_at: string
+        }
+        Insert: {
+          code: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_leadership?: boolean
+          is_system?: boolean
+          name: string
+          permissions?: string[]
+          sort_order?: number
+          updated_at?: string
+        }
+        Update: {
+          code?: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_leadership?: boolean
+          is_system?: boolean
+          name?: string
+          permissions?: string[]
+          sort_order?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       user_achievements: {
         Row: {
           achievement_id: string
@@ -749,6 +820,7 @@ export type Database = {
           unlocked_name: string
         }[]
       }
+      current_team_permissions: { Args: never; Returns: Json }
       get_competition_leaderboard: {
         Args: { _competition_id: string; _limit?: number }
         Returns: {
@@ -780,6 +852,7 @@ export type Database = {
         Returns: boolean
       }
       is_admin: { Args: never; Returns: boolean }
+      is_leadership: { Args: { _uid?: string }; Returns: boolean }
       join_competition: { Args: { _competition_id: string }; Returns: Json }
       level_bonus_pct: { Args: { _earned: number }; Returns: number }
       level_min_earned: {
