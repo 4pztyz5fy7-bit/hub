@@ -208,7 +208,7 @@ swapon /swapfile
 echo '/swapfile none swap sw 0 0' >> /etc/fstab
 ```
 
-### 3.18 Установить московское время
+### 3.19 Установить московское время
 
 ```bash
 timedatectl set-timezone Europe/Moscow
