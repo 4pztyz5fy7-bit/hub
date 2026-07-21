@@ -775,7 +775,7 @@ update
 
 Что вы получили:
 - Сайт `https://kvantm.tech` работает 24/7 на **Timeweb Cloud VPS**
-- Домен продолжает жить в **reg.ru**, DNS указывает на Timeweb
+- Домен `kvantm.tech` и DNS управляются в **Timeweb Cloud**
 - HTTPS с замочком, продлевается сам
 - Автозапуск при перезагрузке
 - Ваша Supabase, ваши данные, ваши письма
