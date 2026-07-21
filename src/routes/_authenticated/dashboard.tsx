@@ -755,6 +755,9 @@ function DashboardPage() {
         offerName: r.offer_name,
         amount: Number(r.amount),
         status: r.status as Conversion["status"],
+        baseAmount: r.base_amount != null ? Number(r.base_amount) : null,
+        bonusPct: r.bonus_pct != null ? Number(r.bonus_pct) : null,
+        bonusAmount: r.bonus_amount != null ? Number(r.bonus_amount) : null,
       })));
 
       setNotifs((notifRes.data ?? []).map((r: any): Notification => ({
