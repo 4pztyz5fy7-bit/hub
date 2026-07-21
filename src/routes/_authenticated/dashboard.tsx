@@ -1010,7 +1010,7 @@ function DashboardPage() {
     setCopiedOffer(offer.id);
     setTimeout(() => setCopiedOffer((c) => (c === offer.id ? null : c)), 1600);
     const req: LinkRequest = {
-      id: String(data.id).slice(0, 8).toUpperCase(),
+      id: (data as any).code || String(data.id).slice(0, 8).toUpperCase(),
       offerId: data.offer_id ?? offer.id,
       offerName: data.offer_name,
       offerTag: data.offer_tag ?? offer.tag,
