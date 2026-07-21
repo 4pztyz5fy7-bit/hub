@@ -53,6 +53,8 @@ export function AdminCompetitionsTab() {
       ...r,
       prizes: Array.isArray(r.prizes) ? (r.prizes as Prize[]) : [],
       prize_pool: Number(r.prize_pool ?? 0),
+      winners: Array.isArray(r.winners) ? r.winners : [],
+      settled_at: r.settled_at ?? null,
     })));
     setLoading(false);
   }, []);
