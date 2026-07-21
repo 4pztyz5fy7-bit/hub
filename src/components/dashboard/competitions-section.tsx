@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
+import { Link } from "@tanstack/react-router";
 import { supabase } from "@/integrations/supabase/client";
-import { Trophy, Gem, Lock, Users, Calendar, Coins, Crown, Medal, Sparkles, TrendingUp } from "lucide-react";
+import { Trophy, Gem, Lock, Users, Calendar, Coins, Crown, Medal, Sparkles, TrendingUp, ArrowUpRight } from "lucide-react";
 
 /* ============================ Types ============================ */
 
