@@ -145,7 +145,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
-          code: string
+          code?: string
           created_at?: string
           credit_conversion_id?: string | null
           credited_at?: string | null
