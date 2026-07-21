@@ -353,14 +353,14 @@ Minimum interval: 60
 
 1. В Lovable в чате: **+** → **GitHub** → **Connect project**.
 2. Авторизоваться в GitHub → **Create Repository**.
-3. Имя, например `kvantom`. Готово.
+3. Имя, например `kvantm`. Готово.
 4. Сделайте репо **приватным**: страница репо → **Settings** → **Change visibility** → **Private**.
 
 ### Создать «ключ» для скачивания на сервер
 
 1. GitHub → аватарка → **Settings** → **Developer settings**.
 2. **Personal access tokens** → **Tokens (classic)** → **Generate new token (classic)**.
-3. `Note`: `vps-kvantom`, `Expiration`: `90 days`, галочка **`repo`**.
+3. `Note`: `vps-kvantm`, `Expiration`: `90 days`, галочка **`repo`**.
 4. **Generate token** → **скопировать** `ghp_...` в блокнот.
 
 ---
@@ -384,13 +384,13 @@ cd /var/www
 ### 7.3 Скачать код (замените ВАШЛОГИН и ВАШТОКЕН)
 
 ```bash
-git clone https://ВАШЛОГИН:ВАШТОКЕН@github.com/ВАШЛОГИН/kvantom.git
+git clone https://ВАШЛОГИН:ВАШТОКЕН@github.com/ВАШЛОГИН/kvantm.git
 ```
 
 ### 7.4 Перейти в папку проекта
 
 ```bash
-cd kvantom
+cd kvantm
 ```
 
 ### 7.5 Открыть файл настроек
@@ -671,7 +671,7 @@ Reply-To:       support@kvantm.tech
 ### 10.1 Перейти в папку проекта
 
 ```bash
-cd /var/www/kvantom
+cd /var/www/kvantm
 ```
 
 ### 10.2 Скачать изменения
