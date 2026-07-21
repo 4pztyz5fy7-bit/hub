@@ -89,6 +89,9 @@ export type Database = {
       conversions: {
         Row: {
           amount: number
+          base_amount: number | null
+          bonus_amount: number | null
+          bonus_pct: number | null
           created_at: string
           id: string
           offer_id: string | null
@@ -98,6 +101,9 @@ export type Database = {
         }
         Insert: {
           amount?: number
+          base_amount?: number | null
+          bonus_amount?: number | null
+          bonus_pct?: number | null
           created_at?: string
           id?: string
           offer_id?: string | null
@@ -107,6 +113,9 @@ export type Database = {
         }
         Update: {
           amount?: number
+          base_amount?: number | null
+          bonus_amount?: number | null
+          bonus_pct?: number | null
           created_at?: string
           id?: string
           offer_id?: string | null
