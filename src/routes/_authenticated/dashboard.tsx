@@ -144,6 +144,7 @@ type Offer = {
   landing: string;
   image?: string;
   cityPayouts: CityPayout[];
+  minLevel: "start" | "silver" | "gold" | "platinum" | "diamond";
 };
 
 
