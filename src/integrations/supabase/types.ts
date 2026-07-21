@@ -235,6 +235,51 @@ export type Database = {
           },
         ]
       }
+      email_settings: {
+        Row: {
+          enabled: boolean
+          from_email: string
+          from_name: string
+          id: number
+          reply_to: string
+          smtp_host: string
+          smtp_pass: string
+          smtp_port: number
+          smtp_secure: boolean
+          smtp_user: string
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          enabled?: boolean
+          from_email?: string
+          from_name?: string
+          id?: number
+          reply_to?: string
+          smtp_host?: string
+          smtp_pass?: string
+          smtp_port?: number
+          smtp_secure?: boolean
+          smtp_user?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          enabled?: boolean
+          from_email?: string
+          from_name?: string
+          id?: number
+          reply_to?: string
+          smtp_host?: string
+          smtp_pass?: string
+          smtp_port?: number
+          smtp_secure?: boolean
+          smtp_user?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: []
+      }
       link_requests: {
         Row: {
           code: string
