@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
+import { Link } from "@tanstack/react-router";
 import { supabase } from "@/integrations/supabase/client";
-import { Trophy, Gem, Lock, Users, Calendar, Coins, Crown, Medal, Sparkles, TrendingUp } from "lucide-react";
+import { Trophy, Gem, Lock, Users, Calendar, Coins, Crown, Medal, Sparkles, TrendingUp, ArrowUpRight } from "lucide-react";
 
 /* ============================ Types ============================ */
 
@@ -111,7 +112,13 @@ export function CompetitionsSection({ earned }: { earned: number }) {
             Diamond
           </span>
         </h3>
-        <span className="font-mono text-[10px] text-muted-foreground">{active.length} активных</span>
+        <Link
+          to="/competitions"
+          className="inline-flex items-center gap-1 rounded-full border border-cyan-500/40 bg-cyan-500/10 px-2 py-0.5 font-mono text-[10px] font-bold text-cyan-300 hover:bg-cyan-500/20"
+        >
+          Открыть все · {active.length}
+          <ArrowUpRight className="size-3" />
+        </Link>
       </div>
 
       {!eligible && (
