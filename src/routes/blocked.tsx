@@ -75,7 +75,7 @@ function BlockedPage() {
         </div>
 
         <a
-          href="mailto:support@kvantom.pro?subject=Разблокировка%20аккаунта"
+          href="mailto:support@kvantm.tech?subject=Разблокировка%20аккаунта"
           className="mt-4 inline-flex w-full items-center justify-center gap-1.5 rounded-xl border border-border bg-background px-4 py-2.5 text-xs font-bold uppercase tracking-wider hover:bg-accent"
         >
           <Mail className="size-3.5" /> Написать в поддержку
