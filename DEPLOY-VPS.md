@@ -124,43 +124,53 @@ apt install -y nodejs git nginx certbot python3-certbot-nginx build-essential uf
 
 Идёт 2–4 минуты. Установятся: Node.js, Git, Nginx (веб-сервер), certbot (для HTTPS), компилятор, файрвол, защита от брутфорса и монитор.
 
-### 3.6 Установить Bun (сборщик проекта)
+### 3.6 Установить unzip (нужно для установки Bun)
+
+```bash
+apt install -y unzip
+```
+
+> Если на этом шаге пишет `unzip is already installed` — просто идите дальше.
+
+### 3.7 Установить Bun (сборщик проекта)
 
 ```bash
 curl -fsSL https://bun.sh/install | bash
 ```
 
-### 3.7 Добавить Bun в PATH (чтобы система нашла команду `bun`)
+Идёт 10–30 секунд. Должно закончиться сообщением `Bun was installed successfully`.
+
+### 3.8 Добавить Bun в PATH (чтобы система нашла команду `bun`)
 
 ```bash
 export PATH="$HOME/.bun/bin:$PATH"
 ```
 
-### 3.8 Сохранить PATH в настройках
+### 3.9 Сохранить PATH в настройках
 
 ```bash
 echo 'export PATH="$HOME/.bun/bin:$PATH"' >> ~/.bashrc
 ```
 
-### 3.9 Установить PM2 (чтобы сайт работал постоянно)
+### 3.10 Установить PM2 (чтобы сайт работал постоянно)
 
 ```bash
 npm install -g pm2
 ```
 
-### 3.10 Разрешить SSH в файрволе
+### 3.11 Разрешить SSH в файрволе
 
 ```bash
 ufw allow OpenSSH
 ```
 
-### 3.11 Разрешить Nginx в файрволе
+### 3.12 Разрешить Nginx в файрволе
 
 ```bash
 ufw allow 'Nginx Full'
 ```
 
-### 3.12 Включить файрвол
+### 3.13 Включить файрвол
 
 ```bash
 ufw --force enable
@@ -168,37 +178,37 @@ ufw --force enable
 
 > ⚠️ В панели Timeweb Cloud у сервера может быть **свой Firewall/Security Group**. Проверьте: карточка сервера → раздел **Файрвол / Сеть** → должны быть открыты порты **22 (SSH)**, **80 (HTTP)**, **443 (HTTPS)**. Если их нет — добавьте, иначе сайт не откроется снаружи.
 
-### 3.13 Создать файл подкачки (swap)
+### 3.14 Создать файл подкачки (swap)
 
 ```bash
 fallocate -l 2G /swapfile
 ```
 
-### 3.14 Закрыть доступ к swap для всех, кроме root
+### 3.15 Закрыть доступ к swap для всех, кроме root
 
 ```bash
 chmod 600 /swapfile
 ```
 
-### 3.15 Пометить файл как swap
+### 3.16 Пометить файл как swap
 
 ```bash
 mkswap /swapfile
 ```
 
-### 3.16 Включить swap
+### 3.17 Включить swap
 
 ```bash
 swapon /swapfile
 ```
 
-### 3.17 Сделать swap постоянным
+### 3.18 Сделать swap постоянным
 
 ```bash
 echo '/swapfile none swap sw 0 0' >> /etc/fstab
 ```
 
-### 3.18 Установить московское время
+### 3.19 Установить московское время
 
 ```bash
 timedatectl set-timezone Europe/Moscow
