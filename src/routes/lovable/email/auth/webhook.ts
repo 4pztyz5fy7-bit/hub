@@ -9,7 +9,7 @@ import { EmailChangeEmail } from '@/lib/email-templates/email-change'
 import { ReauthenticationEmail } from '@/lib/email-templates/reauthentication'
 
 // Configuration
-const SITE_NAME = "Remix of Partner Hub"
+const SITE_NAME = "КВАНТ"
 const SENDER_DOMAIN = "noreply.kvantm.tech"
 const ROOT_DOMAIN = "kvantm.tech"
 const FROM_DOMAIN = "noreply.kvantm.tech"
