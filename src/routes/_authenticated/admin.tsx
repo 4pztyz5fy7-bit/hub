@@ -7,7 +7,7 @@ import {
   BarChart3, Search, Download, Copy, RefreshCw, Send, Filter, MoreHorizontal,
   TrendingUp, DollarSign, UserCheck, Activity, ChevronRight, Eye, Ban, Sparkles,
   Headphones, Megaphone, Newspaper,
-  Trophy, Mail,
+  Trophy, Mail, UserCog, Crown,
 } from "lucide-react";
 import { AdminAnalystTab } from "@/components/admin/analyst-tab";
 import { AdminSupportTab } from "@/components/admin/support-tab";
