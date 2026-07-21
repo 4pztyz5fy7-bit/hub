@@ -61,7 +61,7 @@ const DEFAULT_PREFS: Prefs = {
   notify_marketing: false,
   notify_payouts: true,
   notify_offers: true,
-  theme: "dark",
+  theme: "light",
   language: "ru",
   compact: false,
   showBalance: true,
