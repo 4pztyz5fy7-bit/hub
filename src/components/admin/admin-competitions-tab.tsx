@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { Plus, Trash2, Pencil, X, Trophy, Check, Ban } from "lucide-react";
+import { toast } from "sonner";
+import { Plus, Trash2, Pencil, X, Trophy, Check, Ban, Coins, Loader2 } from "lucide-react";
 
 type Tier = "start" | "silver" | "gold" | "platinum" | "diamond";
 type Metric = "earned" | "conversions" | "requests";
