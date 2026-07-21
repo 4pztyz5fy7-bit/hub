@@ -9,6 +9,7 @@ import {
 } from "lucide-react";
 import { getLandingStats, type LandingStats } from "@/lib/landing-stats.functions";
 import { randomAvatarUrl } from "@/lib/avatars";
+import { useOnlineCount } from "@/lib/online-presence";
 
 function formatRub(n: number): string {
   if (n >= 1_000_000_000) return `₽${(n / 1_000_000_000).toFixed(n >= 10_000_000_000 ? 0 : 1)} млрд`;
