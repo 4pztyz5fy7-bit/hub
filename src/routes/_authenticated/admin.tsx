@@ -480,12 +480,8 @@ function UsersTab() {
     return list;
   }, [rows, roles, q, roleFilter, statusFilter, sort]);
 
-  const toggleAdmin = async (userId: string, makeAdmin: boolean) => {
-    setBusy(userId);
-    if (makeAdmin) await supabase.from("user_roles").insert({ user_id: userId, role: "admin" });
-    else await supabase.from("user_roles").delete().eq("user_id", userId).eq("role", "admin");
-    setBusy(null); load();
-  };
+  // Admin role is now assigned exclusively via team positions (Команда). No direct toggling.
+
 
   if (loading) return <CenterLoader label="Загрузка пользователей" />;
 
