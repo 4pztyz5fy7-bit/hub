@@ -144,6 +144,7 @@ type Offer = {
   landing: string;
   image?: string;
   cityPayouts: CityPayout[];
+  minLevel: "start" | "silver" | "gold" | "platinum" | "diamond";
 };
 
 
@@ -703,6 +704,7 @@ function DashboardPage() {
               .map((c) => ({ city: String(c?.city ?? ""), amount: Number(c?.amount ?? 0) }))
               .filter((c) => c.city && c.amount > 0)
           : [],
+        minLevel: (r.min_level ?? "start") as Offer["minLevel"],
       })));
 
       const pRow = profileRes.data as { bank?: BankDetails | null; display_name?: string | null; avatar_url?: string | null; email?: string | null; settings?: Partial<UserPrefs> | null } | null;
@@ -836,6 +838,7 @@ function DashboardPage() {
         cityPayouts: Array.isArray(r.city_payouts)
           ? (r.city_payouts as any[]).map((c) => ({ city: String(c?.city ?? ""), amount: Number(c?.amount ?? 0) })).filter((c) => c.city && c.amount > 0)
           : [],
+        minLevel: (r.min_level ?? "start") as Offer["minLevel"],
       })));
     };
     const refetchProfile = async () => {
@@ -2093,6 +2096,11 @@ function OffersTab({
           const isCopied = copiedOffer === o.id;
           const boosted = applyLevelBoost(o, level.bonusPct);
           const hasBoost = level.bonusPct > 0 && boosted.boostedPayout !== o.payout;
+          const TIER_ORDER = ["start", "silver", "gold", "platinum", "diamond"] as const;
+          const TIER_NAME = { start: "Старт", silver: "Серебро", gold: "Золото", platinum: "Платина", diamond: "Бриллиант" } as const;
+          const userTier = TIER_ORDER.indexOf(level.id);
+          const reqTier = TIER_ORDER.indexOf(o.minLevel);
+          const locked = userTier < reqTier;
           return (
             <div
               key={o.id}
@@ -2114,6 +2122,13 @@ function OffersTab({
                     {o.isNew && (
                       <span className="rounded bg-primary/10 px-1.5 py-0.5 font-mono text-[8px] font-bold uppercase text-primary">
                         NEW
+                      </span>
+                    )}
+                    {o.minLevel !== "start" && (
+                      <span className={`inline-flex items-center gap-0.5 rounded px-1.5 py-0.5 font-mono text-[8px] font-bold uppercase ${
+                        locked ? "bg-amber-500/15 text-amber-500" : "bg-emerald-500/15 text-emerald-500"
+                      }`}>
+                        <Lock className="size-2.5" /> {TIER_NAME[o.minLevel]}+
                       </span>
                     )}
                   </div>
@@ -2149,14 +2164,22 @@ function OffersTab({
                     <FileText className="size-3" />
                   </button>
                   <button
-                    onClick={() => onCopyLink(o)}
+                    onClick={() => { if (!locked) onCopyLink(o); }}
+                    disabled={locked}
+                    title={locked ? `Доступно с уровня «${TIER_NAME[o.minLevel]}»` : undefined}
                     className={`flex items-center gap-1 rounded-md px-3 py-2 text-[11px] font-bold uppercase tracking-wider transition-colors active:scale-95 ${
-                      isCopied
+                      locked
+                        ? "cursor-not-allowed bg-secondary text-muted-foreground"
+                        : isCopied
                         ? "bg-[color:var(--success)]/15 text-[color:var(--success)]"
                         : "bg-foreground text-background"
                     }`}
                   >
-                    {isCopied ? (
+                    {locked ? (
+                      <>
+                        <Lock className="size-3" /> {TIER_NAME[o.minLevel]}
+                      </>
+                    ) : isCopied ? (
                       <>
                         <Check className="size-3" /> Скопировано
                       </>
@@ -2465,7 +2488,7 @@ function StatsTab({ conversions, offers, requests }: { conversions: Conversion[]
       const off: Offer = offers.find((o) => o.id === r.offerId) ?? {
         id: r.offerId, tag: "×", name: r.offerName, category: "—", payout: "",
         epc: 0, cr: 0, advertiser: "—", geo: [], hold: "—", goal: "—",
-        description: "", requirements: [], allowed: [], denied: [], landing: "", cityPayouts: [],
+        description: "", requirements: [], allowed: [], denied: [], landing: "", cityPayouts: [], minLevel: "start",
       };
       const cur = m.get(r.offerId) ?? { offer: off, conv: 0, income: 0, reqCount: 0 };
       cur.reqCount += 1;
@@ -2476,7 +2499,7 @@ function StatsTab({ conversions, offers, requests }: { conversions: Conversion[]
       const off: Offer = offers.find((o) => o.id === c.offerId) ?? {
         id: c.offerId, tag: "×", name: c.offerName, category: "—", payout: "",
         epc: 0, cr: 0, advertiser: "—", geo: [], hold: "—", goal: "—",
-        description: "", requirements: [], allowed: [], denied: [], landing: "", cityPayouts: [],
+        description: "", requirements: [], allowed: [], denied: [], landing: "", cityPayouts: [], minLevel: "start",
       };
       const cur = m.get(c.offerId) ?? { offer: off, conv: 0, income: 0, reqCount: 0 };
       cur.conv += 1;

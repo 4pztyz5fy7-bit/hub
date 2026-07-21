@@ -17,6 +17,7 @@ import {
   Calendar,
   type LucideIcon,
 } from "lucide-react";
+import { CompetitionsSection } from "./competitions-section";
 
 /* =========================== Types =========================== */
 
@@ -191,6 +192,9 @@ export function RewardsTab({
           </div>
         </div>
       </div>
+
+      {/* Competitions (Diamond+) */}
+      <CompetitionsSection earned={earned} />
 
       {/* Tabs */}
       <div className="flex items-center gap-1 rounded-xl border border-border bg-secondary/40 p-1">

@@ -86,6 +86,60 @@ export type Database = {
         }
         Relationships: []
       }
+      competitions: {
+        Row: {
+          active: boolean
+          banner_url: string | null
+          created_at: string
+          created_by: string | null
+          description: string | null
+          ends_at: string
+          id: string
+          metric: string
+          min_level: Database["public"]["Enums"]["level_tier"]
+          prize_pool: number
+          prizes: Json
+          rules: string | null
+          starts_at: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          banner_url?: string | null
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          ends_at: string
+          id?: string
+          metric?: string
+          min_level?: Database["public"]["Enums"]["level_tier"]
+          prize_pool?: number
+          prizes?: Json
+          rules?: string | null
+          starts_at?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          banner_url?: string | null
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          ends_at?: string
+          id?: string
+          metric?: string
+          min_level?: Database["public"]["Enums"]["level_tier"]
+          prize_pool?: number
+          prizes?: Json
+          rules?: string | null
+          starts_at?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       conversions: {
         Row: {
           amount: number
@@ -286,6 +340,7 @@ export type Database = {
           image_url: string | null
           is_new: boolean
           landing: string | null
+          min_level: Database["public"]["Enums"]["level_tier"]
           name: string
           payout: string
           payout_kind: string
@@ -313,6 +368,7 @@ export type Database = {
           image_url?: string | null
           is_new?: boolean
           landing?: string | null
+          min_level?: Database["public"]["Enums"]["level_tier"]
           name: string
           payout: string
           payout_kind?: string
@@ -340,6 +396,7 @@ export type Database = {
           image_url?: string | null
           is_new?: boolean
           landing?: string | null
+          min_level?: Database["public"]["Enums"]["level_tier"]
           name?: string
           payout?: string
           payout_kind?: string
@@ -598,6 +655,17 @@ export type Database = {
           unlocked_name: string
         }[]
       }
+      get_competition_leaderboard: {
+        Args: { _competition_id: string; _limit?: number }
+        Returns: {
+          avatar_url: string
+          display_name: string
+          is_me: boolean
+          rank: number
+          score: number
+          user_id: string
+        }[]
+      }
       get_landing_stats: { Args: never; Returns: Json }
       get_leaderboard: {
         Args: { _limit?: number; _period?: string }
@@ -619,6 +687,10 @@ export type Database = {
       }
       is_admin: { Args: never; Returns: boolean }
       level_bonus_pct: { Args: { _earned: number }; Returns: number }
+      level_min_earned: {
+        Args: { _tier: Database["public"]["Enums"]["level_tier"] }
+        Returns: number
+      }
       touch_streak: {
         Args: never
         Returns: {
@@ -627,9 +699,11 @@ export type Database = {
           streak_days: number
         }[]
       }
+      user_total_earned: { Args: { _uid: string }; Returns: number }
     }
     Enums: {
       app_role: "admin" | "user"
+      level_tier: "start" | "silver" | "gold" | "platinum" | "diamond"
       link_status:
         | "new"
         | "review"
@@ -768,6 +842,7 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["admin", "user"],
+      level_tier: ["start", "silver", "gold", "platinum", "diamond"],
       link_status: [
         "new",
         "review",

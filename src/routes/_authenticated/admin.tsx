@@ -7,11 +7,13 @@ import {
   BarChart3, Search, Download, Copy, RefreshCw, Send, Filter, MoreHorizontal,
   TrendingUp, DollarSign, UserCheck, Activity, ChevronRight, Eye, Ban, Sparkles,
   Headphones, Megaphone, Newspaper,
+  Trophy,
 } from "lucide-react";
 import { AdminAnalystTab } from "@/components/admin/analyst-tab";
 import { AdminSupportTab } from "@/components/admin/support-tab";
 import { AdminBannersTab } from "@/components/admin/banners-tab";
 import { AdminNewsTab } from "@/components/admin/news-tab";
+import { AdminCompetitionsTab } from "@/components/admin/admin-competitions-tab";
 
 export const Route = createFileRoute("/_authenticated/admin")({
   head: () => ({ meta: [{ title: "Админ-панель — КВАНТ" }] }),
@@ -41,7 +43,7 @@ function useRealtimeReload(tables: string[], reload: () => void, channelKey?: st
 }
 
 /* =========================== TYPES =========================== */
-type TabId = "overview" | "users" | "offers" | "payouts" | "requests" | "conversions" | "broadcast" | "banners" | "news" | "moderation" | "support" | "ai";
+type TabId = "overview" | "users" | "offers" | "payouts" | "requests" | "conversions" | "broadcast" | "banners" | "news" | "moderation" | "support" | "ai" | "competitions";
 
 type Profile = {
   id: string; email: string | null; display_name: string | null;
@@ -63,6 +65,7 @@ type Offer = {
   payout_min: number | null;
   payout_max: number | null;
   city_payouts: CityPayout[];
+  min_level: "start" | "silver" | "gold" | "platinum" | "diamond";
   created_at: string;
 };
 
@@ -219,6 +222,7 @@ function AdminPage() {
     { id: "news", label: "Новости", Icon: Newspaper },
     { id: "moderation", label: "Модерация", Icon: Shield, badge: moderationUnread },
     { id: "support", label: "Поддержка", Icon: Headphones, badge: supportUnread },
+    { id: "competitions", label: "Соревнования", Icon: Trophy },
     { id: "ai", label: "AI-аналитик", Icon: Sparkles },
   ];
 
@@ -281,6 +285,7 @@ function AdminPage() {
         {tab === "moderation" && <ModerationTab meId={meId} onCountChange={setModerationUnread} />}
         {tab === "support" && <AdminSupportTab meId={meId} onCountChange={setSupportUnread} />}
         {tab === "ai" && <AdminAnalystTab />}
+        {tab === "competitions" && <AdminCompetitionsTab />}
       </main>
     </div>
   );
@@ -835,6 +840,7 @@ function OfferEditor({ offer, onClose, onSaved }: { offer: Offer | null; onClose
     active: offer?.active ?? true,
     is_new: offer?.is_new ?? false,
     image_url: offer?.image_url ?? "",
+    min_level: (offer?.min_level ?? "start") as "start" | "silver" | "gold" | "platinum" | "diamond",
   });
   const [cityPayouts, setCityPayouts] = useState<CityPayout[]>(
     Array.isArray(offer?.city_payouts) ? (offer!.city_payouts as CityPayout[]) : []
@@ -894,6 +900,7 @@ function OfferEditor({ offer, onClose, onSaved }: { offer: Offer | null; onClose
       active: form.active,
       is_new: form.is_new,
       image_url: form.image_url ? form.image_url : null,
+      min_level: form.min_level,
     };
     const { error } = offer
       ? await supabase.from("offers").update(payload).eq("id", offer.id)
@@ -982,6 +989,25 @@ function OfferEditor({ offer, onClose, onSaved }: { offer: Offer | null; onClose
             {field("tag", "Тег", "Финансы / Edu / Travel")}
             {field("category", "Категория", "Кредиты, курсы…")}
           </div>
+          <label className="block">
+            <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+              Минимальный уровень партнёра
+            </span>
+            <select
+              value={form.min_level}
+              onChange={(e) => setForm((f) => ({ ...f, min_level: e.target.value as typeof f.min_level }))}
+              className="mt-0.5 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/40"
+            >
+              <option value="start">Старт (доступно всем)</option>
+              <option value="silver">Серебро (от 50 000 ₽)</option>
+              <option value="gold">Золото (от 150 000 ₽) — эксклюзивный</option>
+              <option value="platinum">Платина (от 500 000 ₽) — закрытый</option>
+              <option value="diamond">Бриллиант (от 1 500 000 ₽) — VIP</option>
+            </select>
+            <p className="mt-1 text-[10px] text-muted-foreground">
+              Партнёры ниже указанного уровня увидят оффер с замком без возможности взять ссылку.
+            </p>
+          </label>
           <div className="grid grid-cols-2 gap-3">
             {field("advertiser", "Рекламодатель")}
             {field("geo", "ГЕО", "RU, KZ, BY")}
