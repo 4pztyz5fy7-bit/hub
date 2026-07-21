@@ -730,7 +730,7 @@ function DashboardPage() {
 
       const rows = reqsRes.data ?? [];
       setRequests(rows.map((r: any): LinkRequest => ({
-        id: String(r.id).slice(0, 8).toUpperCase(),
+        id: r.code || String(r.id).slice(0, 8).toUpperCase(),
         offerId: r.offer_id ?? "",
         offerName: r.offer_name,
         offerTag: r.offer_tag ?? "",
