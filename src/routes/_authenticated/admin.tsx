@@ -75,12 +75,13 @@ type LinkStatus =
   | "in_progress" | "completed" | "finished" | "paid"
   | "new" | "review" | "approved" | "rejected"; // legacy values still exist in DB
 type LinkRow = {
-  id: string; user_id: string; offer_id: string | null; offer_name: string;
+  id: string; code: string; user_id: string; offer_id: string | null; offer_name: string;
   offer_tag: string | null; source: string | null; sub: string | null;
   link: string | null; note: string | null; orders_count: number;
   payout_override: number | null;
   status: LinkStatus; created_at: string;
 };
+
 type Conversion = {
   id: string; user_id: string; offer_id: string | null; offer_name: string;
   amount: number; status: string; created_at: string;
