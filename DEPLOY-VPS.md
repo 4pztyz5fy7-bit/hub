@@ -694,9 +694,12 @@ bun run build
 
 ### 10.5 Перезапустить сайт
 
-```bash
-pm2 restart kvantom
-```
+В зависимости от способа запуска:
+
+- **PM2:** `pm2 restart kvantm`
+- **systemd:** `systemctl restart kvantm`
+- **Docker:** `docker restart kvantm`
+- **nohup/screen:** остановите процесс (`kill` или `Ctrl+C`), затем запустите заново
 
 30–60 секунд, готово.
 
@@ -704,8 +707,22 @@ pm2 restart kvantom
 
 Чтобы не вводить команды каждый раз, можно сделать одну команду `update`.
 
+Если используете **PM2**:
+
 ```bash
-echo "alias update='cd /var/www/kvantom && git pull && bun install && bun run build && pm2 restart kvantom'" >> ~/.bashrc
+echo "alias update='cd /var/www/kvantm && git pull && bun install && bun run build && pm2 restart kvantm'" >> ~/.bashrc
+```
+
+Если используете **systemd**:
+
+```bash
+echo "alias update='cd /var/www/kvantm && git pull && bun install && bun run build && systemctl restart kvantm'" >> ~/.bashrc
+```
+
+Если используете **Docker**:
+
+```bash
+echo "alias update='cd /var/www/kvantm && git pull && bun install && bun run build && docker restart kvantm'" >> ~/.bashrc
 ```
 
 Загрузить настройки:
@@ -724,15 +741,16 @@ update
 
 ## Полезные команды на каждый день
 
-| Что нужно | Команда |
-|---|---|
-| Статус сайта | `pm2 status` |
-| Свежие ошибки | `pm2 logs kvantom` (выход — Ctrl+C) |
-| Перезапуск | `pm2 restart kvantom` |
-| Место на диске | `df -h` |
-| Память | `free -h` |
-| Общий монитор | `htop` (выход — q) |
-| Снапшот сервера | Timeweb Cloud → карточка сервера → **Резервные копии / Снапшоты** |
+| Что нужно | PM2 | systemd | Docker |
+|---|---|---|---|
+| Статус сайта | `pm2 status` | `systemctl status kvantm` | `docker ps` |
+| Свежие ошибки | `pm2 logs kvantm` (выход — Ctrl+C) | `journalctl -u kvantm -f` (выход — Ctrl+C) | `docker logs -f kvantm` |
+| Перезапуск | `pm2 restart kvantm` | `systemctl restart kvantm` | `docker restart kvantm` |
+| Остановить | `pm2 stop kvantm` | `systemctl stop kvantm` | `docker stop kvantm` |
+| Место на диске | `df -h` | `df -h` | `df -h` |
+| Память | `free -h` | `free -h` | `free -h` |
+| Общий монитор | `htop` (выход — q) | `htop` | `htop` |
+| Снапшот сервера | Timeweb Cloud → карточка сервера → **Резервные копии / Снапшоты** | | |
 
 ---
 
@@ -740,11 +758,11 @@ update
 
 | Проблема | Что сделать |
 |---|---|
-| Сайт не открывается вообще | `pm2 status` → если `errored` → `pm2 logs kvantom` |
+| Сайт не открывается вообще | Проверьте статус по выбранному способу: `pm2 status`, `systemctl status kvantm` или `docker ps`. Посмотрите логи. |
 | Открывается только по IP, но не по домену | DNS ещё не обновился — подождать; проверить `ping kvantm.tech` |
-| `502 Bad Gateway` | `pm2 restart kvantom`; если повторяется — `pm2 logs kvantom` |
+| `502 Bad Gateway` | Перезапустить процесс (`pm2 restart kvantm` / `systemctl restart kvantm` / `docker restart kvantm`) и посмотреть логи |
 | Порты 80/443 не пускают | Проверить **Firewall в панели Timeweb** — открыты ли 80 и 443 |
-| Логин не работает / белый экран | Не те ключи Supabase в `.env` → правим → `bun run build && pm2 restart kvantom` |
+| Логин не работает / белый экран | Не те ключи Supabase в `.env` → правим → `bun run build` → перезапускаем процесс |
 | `Failed to fetch` | В Supabase → Auth → URL Configuration нет `https://kvantm.tech/**` |
 | Google-вход: `Unsupported provider` | В Supabase → Auth → Providers → Google не заполнили Client ID/Secret |
 | Письма не приходят | Supabase SMTP (для auth) или админка КВАНТа (для приложения) не настроены |
