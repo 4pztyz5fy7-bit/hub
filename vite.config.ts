@@ -12,4 +12,12 @@ export default defineConfig({
     // nitro/vite builds from this
     server: { entry: "server" },
   },
+  // In the Lovable sandbox this option is ignored (forced to cloudflare-module).
+  // On a VPS / bare-metal build it produces a standalone Node.js server at
+  // .output/server/index.mjs — run it with `node .output/server/index.mjs`
+  // (or `bun run start`, which does the same thing).
+  nitro: {
+    preset: "node-server",
+  },
 });
+
