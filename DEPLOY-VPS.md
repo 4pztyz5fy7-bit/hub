@@ -322,22 +322,30 @@ ping kvantm.tech
 
 Сохранить.
 
-### 5.5 SMTP для писем Supabase (подтверждение email, сброс пароля)
+### 5.5 SMTP для писем Supabase (подтверждение email, сброс пароля) — Timeweb Cloud
 
+Сначала создайте почтовый ящик в Timeweb Cloud (если ещё нет):
+1. **Timeweb Cloud** → левое меню → **Почта** → выбрать домен `kvantm.tech` → **Создать ящик**.
+2. Имя ящика — `noreply`, придумать пароль, **записать его**.
+
+Теперь в Supabase:
 **Project Settings** → **Auth** → **SMTP Settings** → **Enable Custom SMTP**:
 
 ```
 Sender email:  noreply@kvantm.tech
 Sender name:   КВАНТ
-Host:          smtp.reg.ru        (или smtp.yandex.ru при Yandex 360)
+Host:          smtp.timeweb.ru
 Port:          465
 Username:      noreply@kvantm.tech
-Password:      пароль от почтового ящика
+Password:      пароль от почтового ящика Timeweb Cloud
+Minimum interval: 60
 ```
 
-**Save** → **Send test email** → проверить, что пришло.
+Включить **SSL/TLS** (порт 465). Если Supabase требует STARTTLS — используйте порт `587` вместо `465`.
 
-Если ящика `noreply@kvantm.tech` ещё нет — создать его в reg.ru → **Почта для домена**.
+**Save** → **Send test email** на свой личный email → проверить, что пришло (в т.ч. в «Спам»).
+
+> Точный SMTP-хост Timeweb Cloud виден в **Почта → выбранный ящик → Настройки почтового клиента** (обычно `smtp.timeweb.ru`, порт 465 SSL или 587 STARTTLS).
 
 ---
 
