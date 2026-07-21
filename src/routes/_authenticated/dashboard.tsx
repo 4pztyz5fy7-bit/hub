@@ -2468,7 +2468,7 @@ function StatsTab({ conversions, offers, requests }: { conversions: Conversion[]
       const off: Offer = offers.find((o) => o.id === r.offerId) ?? {
         id: r.offerId, tag: "×", name: r.offerName, category: "—", payout: "",
         epc: 0, cr: 0, advertiser: "—", geo: [], hold: "—", goal: "—",
-        description: "", requirements: [], allowed: [], denied: [], landing: "", cityPayouts: [],
+        description: "", requirements: [], allowed: [], denied: [], landing: "", cityPayouts: [], minLevel: "start",
       };
       const cur = m.get(r.offerId) ?? { offer: off, conv: 0, income: 0, reqCount: 0 };
       cur.reqCount += 1;
