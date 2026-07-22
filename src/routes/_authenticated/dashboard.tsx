@@ -73,12 +73,25 @@ export const Route = createFileRoute("/_authenticated/dashboard")({
 
 /* ================================ Types ================================ */
 
-type Tab = "info" | "offers" | "stats" | "payouts" | "ai" | "requests" | "profile" | "support" | "rewards";
+type Tab =
+  | "info"
+  | "offers"
+  | "stats"
+  | "payouts"
+  | "ai"
+  | "requests"
+  | "profile"
+  | "support"
+  | "rewards";
 
 function isSameDay(iso: string): boolean {
   const d = new Date(iso);
   const n = new Date();
-  return d.getFullYear() === n.getFullYear() && d.getMonth() === n.getMonth() && d.getDate() === n.getDate();
+  return (
+    d.getFullYear() === n.getFullYear() &&
+    d.getMonth() === n.getMonth() &&
+    d.getDate() === n.getDate()
+  );
 }
 
 export type UserPrefs = {
@@ -150,7 +163,6 @@ type Offer = {
   cityPayouts: CityPayout[];
   minLevel: "start" | "silver" | "gold" | "platinum" | "diamond";
 };
-
 
 type LinkRequestStatus =
   | "in_progress"
@@ -263,7 +275,20 @@ function nowTime() {
 }
 function todayShort() {
   const d = new Date();
-  const months = ["янв", "фев", "мар", "апр", "мая", "июн", "июл", "авг", "сен", "окт", "ноя", "дек"];
+  const months = [
+    "янв",
+    "фев",
+    "мар",
+    "апр",
+    "мая",
+    "июн",
+    "июл",
+    "авг",
+    "сен",
+    "окт",
+    "ноя",
+    "дек",
+  ];
   return `${d.getDate()} ${months[d.getMonth()]}`;
 }
 function uid(prefix = "id") {
@@ -354,7 +379,11 @@ const LEVELS: Level[] = [
     bg: "bg-zinc-400/15",
     ring: "border-zinc-400/40",
     perks: [
-      { Icon: Percent, title: "+2% к каждой конверсии", desc: "Автоматически поверх ставки оффера" },
+      {
+        Icon: Percent,
+        title: "+2% к каждой конверсии",
+        desc: "Автоматически поверх ставки оффера",
+      },
       { Icon: Clock, title: "Выплаты за 48 часов", desc: "Ускоренная обработка заявок" },
       { Icon: Sparkles, title: "Ранний доступ к офферам", desc: "За сутки до общего запуска" },
     ],
@@ -395,7 +424,11 @@ const LEVELS: Level[] = [
     perks: [
       { Icon: Percent, title: "+8% к ставкам", desc: "Максимальный буст на все категории" },
       { Icon: Zap, title: "Выплаты за 12 часов", desc: "VIP-очередь обработки" },
-      { Icon: Gift, title: "Эксклюзивные офферы", desc: "Индивидуальные условия от рекламодателей" },
+      {
+        Icon: Gift,
+        title: "Эксклюзивные офферы",
+        desc: "Индивидуальные условия от рекламодателей",
+      },
       { Icon: TrendingUp, title: "Аналитика Pro", desc: "Расширенные отчёты и когорты" },
     ],
   },
@@ -492,8 +525,6 @@ function applyLevelBoost(offer: Offer, bonusPct: number) {
   return { ...offer, boostedPayout, boostedEpc };
 }
 
-
-
 /* ============================ Validators =============================== */
 
 function validateBank(b: BankDetails): Partial<Record<keyof BankDetails, string>> {
@@ -519,33 +550,89 @@ function validateBank(b: BankDetails): Partial<Record<keyof BankDetails, string>
 /* =========================== Notif metadata ============================ */
 
 function notifMeta(n: Notification) {
-  if (n.kind === "accrual") return { Icon: Coins, iconBg: "bg-[color:var(--success)]/10", iconColor: "text-[color:var(--success)]" };
-  if (n.kind === "offer") return { Icon: Sparkles, iconBg: "bg-primary/10", iconColor: "text-primary" };
-  if (n.kind === "levelup") return { Icon: Trophy, iconBg: "bg-amber-500/10", iconColor: "text-amber-500" };
-  if (n.status === "paid") return { Icon: CheckCircle2, iconBg: "bg-[color:var(--success)]/10", iconColor: "text-[color:var(--success)]" };
-  if (n.status === "rejected") return { Icon: AlertCircle, iconBg: "bg-destructive/10", iconColor: "text-destructive" };
-  return { Icon: Wallet, iconBg: "bg-[color:var(--warning)]/10", iconColor: "text-[color:var(--warning)]" };
+  if (n.kind === "accrual")
+    return {
+      Icon: Coins,
+      iconBg: "bg-[color:var(--success)]/10",
+      iconColor: "text-[color:var(--success)]",
+    };
+  if (n.kind === "offer")
+    return { Icon: Sparkles, iconBg: "bg-primary/10", iconColor: "text-primary" };
+  if (n.kind === "levelup")
+    return { Icon: Trophy, iconBg: "bg-amber-500/10", iconColor: "text-amber-500" };
+  if (n.status === "paid")
+    return {
+      Icon: CheckCircle2,
+      iconBg: "bg-[color:var(--success)]/10",
+      iconColor: "text-[color:var(--success)]",
+    };
+  if (n.status === "rejected")
+    return { Icon: AlertCircle, iconBg: "bg-destructive/10", iconColor: "text-destructive" };
+  return {
+    Icon: Wallet,
+    iconBg: "bg-[color:var(--warning)]/10",
+    iconColor: "text-[color:var(--warning)]",
+  };
 }
 
 function payoutStatusMeta(s: PayoutStatus) {
   switch (s) {
-    case "paid": return { label: "Выплачено", Icon: CheckCircle2, color: "text-[color:var(--success)]", bg: "bg-[color:var(--success)]/10" };
-    case "processing": return { label: "В обработке", Icon: Clock, color: "text-primary", bg: "bg-primary/10" };
-    case "pending": return { label: "Ожидает", Icon: Clock, color: "text-[color:var(--warning)]", bg: "bg-[color:var(--warning)]/10" };
-    case "rejected": return { label: "Отказ", Icon: XCircle, color: "text-destructive", bg: "bg-destructive/10" };
+    case "paid":
+      return {
+        label: "Выплачено",
+        Icon: CheckCircle2,
+        color: "text-[color:var(--success)]",
+        bg: "bg-[color:var(--success)]/10",
+      };
+    case "processing":
+      return { label: "В обработке", Icon: Clock, color: "text-primary", bg: "bg-primary/10" };
+    case "pending":
+      return {
+        label: "Ожидает",
+        Icon: Clock,
+        color: "text-[color:var(--warning)]",
+        bg: "bg-[color:var(--warning)]/10",
+      };
+    case "rejected":
+      return { label: "Отказ", Icon: XCircle, color: "text-destructive", bg: "bg-destructive/10" };
   }
 }
 
 /* ============================== Root shell ============================= */
 
-const MONTHS_RU = ["янв","фев","мар","апр","мая","июн","июл","авг","сен","окт","ноя","дек"] as const;
+const MONTHS_RU = [
+  "янв",
+  "фев",
+  "мар",
+  "апр",
+  "мая",
+  "июн",
+  "июл",
+  "авг",
+  "сен",
+  "окт",
+  "ноя",
+  "дек",
+] as const;
 const pad2 = (n: number) => String(n).padStart(2, "0");
-const timeOf = (iso: string) => { const d = new Date(iso); return `${pad2(d.getHours())}:${pad2(d.getMinutes())}`; };
-const dateShortOf = (iso: string) => { const d = new Date(iso); return `${d.getDate()} ${MONTHS_RU[d.getMonth()]}`; };
+const timeOf = (iso: string) => {
+  const d = new Date(iso);
+  return `${pad2(d.getHours())}:${pad2(d.getMinutes())}`;
+};
+const dateShortOf = (iso: string) => {
+  const d = new Date(iso);
+  return `${d.getDate()} ${MONTHS_RU[d.getMonth()]}`;
+};
 const getInitials = (name: string) => {
   const n = (name || "").trim();
   if (!n) return "?";
-  return n.split(/\s+/).slice(0, 2).map((s) => s[0]?.toUpperCase() ?? "").join("") || "?";
+  return (
+    n
+      .split(/\s+/)
+      .slice(0, 2)
+      .map((s) => s[0]?.toUpperCase() ?? "")
+      .join("") || "?"
+  );
 };
 
 function DashboardPage() {
@@ -607,7 +694,6 @@ function DashboardPage() {
     document.documentElement.dataset.compact = prefs.compact ? "1" : "0";
   }, [prefs.compact]);
 
-
   // Earnings derived from real conversions and payouts.
   // Balance decreases only when a payout is actually approved (status = "paid").
   // Pending/processing payouts are "reserved" and reduce `available`, but not `balance`.
@@ -620,13 +706,15 @@ function DashboardPage() {
     [payouts],
   );
   const reserved = useMemo(
-    () => payouts.filter((p) => p.status === "pending" || p.status === "processing").reduce((s, p) => s + p.amount, 0),
+    () =>
+      payouts
+        .filter((p) => p.status === "pending" || p.status === "processing")
+        .reduce((s, p) => s + p.amount, 0),
     [payouts],
   );
   const balance = Math.max(0, gross - paidOut);
   const spent = paidOut + reserved;
   const available = Math.max(0, gross - spent);
-
 
   const [levelToast, setLevelToast] = useState<Level | null>(null);
   const prevLevelIdxRef = useRef<number>(-1);
@@ -638,7 +726,10 @@ function DashboardPage() {
 
   const showNextAchToast = () => {
     const next = achToastQueueRef.current.shift();
-    if (!next) { setAchToast(null); return; }
+    if (!next) {
+      setAchToast(null);
+      return;
+    }
     setAchToast(next);
     if (achToastTimerRef.current) window.clearTimeout(achToastTimerRef.current);
     achToastTimerRef.current = window.setTimeout(() => showNextAchToast(), 4200);
@@ -648,15 +739,18 @@ function DashboardPage() {
     try {
       const { data } = await supabase.rpc("award_achievements");
       const rows = (data ?? []) as Array<{ unlocked_code: string; unlocked_name: string }>;
-      const fresh = rows.filter(r => r.unlocked_code && !awardedCodesRef.current.has(r.unlocked_code));
+      const fresh = rows.filter(
+        (r) => r.unlocked_code && !awardedCodesRef.current.has(r.unlocked_code),
+      );
       for (const r of fresh) {
         awardedCodesRef.current.add(r.unlocked_code);
         achToastQueueRef.current.push({ code: r.unlocked_code, name: r.unlocked_name });
       }
       if (fresh.length && !achToast) showNextAchToast();
-    } catch { /* ignore */ }
+    } catch {
+      /* ignore */
+    }
   };
-
 
   // Sheets
   const [bankOpen, setBankOpen] = useState(false);
@@ -666,7 +760,7 @@ function DashboardPage() {
   const [payoutOpen, setPayoutOpen] = useState(false);
   const [levelsOpen, setLevelsOpen] = useState(false);
   const [offerDetail, setOfferDetail] = useState<Offer | null>(null);
-  
+
   const [isAdmin, setIsAdmin] = useState(false);
   const navigate = useNavigate();
 
@@ -681,17 +775,50 @@ function DashboardPage() {
 
       // Phase 1: critical for first paint — profile, role, offers.
       const [role, offersRes, profileRes] = await Promise.all([
-        supabase.from("user_roles").select("role").eq("user_id", uid).eq("role", "admin").maybeSingle(),
-        supabase.from("offers").select("*").eq("active", true).order("created_at", { ascending: false }),
-        supabase.from("profiles").select("bank,display_name,avatar_url,email,settings,blocked,blocked_reason").eq("id", uid).maybeSingle(),
+        supabase
+          .from("user_roles")
+          .select("role")
+          .eq("user_id", uid)
+          .eq("role", "admin")
+          .maybeSingle(),
+        supabase
+          .from("offers")
+          .select("*")
+          .eq("active", true)
+          .order("created_at", { ascending: false }),
+        supabase
+          .from("profiles")
+          .select("bank,display_name,avatar_url,email,settings,blocked,blocked_reason")
+          .eq("id", uid)
+          .maybeSingle(),
       ]);
 
       // Phase 2: history — kicked off in parallel with Phase 1, awaited after paint.
       const historyPromise = Promise.all([
-        supabase.from("payout_requests").select("*").eq("user_id", uid).order("created_at", { ascending: false }).limit(200),
-        supabase.from("link_requests").select("*").eq("user_id", uid).order("created_at", { ascending: false }).limit(500),
-        supabase.from("conversions").select("*").eq("user_id", uid).order("created_at", { ascending: false }).limit(500),
-        supabase.from("notifications").select("*").eq("user_id", uid).order("created_at", { ascending: false }).limit(50),
+        supabase
+          .from("payout_requests")
+          .select("*")
+          .eq("user_id", uid)
+          .order("created_at", { ascending: false })
+          .limit(200),
+        supabase
+          .from("link_requests")
+          .select("*")
+          .eq("user_id", uid)
+          .order("created_at", { ascending: false })
+          .limit(500),
+        supabase
+          .from("conversions")
+          .select("*")
+          .eq("user_id", uid)
+          .order("created_at", { ascending: false })
+          .limit(500),
+        supabase
+          .from("notifications")
+          .select("*")
+          .eq("user_id", uid)
+          .order("created_at", { ascending: false })
+          .limit(50),
       ]);
       if (cancelled) return;
 
@@ -705,35 +832,58 @@ function DashboardPage() {
         return;
       }
 
-      setOffers((offersRes.data ?? []).map((r: any): Offer => ({
-        id: r.id, tag: r.tag, name: r.name,
-        category: r.category ?? r.tag ?? "Другое",
-        payout: r.payout, epc: r.epc, cr: Number(r.cr ?? 0),
-        isNew: Boolean(r.is_new),
-        advertiser: r.advertiser ?? "",
-        geo: r.geo ? String(r.geo).split(/[,;\s]+/).filter(Boolean) : [],
-        hold: r.hold ?? "", goal: r.goal ?? "",
-        description: r.description ?? "",
-        requirements: r.requirements ? String(r.requirements).split(/\n+/).filter(Boolean) : [],
-        allowed: Array.isArray(r.allowed) ? r.allowed : [],
-        denied: Array.isArray(r.denied) ? r.denied : [],
-        landing: r.landing ?? "",
-        image: r.image_url ?? undefined,
-        cityPayouts: Array.isArray(r.city_payouts)
-          ? (r.city_payouts as any[])
-              .map((c) => ({ city: String(c?.city ?? ""), amount: Number(c?.amount ?? 0) }))
-              .filter((c) => c.city && c.amount > 0)
-          : [],
-        minLevel: (r.min_level ?? "start") as Offer["minLevel"],
-      })));
+      setOffers(
+        (offersRes.data ?? []).map(
+          (r: any): Offer => ({
+            id: r.id,
+            tag: r.tag,
+            name: r.name,
+            category: r.category ?? r.tag ?? "Другое",
+            payout: r.payout,
+            epc: r.epc,
+            cr: Number(r.cr ?? 0),
+            isNew: Boolean(r.is_new),
+            advertiser: r.advertiser ?? "",
+            geo: r.geo
+              ? String(r.geo)
+                  .split(/[,;\s]+/)
+                  .filter(Boolean)
+              : [],
+            hold: r.hold ?? "",
+            goal: r.goal ?? "",
+            description: r.description ?? "",
+            requirements: r.requirements ? String(r.requirements).split(/\n+/).filter(Boolean) : [],
+            allowed: Array.isArray(r.allowed) ? r.allowed : [],
+            denied: Array.isArray(r.denied) ? r.denied : [],
+            landing: r.landing ?? "",
+            image: r.image_url ?? undefined,
+            cityPayouts: Array.isArray(r.city_payouts)
+              ? (r.city_payouts as any[])
+                  .map((c) => ({ city: String(c?.city ?? ""), amount: Number(c?.amount ?? 0) }))
+                  .filter((c) => c.city && c.amount > 0)
+              : [],
+            minLevel: (r.min_level ?? "start") as Offer["minLevel"],
+          }),
+        ),
+      );
 
-      const pRow = profileRes.data as { bank?: BankDetails | null; display_name?: string | null; avatar_url?: string | null; email?: string | null; settings?: Partial<UserPrefs> | null } | null;
+      const pRow = profileRes.data as {
+        bank?: BankDetails | null;
+        display_name?: string | null;
+        avatar_url?: string | null;
+        email?: string | null;
+        settings?: Partial<UserPrefs> | null;
+      } | null;
       if (pRow?.bank) setBank(pRow.bank);
       setUserName(pRow?.display_name || pRow?.email || u.user.email || "");
       let avatarToUse = pRow?.avatar_url ?? null;
       if (!avatarToUse) {
         avatarToUse = randomAvatarUrl(uid);
-        try { await supabase.from("profiles").update({ avatar_url: avatarToUse }).eq("id", uid); } catch { /* ignore */ }
+        try {
+          await supabase.from("profiles").update({ avatar_url: avatarToUse }).eq("id", uid);
+        } catch {
+          /* ignore */
+        }
       }
       setUserAvatar(avatarToUse);
       if (pRow?.settings) setPrefs((s) => ({ ...s, ...(pRow.settings as Partial<UserPrefs>) }));
@@ -742,57 +892,78 @@ function DashboardPage() {
       const [payoutsRes, reqsRes, convRes, notifRes] = await historyPromise;
       if (cancelled) return;
 
-      setPayouts((payoutsRes.data ?? []).map((r: any): Payout => ({
-        id: String(r.id).slice(0, 8).toUpperCase(),
-        date: dateShortOf(r.created_at),
-        time: timeOf(r.created_at),
-        amount: Number(r.amount),
-        method: r.method,
-        destination: r.destination ?? "",
-        status: r.status,
-        note: r.note ?? undefined,
-      })));
+      setPayouts(
+        (payoutsRes.data ?? []).map(
+          (r: any): Payout => ({
+            id: String(r.id).slice(0, 8).toUpperCase(),
+            date: dateShortOf(r.created_at),
+            time: timeOf(r.created_at),
+            amount: Number(r.amount),
+            method: r.method,
+            destination: r.destination ?? "",
+            status: r.status,
+            note: r.note ?? undefined,
+          }),
+        ),
+      );
 
       const rows = reqsRes.data ?? [];
-      setRequests(rows.map((r: any): LinkRequest => ({
-        id: r.code || String(r.id).slice(0, 8).toUpperCase(),
-        offerId: r.offer_id ?? "",
-        offerName: r.offer_name,
-        offerTag: r.offer_tag ?? "",
-        createdAt: `${new Date(r.created_at).toLocaleDateString("ru-RU")}, ${timeOf(r.created_at)}`,
-        source: r.source ?? "",
-        sub: r.sub ?? "",
-        link: r.link ?? "",
-        status: normalizeStatus(r.status),
-        ordersCount: Number(r.orders_count ?? 0),
-        note: r.note ?? undefined,
-      })));
+      setRequests(
+        rows.map(
+          (r: any): LinkRequest => ({
+            id: r.code || String(r.id).slice(0, 8).toUpperCase(),
+            offerId: r.offer_id ?? "",
+            offerName: r.offer_name,
+            offerTag: r.offer_tag ?? "",
+            createdAt: `${new Date(r.created_at).toLocaleDateString("ru-RU")}, ${timeOf(r.created_at)}`,
+            source: r.source ?? "",
+            sub: r.sub ?? "",
+            link: r.link ?? "",
+            status: normalizeStatus(r.status),
+            ordersCount: Number(r.orders_count ?? 0),
+            note: r.note ?? undefined,
+          }),
+        ),
+      );
       setLinkedOffers(new Set(rows.map((r: any) => r.offer_id).filter(Boolean) as string[]));
 
-      setConversions((convRes.data ?? []).map((r: any): Conversion => ({
-        id: String(r.id).slice(0, 8),
-        time: timeOf(r.created_at),
-        createdAt: r.created_at,
-        offerId: r.offer_id ?? "",
-        offerName: r.offer_name,
-        amount: Number(r.amount),
-        status: r.status as Conversion["status"],
-        baseAmount: r.base_amount != null ? Number(r.base_amount) : null,
-        bonusPct: r.bonus_pct != null ? Number(r.bonus_pct) : null,
-        bonusAmount: r.bonus_amount != null ? Number(r.bonus_amount) : null,
-      })));
+      setConversions(
+        (convRes.data ?? []).map(
+          (r: any): Conversion => ({
+            id: String(r.id).slice(0, 8),
+            time: timeOf(r.created_at),
+            createdAt: r.created_at,
+            offerId: r.offer_id ?? "",
+            offerName: r.offer_name,
+            amount: Number(r.amount),
+            status: r.status as Conversion["status"],
+            baseAmount: r.base_amount != null ? Number(r.base_amount) : null,
+            bonusPct: r.bonus_pct != null ? Number(r.bonus_pct) : null,
+            bonusAmount: r.bonus_amount != null ? Number(r.bonus_amount) : null,
+          }),
+        ),
+      );
 
-      setNotifs((notifRes.data ?? []).map((r: any): Notification => ({
-        id: r.id, kind: r.kind as NotifKind, title: r.title, body: r.body,
-        time: timeOf(r.created_at),
-        amount: r.amount ?? undefined,
-        status: (r.status ?? undefined) as Notification["status"],
-        read: r.read,
-      })));
+      setNotifs(
+        (notifRes.data ?? []).map(
+          (r: any): Notification => ({
+            id: r.id,
+            kind: r.kind as NotifKind,
+            title: r.title,
+            body: r.body,
+            time: timeOf(r.created_at),
+            amount: r.amount ?? undefined,
+            status: (r.status ?? undefined) as Notification["status"],
+            read: r.read,
+          }),
+        ),
+      );
 
       setDataReady(true);
     })();
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   /* --------------- Realtime: live sync of user-scoped data ------------- */
@@ -801,71 +972,151 @@ function DashboardPage() {
     const flt = `user_id=eq.${userId}`;
 
     const refetchRequests = async () => {
-      const { data } = await supabase.from("link_requests").select("*").eq("user_id", userId).order("created_at", { ascending: false });
+      const { data } = await supabase
+        .from("link_requests")
+        .select("*")
+        .eq("user_id", userId)
+        .order("created_at", { ascending: false });
       const rows = data ?? [];
-      setRequests(rows.map((r: any): LinkRequest => ({
-        id: r.code || String(r.id).slice(0, 8).toUpperCase(),
-        offerId: r.offer_id ?? "", offerName: r.offer_name, offerTag: r.offer_tag ?? "",
-        createdAt: `${new Date(r.created_at).toLocaleDateString("ru-RU")}, ${timeOf(r.created_at)}`,
-        source: r.source ?? "", sub: r.sub ?? "", link: r.link ?? "",
-        status: normalizeStatus(r.status), ordersCount: Number(r.orders_count ?? 0),
-        note: r.note ?? undefined,
-      })));
+      setRequests(
+        rows.map(
+          (r: any): LinkRequest => ({
+            id: r.code || String(r.id).slice(0, 8).toUpperCase(),
+            offerId: r.offer_id ?? "",
+            offerName: r.offer_name,
+            offerTag: r.offer_tag ?? "",
+            createdAt: `${new Date(r.created_at).toLocaleDateString("ru-RU")}, ${timeOf(r.created_at)}`,
+            source: r.source ?? "",
+            sub: r.sub ?? "",
+            link: r.link ?? "",
+            status: normalizeStatus(r.status),
+            ordersCount: Number(r.orders_count ?? 0),
+            note: r.note ?? undefined,
+          }),
+        ),
+      );
       setLinkedOffers(new Set(rows.map((r: any) => r.offer_id).filter(Boolean) as string[]));
     };
     const refetchPayouts = async () => {
-      const { data } = await supabase.from("payout_requests").select("*").eq("user_id", userId).order("created_at", { ascending: false });
-      setPayouts((data ?? []).map((r: any): Payout => ({
-        id: String(r.id).slice(0, 8).toUpperCase(),
-        date: dateShortOf(r.created_at), time: timeOf(r.created_at),
-        amount: Number(r.amount), method: r.method, destination: r.destination ?? "",
-        status: r.status, note: r.note ?? undefined,
-      })));
+      const { data } = await supabase
+        .from("payout_requests")
+        .select("*")
+        .eq("user_id", userId)
+        .order("created_at", { ascending: false });
+      setPayouts(
+        (data ?? []).map(
+          (r: any): Payout => ({
+            id: String(r.id).slice(0, 8).toUpperCase(),
+            date: dateShortOf(r.created_at),
+            time: timeOf(r.created_at),
+            amount: Number(r.amount),
+            method: r.method,
+            destination: r.destination ?? "",
+            status: r.status,
+            note: r.note ?? undefined,
+          }),
+        ),
+      );
     };
     const refetchConversions = async () => {
-      const { data } = await supabase.from("conversions").select("*").eq("user_id", userId).order("created_at", { ascending: false });
-      setConversions((data ?? []).map((r: any): Conversion => ({
-        id: String(r.id).slice(0, 8), time: timeOf(r.created_at), createdAt: r.created_at,
-        offerId: r.offer_id ?? "", offerName: r.offer_name,
-        amount: Number(r.amount), status: r.status as Conversion["status"],
-        baseAmount: r.base_amount != null ? Number(r.base_amount) : null,
-        bonusPct: r.bonus_pct != null ? Number(r.bonus_pct) : null,
-        bonusAmount: r.bonus_amount != null ? Number(r.bonus_amount) : null,
-      })));
+      const { data } = await supabase
+        .from("conversions")
+        .select("*")
+        .eq("user_id", userId)
+        .order("created_at", { ascending: false });
+      setConversions(
+        (data ?? []).map(
+          (r: any): Conversion => ({
+            id: String(r.id).slice(0, 8),
+            time: timeOf(r.created_at),
+            createdAt: r.created_at,
+            offerId: r.offer_id ?? "",
+            offerName: r.offer_name,
+            amount: Number(r.amount),
+            status: r.status as Conversion["status"],
+            baseAmount: r.base_amount != null ? Number(r.base_amount) : null,
+            bonusPct: r.bonus_pct != null ? Number(r.bonus_pct) : null,
+            bonusAmount: r.bonus_amount != null ? Number(r.bonus_amount) : null,
+          }),
+        ),
+      );
     };
     const refetchNotifs = async () => {
-      const { data } = await supabase.from("notifications").select("*").eq("user_id", userId).order("created_at", { ascending: false }).limit(50);
-      setNotifs((data ?? []).map((r: any): Notification => ({
-        id: r.id, kind: r.kind as NotifKind, title: r.title, body: r.body,
-        time: timeOf(r.created_at), amount: r.amount ?? undefined,
-        status: (r.status ?? undefined) as Notification["status"], read: r.read,
-      })));
+      const { data } = await supabase
+        .from("notifications")
+        .select("*")
+        .eq("user_id", userId)
+        .order("created_at", { ascending: false })
+        .limit(50);
+      setNotifs(
+        (data ?? []).map(
+          (r: any): Notification => ({
+            id: r.id,
+            kind: r.kind as NotifKind,
+            title: r.title,
+            body: r.body,
+            time: timeOf(r.created_at),
+            amount: r.amount ?? undefined,
+            status: (r.status ?? undefined) as Notification["status"],
+            read: r.read,
+          }),
+        ),
+      );
     };
     const refetchOffers = async () => {
-      const { data } = await supabase.from("offers").select("*").eq("active", true).order("created_at", { ascending: false });
-      setOffers((data ?? []).map((r: any): Offer => ({
-        id: r.id, tag: r.tag, name: r.name,
-        category: r.category ?? r.tag ?? "Другое",
-        payout: r.payout, epc: r.epc, cr: Number(r.cr ?? 0),
-        isNew: Boolean(r.is_new), advertiser: r.advertiser ?? "",
-        geo: r.geo ? String(r.geo).split(/[,;\s]+/).filter(Boolean) : [],
-        hold: r.hold ?? "", goal: r.goal ?? "",
-        description: r.description ?? "",
-        requirements: r.requirements ? String(r.requirements).split(/\n+/).filter(Boolean) : [],
-        allowed: Array.isArray(r.allowed) ? r.allowed : [],
-        denied: Array.isArray(r.denied) ? r.denied : [],
-        landing: r.landing ?? "", image: r.image_url ?? undefined,
-        cityPayouts: Array.isArray(r.city_payouts)
-          ? (r.city_payouts as any[]).map((c) => ({ city: String(c?.city ?? ""), amount: Number(c?.amount ?? 0) })).filter((c) => c.city && c.amount > 0)
-          : [],
-        minLevel: (r.min_level ?? "start") as Offer["minLevel"],
-      })));
+      const { data } = await supabase
+        .from("offers")
+        .select("*")
+        .eq("active", true)
+        .order("created_at", { ascending: false });
+      setOffers(
+        (data ?? []).map(
+          (r: any): Offer => ({
+            id: r.id,
+            tag: r.tag,
+            name: r.name,
+            category: r.category ?? r.tag ?? "Другое",
+            payout: r.payout,
+            epc: r.epc,
+            cr: Number(r.cr ?? 0),
+            isNew: Boolean(r.is_new),
+            advertiser: r.advertiser ?? "",
+            geo: r.geo
+              ? String(r.geo)
+                  .split(/[,;\s]+/)
+                  .filter(Boolean)
+              : [],
+            hold: r.hold ?? "",
+            goal: r.goal ?? "",
+            description: r.description ?? "",
+            requirements: r.requirements ? String(r.requirements).split(/\n+/).filter(Boolean) : [],
+            allowed: Array.isArray(r.allowed) ? r.allowed : [],
+            denied: Array.isArray(r.denied) ? r.denied : [],
+            landing: r.landing ?? "",
+            image: r.image_url ?? undefined,
+            cityPayouts: Array.isArray(r.city_payouts)
+              ? (r.city_payouts as any[])
+                  .map((c) => ({ city: String(c?.city ?? ""), amount: Number(c?.amount ?? 0) }))
+                  .filter((c) => c.city && c.amount > 0)
+              : [],
+            minLevel: (r.min_level ?? "start") as Offer["minLevel"],
+          }),
+        ),
+      );
     };
     const refetchProfile = async () => {
-      const { data } = await supabase.from("profiles").select("bank,display_name,avatar_url,email,settings,blocked,blocked_reason").eq("id", userId).maybeSingle();
+      const { data } = await supabase
+        .from("profiles")
+        .select("bank,display_name,avatar_url,email,settings,blocked,blocked_reason")
+        .eq("id", userId)
+        .maybeSingle();
       const p = data as any;
       if (!p) return;
-      if (p.blocked === true && !isAdmin) { await supabase.auth.signOut(); navigate({ to: "/blocked", replace: true }); return; }
+      if (p.blocked === true && !isAdmin) {
+        await supabase.auth.signOut();
+        navigate({ to: "/blocked", replace: true });
+        return;
+      }
       if (p.bank) setBank(p.bank);
       if (p.display_name || p.email) setUserName(p.display_name || p.email);
       setUserAvatar(p.avatar_url ?? null);
@@ -874,14 +1125,40 @@ function DashboardPage() {
 
     const ch = supabase
       .channel(`user:${userId}`)
-      .on("postgres_changes", { event: "*", schema: "public", table: "link_requests", filter: flt }, () => void refetchRequests())
-      .on("postgres_changes", { event: "*", schema: "public", table: "payout_requests", filter: flt }, () => void refetchPayouts())
-      .on("postgres_changes", { event: "*", schema: "public", table: "conversions", filter: flt }, () => void refetchConversions())
-      .on("postgres_changes", { event: "*", schema: "public", table: "notifications", filter: flt }, () => void refetchNotifs())
-      .on("postgres_changes", { event: "*", schema: "public", table: "offers" }, () => void refetchOffers())
-      .on("postgres_changes", { event: "UPDATE", schema: "public", table: "profiles", filter: `id=eq.${userId}` }, () => void refetchProfile())
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "link_requests", filter: flt },
+        () => void refetchRequests(),
+      )
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "payout_requests", filter: flt },
+        () => void refetchPayouts(),
+      )
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "conversions", filter: flt },
+        () => void refetchConversions(),
+      )
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "notifications", filter: flt },
+        () => void refetchNotifs(),
+      )
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "offers" },
+        () => void refetchOffers(),
+      )
+      .on(
+        "postgres_changes",
+        { event: "UPDATE", schema: "public", table: "profiles", filter: `id=eq.${userId}` },
+        () => void refetchProfile(),
+      )
       .subscribe();
-    return () => { void supabase.removeChannel(ch); };
+    return () => {
+      void supabase.removeChannel(ch);
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [userId]);
 
@@ -908,7 +1185,9 @@ function DashboardPage() {
         if (code) awardedCodesRef.current.add(code);
       }
     })();
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+    };
   }, [userId]);
 
   // Check achievements whenever key metrics change (idempotent RPC)
@@ -917,7 +1196,6 @@ function DashboardPage() {
     void runAwardAchievements();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [userId, dataReady, gross, conversions.length, requests.length]);
-
 
   const handleSignOut = async () => {
     await supabase.auth.signOut();
@@ -930,25 +1208,42 @@ function DashboardPage() {
   /* --------------------------- Notif helpers -------------------------- */
   const pushNotif = async (n: Omit<Notification, "id" | "time" | "read">) => {
     if (!userId) return;
-    const { data } = await supabase.from("notifications").insert({
-      user_id: userId,
-      kind: n.kind, title: n.title, body: n.body,
-      amount: n.amount ?? null, status: n.status ?? null,
-    }).select().single();
+    const { data } = await supabase
+      .from("notifications")
+      .insert({
+        user_id: userId,
+        kind: n.kind,
+        title: n.title,
+        body: n.body,
+        amount: n.amount ?? null,
+        status: n.status ?? null,
+      })
+      .select()
+      .single();
     if (data) {
-      setNotifs((prev) => [{
-        id: data.id, kind: data.kind as NotifKind, title: data.title, body: data.body,
-        time: timeOf(data.created_at),
-        amount: data.amount ?? undefined,
-        status: (data.status ?? undefined) as Notification["status"],
-        read: data.read,
-      }, ...prev]);
+      setNotifs((prev) => [
+        {
+          id: data.id,
+          kind: data.kind as NotifKind,
+          title: data.title,
+          body: data.body,
+          time: timeOf(data.created_at),
+          amount: data.amount ?? undefined,
+          status: (data.status ?? undefined) as Notification["status"],
+          read: data.read,
+        },
+        ...prev,
+      ]);
     }
   };
   const markAllRead = async () => {
     if (!userId) return;
     setNotifs((ns) => ns.map((n) => ({ ...n, read: true })));
-    await supabase.from("notifications").update({ read: true }).eq("user_id", userId).eq("read", false);
+    await supabase
+      .from("notifications")
+      .update({ read: true })
+      .eq("user_id", userId)
+      .eq("read", false);
   };
   const toggleRead = async (id: string) => {
     const target = notifs.find((n) => n.id === id);
@@ -998,7 +1293,10 @@ function DashboardPage() {
     if (!canSaveBank || !userId) return;
     setBank(bankDraft);
     setBankOpen(false);
-    await supabase.from("profiles").update({ bank: bankDraft as any }).eq("id", userId);
+    await supabase
+      .from("profiles")
+      .update({ bank: bankDraft as any })
+      .eq("id", userId);
   };
 
   /* --------------------------- Offer request -------------------------- */
@@ -1016,20 +1314,28 @@ function DashboardPage() {
     }
     setRequestingOffer(offer.id);
     const sub = `sub-${Math.random().toString(36).slice(2, 6)}`;
-    const trackingLink = offer.landing.replace(/\{sub\}/gi, sub).replace(/\{uid\}/gi, userId.slice(0, 8));
+    const trackingLink = offer.landing
+      .replace(/\{sub\}/gi, sub)
+      .replace(/\{uid\}/gi, userId.slice(0, 8));
     try {
       await navigator.clipboard.writeText(trackingLink);
     } catch {
       /* clipboard may be blocked — заявка всё равно создаётся */
     }
-    const { data, error } = await supabase.from("link_requests").insert({
-      user_id: userId,
-      offer_id: offer.id,
-      offer_name: offer.name,
-      offer_tag: offer.tag,
-      source, sub, link: trackingLink,
-      status: "in_progress",
-    }).select().single();
+    const { data, error } = await supabase
+      .from("link_requests")
+      .insert({
+        user_id: userId,
+        offer_id: offer.id,
+        offer_name: offer.name,
+        offer_tag: offer.tag,
+        source,
+        sub,
+        link: trackingLink,
+        status: "in_progress",
+      })
+      .select()
+      .single();
     setRequestingOffer(null);
     if (error || !data) {
       pushNotif({
@@ -1062,8 +1368,6 @@ function DashboardPage() {
     });
   };
 
-
-
   /* --------------------------- Payout flow ---------------------------- */
   const requestPayout = async (amount: number) => {
     if (!bank || !userId || amount <= 0 || amount > available) return;
@@ -1073,12 +1377,22 @@ function DashboardPage() {
     const net = amount - fee;
     const method = bankMethodLabel(bank);
     const destination = bankDest(bank);
-    const note = fee > 0
-      ? `Комиссия ${lvl.feePct}% (${fmt(fee)} ₽) • к зачислению ${fmt(net)} ₽ • ${lvl.name}`
-      : `Без комиссии • ${lvl.name}`;
-    const { data } = await supabase.from("payout_requests").insert({
-      user_id: userId, amount, method, destination, status: "pending", note,
-    }).select().single();
+    const note =
+      fee > 0
+        ? `Комиссия ${lvl.feePct}% (${fmt(fee)} ₽) • к зачислению ${fmt(net)} ₽ • ${lvl.name}`
+        : `Без комиссии • ${lvl.name}`;
+    const { data } = await supabase
+      .from("payout_requests")
+      .insert({
+        user_id: userId,
+        amount,
+        method,
+        destination,
+        status: "pending",
+        note,
+      })
+      .select()
+      .single();
     setPayoutOpen(false);
     if (data) {
       const p: Payout = {
@@ -1166,7 +1480,9 @@ function DashboardPage() {
             className={`hidden items-center gap-1.5 rounded-full border ${levelInfo.current.ring} ${levelInfo.current.bg} px-2.5 py-1 transition-transform hover:scale-[1.02] active:scale-95 sm:flex`}
           >
             <levelInfo.current.Icon className={`size-3.5 ${levelInfo.current.color}`} />
-            <span className={`text-[10px] font-bold uppercase tracking-wider ${levelInfo.current.color}`}>
+            <span
+              className={`text-[10px] font-bold uppercase tracking-wider ${levelInfo.current.color}`}
+            >
               {levelInfo.current.name}
             </span>
           </button>
@@ -1183,7 +1499,9 @@ function DashboardPage() {
             onClick={() => setActive("profile")}
             aria-label="Профиль"
             className={`grid size-9 place-items-center overflow-hidden rounded-full border-2 font-mono text-[10px] font-semibold transition-all active:scale-95 ${
-              active === "profile" ? "border-primary ring-2 ring-primary/40" : "border-border bg-secondary hover:border-primary/60"
+              active === "profile"
+                ? "border-primary ring-2 ring-primary/40"
+                : "border-border bg-secondary hover:border-primary/60"
             }`}
           >
             {userAvatar ? (
@@ -1191,7 +1509,7 @@ function DashboardPage() {
                 src={userAvatar}
                 alt=""
                 className="size-full object-cover"
-                onError={(e) => ((e.currentTarget.style.display = "none"))}
+                onError={(e) => (e.currentTarget.style.display = "none")}
               />
             ) : (
               <span>{getInitials(userName)}</span>
@@ -1199,7 +1517,6 @@ function DashboardPage() {
           </button>
         </div>
       </header>
-
 
       {/* Achievement unlocked floating toast */}
       {achToast && (
@@ -1240,7 +1557,9 @@ function DashboardPage() {
             }}
             className={`pointer-events-auto animate-in-up mt-2 flex w-full max-w-[420px] items-center gap-3 rounded-xl border ${levelToast.ring} ${levelToast.bg} px-3 py-2.5 text-left shadow-lg backdrop-blur active:scale-[0.99]`}
           >
-            <div className={`grid size-9 shrink-0 place-items-center rounded-lg bg-background/70 ${levelToast.color}`}>
+            <div
+              className={`grid size-9 shrink-0 place-items-center rounded-lg bg-background/70 ${levelToast.color}`}
+            >
               <levelToast.Icon className="size-4" />
             </div>
             <div className="min-w-0 flex-1">
@@ -1257,8 +1576,11 @@ function DashboardPage() {
         </div>
       )}
 
-
-      <main key={active} data-dashboard-main className="mx-auto w-full max-w-[430px] space-y-6 p-4 pb-24 lg:max-w-6xl lg:pb-10 lg:pl-24 lg:pr-8 lg:pt-8">
+      <main
+        key={active}
+        data-dashboard-main
+        className="mx-auto w-full max-w-[430px] space-y-6 p-4 pb-24 lg:max-w-6xl lg:pb-10 lg:pl-24 lg:pr-8 lg:pt-8"
+      >
         {active === "info" && (
           <InfoTab
             balance={balance}
@@ -1304,10 +1626,12 @@ function DashboardPage() {
           <RewardsTab
             userId={userId}
             earned={balance}
-            conversionsCount={conversions.filter(c => c.status === "ok").length}
+            conversionsCount={conversions.filter((c) => c.status === "ok").length}
             requestsCount={requests.length}
-            todayConversions={conversions.filter(c => c.status === "ok" && isSameDay(c.createdAt)).length}
-            todayRequests={requests.filter(r => isSameDay(r.createdAt)).length}
+            todayConversions={
+              conversions.filter((c) => c.status === "ok" && isSameDay(c.createdAt)).length
+            }
+            todayRequests={requests.filter((r) => isSameDay(r.createdAt)).length}
           />
         )}
         {active === "profile" && (
@@ -1317,9 +1641,11 @@ function DashboardPage() {
             onSignOut={handleSignOut}
             prefs={prefs}
             onPrefsChange={setPrefs}
-            onProfileChange={(name, avatar) => { setUserName(name); setUserAvatar(avatar); }}
+            onProfileChange={(name, avatar) => {
+              setUserName(name);
+              setUserAvatar(avatar);
+            }}
           />
-
         )}
       </main>
 
@@ -1361,11 +1687,7 @@ function DashboardPage() {
 
       {/* Levels sheet */}
       {levelsOpen && (
-        <LevelsSheet
-          earned={balance}
-          history={levelHistory}
-          onClose={() => setLevelsOpen(false)}
-        />
+        <LevelsSheet earned={balance} history={levelHistory} onClose={() => setLevelsOpen(false)} />
       )}
 
       {/* Offer detail sheet */}
@@ -1380,10 +1702,6 @@ function DashboardPage() {
         />
       )}
 
-
-
-
-
       {/* ============ Navigation ============
           Desktop: floating glass rail (icons + hover labels)
           Mobile: pill-shaped floating bottom bar */}
@@ -1394,9 +1712,14 @@ function DashboardPage() {
           { id: "requests" as const, key: "nav_requests" as const, Icon: Inbox, label: "Заявки" },
           { id: "stats" as const, key: "nav_stats" as const, Icon: BarChart3, label: "Аналитика" },
           { id: "payouts" as const, key: "nav_payouts" as const, Icon: Wallet, label: "Выплаты" },
-          { id: "ai" as const, key: "nav_ai" as const, Icon: Sparkles, label: "AI" },
+          { id: "ai" as const, key: "nav_ai" as const, Icon: Sparkles, label: "Помощник" },
           { id: "rewards" as const, key: "nav_rewards" as const, Icon: Trophy, label: "Награды" },
-          { id: "support" as const, key: "nav_support" as const, Icon: Headphones, label: "Поддержка" },
+          {
+            id: "support" as const,
+            key: "nav_support" as const,
+            Icon: Headphones,
+            label: "Поддержка",
+          },
         ];
         return (
           <>
@@ -1486,18 +1809,20 @@ function DashboardPage() {
           if (o) setOfferDetail(o);
         }}
       />
-
     </div>
   );
 }
-
 
 /* ================================ Info ================================= */
 
 type Kpi = { label: string; value: string; delta: string; positive: boolean };
 
 /** Weekly income series (Mon..Sun of current ISO week). */
-function weekIncomeSeries(conversions: Conversion[]): { series: number[]; total: number; prevTotal: number } {
+function weekIncomeSeries(conversions: Conversion[]): {
+  series: number[];
+  total: number;
+  prevTotal: number;
+} {
   const now = new Date();
   const day = (now.getDay() + 6) % 7; // 0 = Mon
   const monday = new Date(now.getFullYear(), now.getMonth(), now.getDate() - day);
@@ -1526,8 +1851,11 @@ function weekIncomeSeries(conversions: Conversion[]): { series: number[]; total:
 
 function sumToday(conversions: Conversion[]): { income: number; count: number } {
   const today = new Date();
-  const y = today.getFullYear(), m = today.getMonth(), d = today.getDate();
-  let income = 0, count = 0;
+  const y = today.getFullYear(),
+    m = today.getMonth(),
+    d = today.getDate();
+  let income = 0,
+    count = 0;
   for (const c of conversions) {
     if (c.status !== "ok") continue;
     const dt = new Date(c.createdAt);
@@ -1538,7 +1866,6 @@ function sumToday(conversions: Conversion[]): { income: number; count: number } 
   }
   return { income, count };
 }
-
 
 type AchRow = {
   id: string;
@@ -1553,8 +1880,15 @@ type AchRow = {
 };
 
 const ACH_ICONS: Record<string, LucideIcon> = {
-  trophy: Trophy, rocket: Rocket, sparkles: Sparkles, target: Target,
-  coins: Coins, gem: Gem, crown: Crown, zap: Zap, medal: Medal,
+  trophy: Trophy,
+  rocket: Rocket,
+  sparkles: Sparkles,
+  target: Target,
+  coins: Coins,
+  gem: Gem,
+  crown: Crown,
+  zap: Zap,
+  medal: Medal,
 };
 
 function AchievementsProgress({
@@ -1579,29 +1913,44 @@ function AchievementsProgress({
       const uid = u.user?.id;
       const [{ data: ach }, { data: ua }, { data: prof }] = await Promise.all([
         supabase.from("achievements").select("*").order("sort_order"),
-        uid ? supabase.from("user_achievements").select("achievement_id").eq("user_id", uid)
-            : Promise.resolve({ data: [] as { achievement_id: string }[] }),
-        uid ? supabase.from("profiles").select("streak_days").eq("id", uid).maybeSingle()
-            : Promise.resolve({ data: null as null | { streak_days: number | null } }),
+        uid
+          ? supabase.from("user_achievements").select("achievement_id").eq("user_id", uid)
+          : Promise.resolve({ data: [] as { achievement_id: string }[] }),
+        uid
+          ? supabase.from("profiles").select("streak_days").eq("id", uid).maybeSingle()
+          : Promise.resolve({ data: null as null | { streak_days: number | null } }),
       ]);
       if (cancelled) return;
       setAchievements((ach ?? []) as AchRow[]);
-      setUnlockedIds(new Set(((ua as { achievement_id: string }[] | null) ?? []).map((r) => r.achievement_id)));
+      setUnlockedIds(
+        new Set(((ua as { achievement_id: string }[] | null) ?? []).map((r) => r.achievement_id)),
+      );
       setStreak(prof?.streak_days ?? 0);
 
       if (uid) {
         channel = supabase
           .channel(`ua_progress_${uid}`)
-          .on("postgres_changes", { event: "INSERT", schema: "public", table: "user_achievements", filter: `user_id=eq.${uid}` },
+          .on(
+            "postgres_changes",
+            {
+              event: "INSERT",
+              schema: "public",
+              table: "user_achievements",
+              filter: `user_id=eq.${uid}`,
+            },
             (payload) => {
               const id = (payload.new as { achievement_id?: string })?.achievement_id;
               if (id) setUnlockedIds((s) => new Set(s).add(id));
-            })
-          .on("postgres_changes", { event: "UPDATE", schema: "public", table: "profiles", filter: `id=eq.${uid}` },
+            },
+          )
+          .on(
+            "postgres_changes",
+            { event: "UPDATE", schema: "public", table: "profiles", filter: `id=eq.${uid}` },
             (payload) => {
               const s = (payload.new as { streak_days?: number })?.streak_days;
               if (typeof s === "number") setStreak(s);
-            })
+            },
+          )
           .subscribe();
       }
     })();
@@ -1615,10 +1964,16 @@ function AchievementsProgress({
   const rows = useMemo(() => {
     const values = { earned, conversions: conversionsCount, requests: requestsCount, streak };
     return achievements.map((a) => {
-      const cur = a.metric === "earned" ? values.earned
-        : a.metric === "conversions" ? values.conversions
-        : a.metric === "requests" ? values.requests
-        : a.metric === "streak" ? values.streak : 0;
+      const cur =
+        a.metric === "earned"
+          ? values.earned
+          : a.metric === "conversions"
+            ? values.conversions
+            : a.metric === "requests"
+              ? values.requests
+              : a.metric === "streak"
+                ? values.streak
+                : 0;
       const pct = Math.max(0, Math.min(1, cur / Math.max(1, a.threshold)));
       return { a, cur, pct, unlocked: unlockedIds.has(a.id) };
     });
@@ -1626,7 +1981,10 @@ function AchievementsProgress({
 
   // Next 4 uncompleted, closest to done first; fallback: 4 latest unlocked
   const nextRows = useMemo(() => {
-    const pending = rows.filter((r) => !r.unlocked).sort((a, b) => b.pct - a.pct).slice(0, 4);
+    const pending = rows
+      .filter((r) => !r.unlocked)
+      .sort((a, b) => b.pct - a.pct)
+      .slice(0, 4);
     if (pending.length >= 3) return pending;
     const done = rows.filter((r) => r.unlocked).slice(0, 4 - pending.length);
     return [...pending, ...done];
@@ -1660,11 +2018,13 @@ function AchievementsProgress({
           const Icon = ACH_ICONS[a.icon] ?? Trophy;
           return (
             <div key={a.id} className="flex items-center gap-3 p-3">
-              <div className={`grid size-9 shrink-0 place-items-center rounded-lg border ${
-                unlocked
-                  ? "border-foreground/30 bg-foreground text-background"
-                  : "border-border bg-secondary/60 text-muted-foreground"
-              }`}>
+              <div
+                className={`grid size-9 shrink-0 place-items-center rounded-lg border ${
+                  unlocked
+                    ? "border-foreground/30 bg-foreground text-background"
+                    : "border-border bg-secondary/60 text-muted-foreground"
+                }`}
+              >
                 {unlocked ? <CheckCircle2 className="size-4" /> : <Icon className="size-4" />}
               </div>
               <div className="min-w-0 flex-1">
@@ -1732,14 +2092,37 @@ function InfoTab({
     [requests],
   );
   const paidCount = useMemo(() => requests.filter((r) => r.status === "paid").length, [requests]);
-  const weekDelta = week.prevTotal > 0
-    ? Math.round(((week.total - week.prevTotal) / week.prevTotal) * 100)
-    : week.total > 0 ? 100 : 0;
+  const weekDelta =
+    week.prevTotal > 0
+      ? Math.round(((week.total - week.prevTotal) / week.prevTotal) * 100)
+      : week.total > 0
+        ? 100
+        : 0;
   const kpis: Kpi[] = [
-    { label: "Доход сегодня", value: `${fmt(today.income)} ₽`, delta: today.count > 0 ? `+${today.count} конв.` : "0", positive: today.income > 0 },
-    { label: "Конверсии", value: fmt(today.count), delta: `Σ ${fmt(conversions.filter((c) => c.status === "ok").length)}`, positive: today.count > 0 },
-    { label: "Заказы", value: fmt(totalOrders), delta: `Σ заявок ${fmt(requests.length)}`, positive: totalOrders > 0 },
-    { label: "Оплачено", value: fmt(paidCount), delta: paidCount > 0 ? "заявок" : "—", positive: paidCount > 0 },
+    {
+      label: "Доход сегодня",
+      value: `${fmt(today.income)} ₽`,
+      delta: today.count > 0 ? `+${today.count} конв.` : "0",
+      positive: today.income > 0,
+    },
+    {
+      label: "Конверсии",
+      value: fmt(today.count),
+      delta: `Σ ${fmt(conversions.filter((c) => c.status === "ok").length)}`,
+      positive: today.count > 0,
+    },
+    {
+      label: "Заказы",
+      value: fmt(totalOrders),
+      delta: `Σ заявок ${fmt(requests.length)}`,
+      positive: totalOrders > 0,
+    },
+    {
+      label: "Оплачено",
+      value: fmt(paidCount),
+      delta: paidCount > 0 ? "заявок" : "—",
+      positive: paidCount > 0,
+    },
   ];
   const refLink = "kvantm.tech/p/user772/ref";
   const copy = async () => {
@@ -1772,8 +2155,11 @@ function InfoTab({
                 >
                   {showBalance ? <Eye className="size-3.5" /> : <EyeOff className="size-3.5" />}
                 </button>
-                <span className={`rounded-full bg-white/10 px-2 py-0.5 font-mono text-[10px] font-medium ${weekDelta >= 0 ? "text-[color:var(--success)]" : "text-destructive"}`}>
-                  {weekDelta >= 0 ? "+" : ""}{weekDelta}% • 7дн
+                <span
+                  className={`rounded-full bg-white/10 px-2 py-0.5 font-mono text-[10px] font-medium ${weekDelta >= 0 ? "text-[color:var(--success)]" : "text-destructive"}`}
+                >
+                  {weekDelta >= 0 ? "+" : ""}
+                  {weekDelta}% • 7дн
                 </span>
               </div>
             </div>
@@ -1811,7 +2197,9 @@ function InfoTab({
           className={`group flex w-full flex-col gap-3 rounded-xl border ${level.current.ring} ${level.current.bg} p-4 text-left transition-colors hover:brightness-105`}
         >
           <div className="flex items-center gap-3">
-            <div className={`grid size-10 shrink-0 place-items-center rounded-lg bg-background ${level.current.color} border ${level.current.ring}`}>
+            <div
+              className={`grid size-10 shrink-0 place-items-center rounded-lg bg-background ${level.current.color} border ${level.current.ring}`}
+            >
               <level.current.Icon className="size-5" />
             </div>
             <div className="min-w-0 flex-1">
@@ -1880,8 +2268,11 @@ function InfoTab({
               </p>
               <p className="mt-0.5 font-mono text-sm font-bold tabular-nums">{fmt(week.total)} ₽</p>
             </div>
-            <span className={`flex items-center gap-1 rounded-full px-2 py-1 font-mono text-[10px] font-medium ${weekDelta >= 0 ? "bg-[color:var(--success)]/10 text-[color:var(--success)]" : "bg-destructive/10 text-destructive"}`}>
-              <TrendingUp className="size-3" /> {weekDelta >= 0 ? "+" : ""}{weekDelta}%
+            <span
+              className={`flex items-center gap-1 rounded-full px-2 py-1 font-mono text-[10px] font-medium ${weekDelta >= 0 ? "bg-[color:var(--success)]/10 text-[color:var(--success)]" : "bg-destructive/10 text-destructive"}`}
+            >
+              <TrendingUp className="size-3" /> {weekDelta >= 0 ? "+" : ""}
+              {weekDelta}%
             </span>
           </div>
           <div className="flex h-20 items-end gap-1.5">
@@ -1922,10 +2313,6 @@ function InfoTab({
 
       {/* ============ Heatmap активности ============ */}
       <ActivityHeatmap conversions={conversions} />
-
-
-
-
 
       {/* ============ Активность: табы ============ */}
       <section className="animate-in-up" style={{ animationDelay: "180ms" }}>
@@ -2139,12 +2526,12 @@ function OffersTab({
     [offers],
   );
 
-
   const filtered = useMemo(() => {
     const s = q.trim().toLowerCase();
     let list = offers.filter((o) => {
       if (cat !== "Все" && o.category !== cat) return false;
-      if (s && !o.name.toLowerCase().includes(s) && !o.category.toLowerCase().includes(s)) return false;
+      if (s && !o.name.toLowerCase().includes(s) && !o.category.toLowerCase().includes(s))
+        return false;
       return true;
     });
     if (sort === "epc") list = [...list].sort((a, b) => b.epc - a.epc);
@@ -2165,10 +2552,13 @@ function OffersTab({
           </span>
         </div>
         {level.bonusPct > 0 && (
-          <div className={`mb-3 flex items-center gap-2 rounded-md border ${level.ring} ${level.bg} px-3 py-2`}>
+          <div
+            className={`mb-3 flex items-center gap-2 rounded-md border ${level.ring} ${level.bg} px-3 py-2`}
+          >
             <level.Icon className={`size-3.5 shrink-0 ${level.color}`} />
             <p className={`text-[10.5px] font-bold ${level.color}`}>
-              Бонус уровня «{level.name}»: +{level.bonusPct}% ко всем ставкам применяется автоматически
+              Бонус уровня «{level.name}»: +{level.bonusPct}% ко всем ставкам применяется
+              автоматически
             </p>
           </div>
         )}
@@ -2200,13 +2590,11 @@ function OffersTab({
           <span className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
             <Filter className="size-3" /> Сортировка:
           </span>
-          {(
-            [
-              { id: "epc" as const, label: "EPC" },
-              { id: "cr" as const, label: "CR" },
-              { id: "new" as const, label: "Новые" },
-            ]
-          ).map((s) => (
+          {[
+            { id: "epc" as const, label: "EPC" },
+            { id: "cr" as const, label: "CR" },
+            { id: "new" as const, label: "Новые" },
+          ].map((s) => (
             <button
               key={s.id}
               onClick={() => setSort(s.id)}
@@ -2232,7 +2620,13 @@ function OffersTab({
           const boosted = applyLevelBoost(o, level.bonusPct);
           const hasBoost = level.bonusPct > 0 && boosted.boostedPayout !== o.payout;
           const TIER_ORDER = ["start", "silver", "gold", "platinum", "diamond"] as const;
-          const TIER_NAME = { start: "Старт", silver: "Серебро", gold: "Золото", platinum: "Платина", diamond: "Бриллиант" } as const;
+          const TIER_NAME = {
+            start: "Старт",
+            silver: "Серебро",
+            gold: "Золото",
+            platinum: "Платина",
+            diamond: "Бриллиант",
+          } as const;
           const userTier = TIER_ORDER.indexOf(level.id);
           const reqTier = TIER_ORDER.indexOf(o.minLevel);
           const locked = userTier < reqTier;
@@ -2247,7 +2641,11 @@ function OffersTab({
                 className="flex w-full items-start gap-3 text-left"
               >
                 {o.image ? (
-                  <img src={o.image} alt="" className="size-10 shrink-0 rounded-md border border-border object-cover" />
+                  <img
+                    src={o.image}
+                    alt=""
+                    className="size-10 shrink-0 rounded-md border border-border object-cover"
+                  />
                 ) : (
                   <OfferTag tag={o.tag} />
                 )}
@@ -2260,9 +2658,13 @@ function OffersTab({
                       </span>
                     )}
                     {o.minLevel !== "start" && (
-                      <span className={`inline-flex items-center gap-0.5 rounded px-1.5 py-0.5 font-mono text-[8px] font-bold uppercase ${
-                        locked ? "bg-amber-500/15 text-amber-500" : "bg-emerald-500/15 text-emerald-500"
-                      }`}>
+                      <span
+                        className={`inline-flex items-center gap-0.5 rounded px-1.5 py-0.5 font-mono text-[8px] font-bold uppercase ${
+                          locked
+                            ? "bg-amber-500/15 text-amber-500"
+                            : "bg-emerald-500/15 text-emerald-500"
+                        }`}
+                      >
                         <Lock className="size-2.5" /> {TIER_NAME[o.minLevel]}+
                       </span>
                     )}
@@ -2282,7 +2684,9 @@ function OffersTab({
                       <span className={level.color}>+{level.bonusPct}%</span>
                     </p>
                   ) : (
-                    <p className="font-mono text-[9px] uppercase text-muted-foreground">за действие</p>
+                    <p className="font-mono text-[9px] uppercase text-muted-foreground">
+                      за действие
+                    </p>
                   )}
                 </div>
               </button>
@@ -2299,15 +2703,17 @@ function OffersTab({
                     <FileText className="size-3" />
                   </button>
                   <button
-                    onClick={() => { if (!locked) onCopyLink(o); }}
+                    onClick={() => {
+                      if (!locked) onCopyLink(o);
+                    }}
                     disabled={locked}
                     title={locked ? `Доступно с уровня «${TIER_NAME[o.minLevel]}»` : undefined}
                     className={`flex items-center gap-1 rounded-md px-3 py-2 text-[11px] font-bold uppercase tracking-wider transition-colors active:scale-95 ${
                       locked
                         ? "cursor-not-allowed bg-secondary text-muted-foreground"
                         : isCopied
-                        ? "bg-[color:var(--success)]/15 text-[color:var(--success)]"
-                        : "bg-foreground text-background"
+                          ? "bg-[color:var(--success)]/15 text-[color:var(--success)]"
+                          : "bg-foreground text-background"
                     }`}
                   >
                     {locked ? (
@@ -2337,7 +2743,9 @@ function OffersTab({
 function Stat({ label, value }: { label: string; value: string }) {
   return (
     <div>
-      <p className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground">{label}</p>
+      <p className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground">
+        {label}
+      </p>
       <p className="mt-0.5 font-mono text-xs font-bold tabular-nums">{value}</p>
     </div>
   );
@@ -2345,18 +2753,37 @@ function Stat({ label, value }: { label: string; value: string }) {
 
 /* ============================ Stats ============================ */
 
-
 /* ================================ Requests ================================ */
 
 const REQ_STATUS_META: Record<LinkRequestStatus, { label: string; tone: string; step: number }> = {
-  in_progress: { label: "В работе", tone: "bg-amber-500/15 text-amber-600 border-amber-500/30", step: 1 },
-  new:         { label: "В работе", tone: "bg-amber-500/15 text-amber-600 border-amber-500/30", step: 1 },
-  review:      { label: "В работе", tone: "bg-amber-500/15 text-amber-600 border-amber-500/30", step: 1 },
-  rejected:    { label: "В работе", tone: "bg-amber-500/15 text-amber-600 border-amber-500/30", step: 1 },
-  completed:   { label: "Выполнено", tone: "bg-sky-500/15 text-sky-600 border-sky-500/30", step: 2 },
-  approved:    { label: "Выполнено", tone: "bg-sky-500/15 text-sky-600 border-sky-500/30", step: 2 },
-  finished:    { label: "Завершено", tone: "bg-violet-500/15 text-violet-600 border-violet-500/30", step: 3 },
-  paid:        { label: "Оплачено", tone: "bg-emerald-500/15 text-emerald-600 border-emerald-500/30", step: 4 },
+  in_progress: {
+    label: "В работе",
+    tone: "bg-amber-500/15 text-amber-600 border-amber-500/30",
+    step: 1,
+  },
+  new: { label: "В работе", tone: "bg-amber-500/15 text-amber-600 border-amber-500/30", step: 1 },
+  review: {
+    label: "В работе",
+    tone: "bg-amber-500/15 text-amber-600 border-amber-500/30",
+    step: 1,
+  },
+  rejected: {
+    label: "В работе",
+    tone: "bg-amber-500/15 text-amber-600 border-amber-500/30",
+    step: 1,
+  },
+  completed: { label: "Выполнено", tone: "bg-sky-500/15 text-sky-600 border-sky-500/30", step: 2 },
+  approved: { label: "Выполнено", tone: "bg-sky-500/15 text-sky-600 border-sky-500/30", step: 2 },
+  finished: {
+    label: "Завершено",
+    tone: "bg-violet-500/15 text-violet-600 border-violet-500/30",
+    step: 3,
+  },
+  paid: {
+    label: "Оплачено",
+    tone: "bg-emerald-500/15 text-emerald-600 border-emerald-500/30",
+    step: 4,
+  },
 };
 
 function RequestsTab({ requests }: { requests: LinkRequest[] }) {
@@ -2415,7 +2842,9 @@ function RequestsTab({ requests }: { requests: LinkRequest[] }) {
     <div className="space-y-4">
       <div>
         <h2 className="text-xl font-black tracking-tight">Мои заявки</h2>
-        <p className="mt-0.5 text-xs text-muted-foreground">Отслеживайте статус по каждому офферу</p>
+        <p className="mt-0.5 text-xs text-muted-foreground">
+          Отслеживайте статус по каждому офферу
+        </p>
       </div>
 
       <div className="grid grid-cols-4 gap-2">
@@ -2427,7 +2856,9 @@ function RequestsTab({ requests }: { requests: LinkRequest[] }) {
         ].map((s) => (
           <div key={s.label} className="rounded-2xl border border-border bg-card p-2.5 text-center">
             <p className={`text-lg font-black leading-none ${s.tone}`}>{s.value}</p>
-            <p className="mt-1 text-[9px] font-bold uppercase tracking-wider text-muted-foreground">{s.label}</p>
+            <p className="mt-1 text-[9px] font-bold uppercase tracking-wider text-muted-foreground">
+              {s.label}
+            </p>
           </div>
         ))}
       </div>
@@ -2476,7 +2907,9 @@ function RequestsTab({ requests }: { requests: LinkRequest[] }) {
                     {r.offerTag} · {new Date(r.createdAt).toLocaleDateString("ru-RU")}
                   </p>
                 </div>
-                <span className={`shrink-0 rounded-full border px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider ${meta.tone}`}>
+                <span
+                  className={`shrink-0 rounded-full border px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider ${meta.tone}`}
+                >
                   {meta.label}
                 </span>
               </div>
@@ -2507,12 +2940,15 @@ function RequestsTab({ requests }: { requests: LinkRequest[] }) {
 
               {r.source && (
                 <p className="mt-2 text-[11px] text-muted-foreground">
-                  <span className="font-bold uppercase tracking-wider text-[9px]">Источник:</span> {r.source}
+                  <span className="font-bold uppercase tracking-wider text-[9px]">Источник:</span>{" "}
+                  {r.source}
                 </p>
               )}
               {r.note && (
                 <div className="mt-2 rounded-xl border border-border bg-secondary/30 px-3 py-2 text-[11px] leading-relaxed">
-                  <span className="font-bold uppercase tracking-wider text-[9px] text-muted-foreground">Комментарий: </span>
+                  <span className="font-bold uppercase tracking-wider text-[9px] text-muted-foreground">
+                    Комментарий:{" "}
+                  </span>
                   {r.note}
                 </div>
               )}
@@ -2522,10 +2958,14 @@ function RequestsTab({ requests }: { requests: LinkRequest[] }) {
                   onClick={() => copy(r)}
                   className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl border border-border bg-secondary/40 px-3 py-2 text-xs font-bold uppercase tracking-wider transition hover:border-primary hover:bg-primary/10"
                 >
-                  {copiedId === r.id ? <Check className="size-3.5 text-emerald-500" /> : <Copy className="size-3.5" />}
+                  {copiedId === r.id ? (
+                    <Check className="size-3.5 text-emerald-500" />
+                  ) : (
+                    <Copy className="size-3.5" />
+                  )}
                   {copiedId === r.id ? "Скопировано" : "Скопировать ссылку"}
                 </button>
-              ) : (s === "finished" || s === "paid") ? (
+              ) : s === "finished" || s === "paid" ? (
                 <div className="mt-3 flex items-center justify-center gap-2 rounded-xl border border-dashed border-border px-3 py-2 text-[11px] text-muted-foreground">
                   <Lock className="size-3.5" />
                   Заявка завершена — ссылка недоступна
@@ -2546,10 +2986,15 @@ function RequestsTab({ requests }: { requests: LinkRequest[] }) {
 
 /* ================================ Stats ================================ */
 
-
-
-
-function StatsTab({ conversions, offers, requests }: { conversions: Conversion[]; offers: Offer[]; requests: LinkRequest[] }) {
+function StatsTab({
+  conversions,
+  offers,
+  requests,
+}: {
+  conversions: Conversion[];
+  offers: Offer[];
+  requests: LinkRequest[];
+}) {
   const [period, setPeriod] = useState<(typeof statsPeriods)[number]["id"]>("7d");
   const days = statsPeriods.find((p) => p.id === period)!.days;
 
@@ -2561,32 +3006,45 @@ function StatsTab({ conversions, offers, requests }: { conversions: Conversion[]
   }, [days]);
 
   const scoped = useMemo(
-    () => conversions.filter((c) => {
-      const d = new Date(c.createdAt);
-      return !isNaN(d.getTime()) && d >= cutoff;
-    }),
+    () =>
+      conversions.filter((c) => {
+        const d = new Date(c.createdAt);
+        return !isNaN(d.getTime()) && d >= cutoff;
+      }),
     [conversions, cutoff],
   );
 
   const scopedRequests = useMemo(
-    () => requests.filter((r) => {
-      const d = new Date(r.createdAt);
-      return !isNaN(d.getTime()) && d >= cutoff;
-    }),
+    () =>
+      requests.filter((r) => {
+        const d = new Date(r.createdAt);
+        return !isNaN(d.getTime()) && d >= cutoff;
+      }),
     [requests, cutoff],
   );
 
   const income = scoped.filter((c) => c.status === "ok").reduce((s, c) => s + c.amount, 0);
   const convs = scoped.filter((c) => c.status === "ok").length;
-  const totalOrders = useMemo(() => scopedRequests.reduce((s, r) => s + (r.ordersCount || 0), 0), [scopedRequests]);
+  const totalOrders = useMemo(
+    () => scopedRequests.reduce((s, r) => s + (r.ordersCount || 0), 0),
+    [scopedRequests],
+  );
   const epc = convs > 0 ? (income / convs).toFixed(0) : "0";
   // Real conversion rate = ok conversions / requests created in the period
   const cr = scopedRequests.length > 0 ? (convs / scopedRequests.length) * 100 : 0;
   const activeOffers = useMemo(
-    () => new Set(scopedRequests.filter((r) => r.status !== "paid" && r.status !== "finished").map((r) => r.offerId)).size,
+    () =>
+      new Set(
+        scopedRequests
+          .filter((r) => r.status !== "paid" && r.status !== "finished")
+          .map((r) => r.offerId),
+      ).size,
     [scopedRequests],
   );
-  const paidRequests = useMemo(() => scopedRequests.filter((r) => r.status === "paid").length, [scopedRequests]);
+  const paidRequests = useMemo(
+    () => scopedRequests.filter((r) => r.status === "paid").length,
+    [scopedRequests],
+  );
 
   // Bars: bucket scoped income into up to 7 evenly-spaced buckets, оканчивая сегодняшним днём.
   const bucketCount = Math.min(7, days);
@@ -2611,7 +3069,11 @@ function StatsTab({ conversions, offers, requests }: { conversions: Conversion[]
     for (let i = bucketCount - 1; i >= 0; i--) {
       const d = new Date();
       d.setDate(d.getDate() - i * bucketSize);
-      arr.push(bucketSize === 1 ? weekLabels[(d.getDay() + 6) % 7] : `${d.getDate()}.${String(d.getMonth() + 1).padStart(2, "0")}`);
+      arr.push(
+        bucketSize === 1
+          ? weekLabels[(d.getDay() + 6) % 7]
+          : `${d.getDate()}.${String(d.getMonth() + 1).padStart(2, "0")}`,
+      );
     }
     return arr;
   }, [days, bucketCount]);
@@ -2621,9 +3083,24 @@ function StatsTab({ conversions, offers, requests }: { conversions: Conversion[]
     // Seed with request-derived clicks (each link_request ≈ one link generation)
     scopedRequests.forEach((r) => {
       const off: Offer = offers.find((o) => o.id === r.offerId) ?? {
-        id: r.offerId, tag: "×", name: r.offerName, category: "—", payout: "",
-        epc: 0, cr: 0, advertiser: "—", geo: [], hold: "—", goal: "—",
-        description: "", requirements: [], allowed: [], denied: [], landing: "", cityPayouts: [], minLevel: "start",
+        id: r.offerId,
+        tag: "×",
+        name: r.offerName,
+        category: "—",
+        payout: "",
+        epc: 0,
+        cr: 0,
+        advertiser: "—",
+        geo: [],
+        hold: "—",
+        goal: "—",
+        description: "",
+        requirements: [],
+        allowed: [],
+        denied: [],
+        landing: "",
+        cityPayouts: [],
+        minLevel: "start",
       };
       const cur = m.get(r.offerId) ?? { offer: off, conv: 0, income: 0, reqCount: 0 };
       cur.reqCount += 1;
@@ -2632,9 +3109,24 @@ function StatsTab({ conversions, offers, requests }: { conversions: Conversion[]
     scoped.forEach((c) => {
       if (c.status === "rejected") return;
       const off: Offer = offers.find((o) => o.id === c.offerId) ?? {
-        id: c.offerId, tag: "×", name: c.offerName, category: "—", payout: "",
-        epc: 0, cr: 0, advertiser: "—", geo: [], hold: "—", goal: "—",
-        description: "", requirements: [], allowed: [], denied: [], landing: "", cityPayouts: [], minLevel: "start",
+        id: c.offerId,
+        tag: "×",
+        name: c.offerName,
+        category: "—",
+        payout: "",
+        epc: 0,
+        cr: 0,
+        advertiser: "—",
+        geo: [],
+        hold: "—",
+        goal: "—",
+        description: "",
+        requirements: [],
+        allowed: [],
+        denied: [],
+        landing: "",
+        cityPayouts: [],
+        minLevel: "start",
       };
       const cur = m.get(c.offerId) ?? { offer: off, conv: 0, income: 0, reqCount: 0 };
       cur.conv += 1;
@@ -2677,7 +3169,6 @@ function StatsTab({ conversions, offers, requests }: { conversions: Conversion[]
         </div>
       </section>
 
-
       <section className="animate-in-up" style={{ animationDelay: "60ms" }}>
         {(() => {
           const first = bars.find((v) => v > 0) ?? 0;
@@ -2699,7 +3190,9 @@ function StatsTab({ conversions, offers, requests }: { conversions: Conversion[]
             return { x, y };
           });
           const linePath = points.length
-            ? points.map((p, i) => `${i === 0 ? "M" : "L"}${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(" ")
+            ? points
+                .map((p, i) => `${i === 0 ? "M" : "L"}${p.x.toFixed(1)},${p.y.toFixed(1)}`)
+                .join(" ")
             : "";
           const areaPath = points.length
             ? `${linePath} L${points[points.length - 1].x.toFixed(1)},${H - PAD_Y} L${points[0].x.toFixed(1)},${H - PAD_Y} Z`
@@ -2711,9 +3204,13 @@ function StatsTab({ conversions, offers, requests }: { conversions: Conversion[]
                 <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
                   Динамика дохода
                 </span>
-                <span className="flex items-center gap-1 font-mono text-[10px]" style={{ color: trendColor }}>
+                <span
+                  className="flex items-center gap-1 font-mono text-[10px]"
+                  style={{ color: trendColor }}
+                >
                   <TrendIcon className="size-3" />
-                  {isUp ? "+" : ""}{pct.toFixed(1)}% • Σ {fmt(income)} ₽
+                  {isUp ? "+" : ""}
+                  {pct.toFixed(1)}% • Σ {fmt(income)} ₽
                 </span>
               </div>
               <div className="relative h-28 w-full">
@@ -2756,7 +3253,9 @@ function StatsTab({ conversions, offers, requests }: { conversions: Conversion[]
                   <span
                     key={`${l}-${i}`}
                     className={`flex-1 text-center font-mono text-[9px] uppercase ${
-                      bars[i] === maxBar && bars[i] > 0 ? "font-bold text-foreground" : "text-muted-foreground"
+                      bars[i] === maxBar && bars[i] > 0
+                        ? "font-bold text-foreground"
+                        : "text-muted-foreground"
                     }`}
                   >
                     {l}
@@ -2768,17 +3267,20 @@ function StatsTab({ conversions, offers, requests }: { conversions: Conversion[]
         })()}
       </section>
 
-
       <section className="animate-in-up" style={{ animationDelay: "120ms" }}>
         <div className="mb-3 flex items-center justify-between">
           <h3 className="text-[11px] font-bold uppercase tracking-[0.1em] text-muted-foreground">
             По офферам
           </h3>
-          <span className="font-mono text-[10px] text-muted-foreground">{activeOffers} активных</span>
+          <span className="font-mono text-[10px] text-muted-foreground">
+            {activeOffers} активных
+          </span>
         </div>
         <div className="divide-y divide-border overflow-hidden rounded-lg border border-border bg-card">
           {byOffer.length === 0 && (
-            <div className="p-4 text-center text-[11px] text-muted-foreground">Пока нет данных за период</div>
+            <div className="p-4 text-center text-[11px] text-muted-foreground">
+              Пока нет данных за период
+            </div>
           )}
           {byOffer.map((row) => {
             const rowCr = row.reqCount > 0 ? (row.conv / row.reqCount) * 100 : 0;
@@ -2801,7 +3303,6 @@ function StatsTab({ conversions, offers, requests }: { conversions: Conversion[]
               </div>
             );
           })}
-
         </div>
       </section>
 
@@ -2817,11 +3318,14 @@ function StatsTab({ conversions, offers, requests }: { conversions: Conversion[]
             return (
               <div key={c.id} className="flex items-start justify-between p-3">
                 <div className="min-w-0 flex-1">
-                  <p className="truncate text-[11px] font-bold">{c.time} • {c.offerName}</p>
+                  <p className="truncate text-[11px] font-bold">
+                    {c.time} • {c.offerName}
+                  </p>
                   <p className="font-mono text-[10px] text-muted-foreground">ID: {c.id}</p>
                   {hasBonus && (
                     <p className="mt-1 font-mono text-[10px] tabular-nums text-[color:var(--success)]">
-                      База {fmt(Number(c.baseAmount))} ₽ + бонус уровня {c.bonusPct}% (+{fmt(Number(c.bonusAmount))} ₽)
+                      База {fmt(Number(c.baseAmount))} ₽ + бонус уровня {c.bonusPct}% (+
+                      {fmt(Number(c.bonusAmount))} ₽)
                     </p>
                   )}
                   {!hasBonus && c.baseAmount != null && (
@@ -2861,7 +3365,9 @@ function KpiRow({ label, value, accent }: { label: string; value: string; accent
   return (
     <div className="bg-card p-3">
       <p className="text-[10px] font-medium uppercase text-muted-foreground">{label}</p>
-      <p className={`mt-1 font-mono text-sm font-bold tabular-nums ${accent ? "text-primary" : ""}`}>
+      <p
+        className={`mt-1 font-mono text-sm font-bold tabular-nums ${accent ? "text-primary" : ""}`}
+      >
         {value}
       </p>
     </div>
@@ -3079,13 +3585,11 @@ function BankSheet({
               Способ вывода
             </p>
             <div className="grid grid-cols-3 gap-px overflow-hidden rounded-lg border border-border bg-border">
-              {(
-                [
-                  { id: "card" as const, label: "Карта" },
-                  { id: "sbp" as const, label: "СБП" },
-                  { id: "account" as const, label: "Счёт" },
-                ]
-              ).map((m) => (
+              {[
+                { id: "card" as const, label: "Карта" },
+                { id: "sbp" as const, label: "СБП" },
+                { id: "account" as const, label: "Счёт" },
+              ].map((m) => (
                 <button
                   key={m.id}
                   onClick={() => setDraft({ ...draft, method: m.id })}
@@ -3175,7 +3679,8 @@ function BankSheet({
           )}
 
           <p className="rounded-md border border-border bg-secondary/50 p-3 text-[10px] leading-relaxed text-muted-foreground">
-            Реквизиты используются только для выплаты вознаграждений и хранятся в зашифрованном виде.
+            Реквизиты используются только для выплаты вознаграждений и хранятся в зашифрованном
+            виде.
           </p>
         </div>
 
@@ -3265,9 +3770,8 @@ function PayoutSheet({
 
   const fee = Math.round((amount * level.feePct) / 100);
   const net = Math.max(0, amount - fee);
-  const eta = level.payoutHours >= 24
-    ? `${Math.round(level.payoutHours / 24)} дн`
-    : `${level.payoutHours} ч`;
+  const eta =
+    level.payoutHours >= 24 ? `${Math.round(level.payoutHours / 24)} дн` : `${level.payoutHours} ч`;
 
   const quick = [Math.floor(available * 0.25), Math.floor(available * 0.5), available];
 
@@ -3291,8 +3795,12 @@ function PayoutSheet({
         </div>
         <div className="space-y-4 p-4">
           {/* Level conditions banner */}
-          <div className={`flex items-center gap-3 rounded-lg border ${level.ring} ${level.bg} px-3 py-2.5`}>
-            <div className={`grid size-8 shrink-0 place-items-center rounded-md bg-background/60 ${level.color}`}>
+          <div
+            className={`flex items-center gap-3 rounded-lg border ${level.ring} ${level.bg} px-3 py-2.5`}
+          >
+            <div
+              className={`grid size-8 shrink-0 place-items-center rounded-md bg-background/60 ${level.color}`}
+            >
               <level.Icon className="size-4" />
             </div>
             <div className="min-w-0 flex-1">
@@ -3313,7 +3821,9 @@ function PayoutSheet({
               <Landmark className="size-4 text-muted-foreground" />
               <div>
                 <p className="text-xs font-bold">{bankLabel(bank)}</p>
-                <p className="font-mono text-[10px] text-muted-foreground">{bank.holder || bankMethodLabel(bank)}</p>
+                <p className="font-mono text-[10px] text-muted-foreground">
+                  {bank.holder || bankMethodLabel(bank)}
+                </p>
               </div>
             </div>
           </div>
@@ -3321,9 +3831,7 @@ function PayoutSheet({
           <div>
             <p className="mb-1.5 flex items-baseline justify-between text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
               <span>Сумма</span>
-              <span className="font-mono text-muted-foreground">
-                доступно {fmt(available)} ₽
-              </span>
+              <span className="font-mono text-muted-foreground">доступно {fmt(available)} ₽</span>
             </p>
             <div className="flex items-center gap-2 rounded-md border border-border bg-card px-3 py-3">
               <input
@@ -3357,11 +3865,7 @@ function PayoutSheet({
               value={fee > 0 ? `−${fmt(fee)} ₽` : "0 ₽"}
               tone={fee > 0 ? "warn" : "success"}
             />
-            <SummaryRow
-              label="ETA зачисления"
-              value={eta}
-              tone="primary"
-            />
+            <SummaryRow label="ETA зачисления" value={eta} tone="primary" />
             <div className="mt-2 border-t border-border pt-2">
               <SummaryRow label="К зачислению" value={`${fmt(net)} ₽`} strong />
             </div>
@@ -3411,7 +3915,9 @@ function SummaryRow({
       <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
         {label}
       </span>
-      <span className={`font-mono tabular-nums ${strong ? "text-sm font-bold" : "text-[11px] font-bold"} ${cls}`}>
+      <span
+        className={`font-mono tabular-nums ${strong ? "text-sm font-bold" : "text-[11px] font-bold"} ${cls}`}
+      >
         {value}
       </span>
     </div>
@@ -3439,7 +3945,7 @@ function NotificationsSheet({
 }) {
   const filtered = filter === "all" ? notifs : notifs.filter((n) => n.kind === filter);
   const [selectedId, setSelectedId] = useState<string | null>(null);
-  const selected = selectedId ? notifs.find((n) => n.id === selectedId) ?? null : null;
+  const selected = selectedId ? (notifs.find((n) => n.id === selectedId) ?? null) : null;
   const openNotif = (n: Notification) => {
     setSelectedId(n.id);
     if (!n.read) onToggleRead(n.id);
@@ -3466,7 +3972,6 @@ function NotificationsSheet({
         onClick={(e) => e.stopPropagation()}
         className="animate-in-up relative flex max-h-[92vh] w-full max-w-[440px] flex-col overflow-hidden rounded-t-2xl border border-border bg-background sm:rounded-2xl"
       >
-
         <div className="flex items-center justify-between border-b border-border px-4 py-3">
           <div>
             <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
@@ -3490,15 +3995,13 @@ function NotificationsSheet({
 
         <div className="flex items-center justify-between gap-2 border-b border-border px-4 py-2">
           <div className="flex gap-1 overflow-x-auto">
-            {(
-              [
-                { id: "all" as const, label: "Все" },
-                { id: "accrual" as const, label: "Начисления" },
-                { id: "payout" as const, label: "Выплаты" },
-                { id: "offer" as const, label: "Офферы" },
-                { id: "levelup" as const, label: "Уровни" },
-              ]
-            ).map((t) => (
+            {[
+              { id: "all" as const, label: "Все" },
+              { id: "accrual" as const, label: "Начисления" },
+              { id: "payout" as const, label: "Выплаты" },
+              { id: "offer" as const, label: "Офферы" },
+              { id: "levelup" as const, label: "Уровни" },
+            ].map((t) => (
               <button
                 key={t.id}
                 onClick={() => setFilter(t.id)}
@@ -3535,7 +4038,9 @@ function NotificationsSheet({
                   n.read ? "opacity-70" : ""
                 }`}
               >
-                <div className={`grid size-9 shrink-0 place-items-center rounded-lg ${meta.iconBg}`}>
+                <div
+                  className={`grid size-9 shrink-0 place-items-center rounded-lg ${meta.iconBg}`}
+                >
                   <meta.Icon className={`size-4 ${meta.iconColor}`} />
                 </div>
                 <div className="min-w-0 flex-1">
@@ -3550,7 +4055,9 @@ function NotificationsSheet({
                 </div>
                 <div className="shrink-0 text-right">
                   {n.amount && (
-                    <p className="font-mono text-xs font-bold text-[color:var(--success)]">{n.amount}</p>
+                    <p className="font-mono text-xs font-bold text-[color:var(--success)]">
+                      {n.amount}
+                    </p>
                   )}
                   {n.status && n.kind === "payout" && (
                     <span
@@ -3601,7 +4108,9 @@ function NotificationsSheet({
             </div>
             <div className="flex-1 overflow-y-auto p-5">
               <div className="flex items-start gap-3">
-                <div className={`grid size-12 shrink-0 place-items-center rounded-xl ${selectedMeta.iconBg}`}>
+                <div
+                  className={`grid size-12 shrink-0 place-items-center rounded-xl ${selectedMeta.iconBg}`}
+                >
                   <selectedMeta.Icon className={`size-5 ${selectedMeta.iconColor}`} />
                 </div>
                 <div className="min-w-0 flex-1">
@@ -3725,16 +4234,16 @@ function LevelsSheet({
         {/* Current */}
         <div className={`border-b border-border ${info.current.bg} px-4 py-4`}>
           <div className="flex items-center gap-3">
-            <div className={`grid size-12 place-items-center rounded-xl bg-background border ${info.current.ring} ${info.current.color}`}>
+            <div
+              className={`grid size-12 place-items-center rounded-xl bg-background border ${info.current.ring} ${info.current.color}`}
+            >
               <info.current.Icon className="size-6" />
             </div>
             <div className="min-w-0 flex-1">
               <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
                 Текущий уровень
               </p>
-              <p className={`text-base font-bold ${info.current.color}`}>
-                {info.current.name}
-              </p>
+              <p className={`text-base font-bold ${info.current.color}`}>{info.current.name}</p>
               <p className="text-[11px] text-muted-foreground">{info.current.tagline}</p>
             </div>
           </div>
@@ -3751,9 +4260,7 @@ function LevelsSheet({
                 />
               </div>
               <div className="mt-2 flex items-center justify-between text-[10px]">
-                <span className="font-mono text-muted-foreground">
-                  {fmt(earned)} ₽ заработано
-                </span>
+                <span className="font-mono text-muted-foreground">{fmt(earned)} ₽ заработано</span>
                 <span className={`flex items-center gap-1 font-bold ${info.next.color}`}>
                   <info.next.Icon className="size-3" />
                   ещё {fmt(info.remaining)} ₽ до «{info.next.name}»
@@ -3772,7 +4279,11 @@ function LevelsSheet({
           {(
             [
               { id: "all", label: "Все уровни", Icon: Trophy },
-              { id: "history", label: `История${history.length ? ` · ${history.length}` : ""}`, Icon: Clock },
+              {
+                id: "history",
+                label: `История${history.length ? ` · ${history.length}` : ""}`,
+                Icon: Clock,
+              },
             ] as const
           ).map((t) => {
             const activeTab = tab === t.id;
@@ -3796,108 +4307,115 @@ function LevelsSheet({
         {/* Content */}
         <div className="flex-1 overflow-y-auto p-4">
           {tab === "all" && (
-          <div className="space-y-3">
-            {LEVELS.map((lv, i) => {
-              const isCurrent = i === info.idx;
-              const isReached = i <= info.idx;
-              const isLocked = i > info.idx;
-              return (
-                <div
-                  key={lv.id}
-                  className={`overflow-hidden rounded-xl border ${
-                    isCurrent ? `${lv.ring} shadow-sm` : "border-border"
-                  } ${isLocked ? "opacity-60" : ""} bg-card`}
-                >
-                  {/* Header row */}
-                  <div className={`flex items-center gap-3 border-b border-border ${isCurrent ? lv.bg : "bg-secondary/30"} px-4 py-3`}>
-                    <div className={`grid size-10 shrink-0 place-items-center rounded-lg bg-background border ${lv.ring} ${lv.color}`}>
-                      <lv.Icon className="size-5" />
-                    </div>
-                    <div className="min-w-0 flex-1">
-                      <div className="flex items-center gap-2">
-                        <p className={`text-sm font-bold ${lv.color}`}>{lv.name}</p>
-                        {isCurrent && (
-                          <span className="rounded-full bg-foreground px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-background">
-                            текущий
-                          </span>
-                        )}
-                        {isReached && !isCurrent && (
-                          <CheckCircle2 className="size-3.5 text-[color:var(--success)]" />
-                        )}
-                        {isLocked && <Lock className="size-3 text-muted-foreground" />}
+            <div className="space-y-3">
+              {LEVELS.map((lv, i) => {
+                const isCurrent = i === info.idx;
+                const isReached = i <= info.idx;
+                const isLocked = i > info.idx;
+                return (
+                  <div
+                    key={lv.id}
+                    className={`overflow-hidden rounded-xl border ${
+                      isCurrent ? `${lv.ring} shadow-sm` : "border-border"
+                    } ${isLocked ? "opacity-60" : ""} bg-card`}
+                  >
+                    {/* Header row */}
+                    <div
+                      className={`flex items-center gap-3 border-b border-border ${isCurrent ? lv.bg : "bg-secondary/30"} px-4 py-3`}
+                    >
+                      <div
+                        className={`grid size-10 shrink-0 place-items-center rounded-lg bg-background border ${lv.ring} ${lv.color}`}
+                      >
+                        <lv.Icon className="size-5" />
                       </div>
-                      <p className="text-[10px] text-muted-foreground">{lv.tagline}</p>
-                    </div>
-                    <div className="shrink-0 text-right">
-                      <p className="font-mono text-[10px] uppercase text-muted-foreground">
-                        от
-                      </p>
-                      <p className="font-mono text-xs font-bold tabular-nums">
-                        {fmt(lv.minEarned)} ₽
-                      </p>
-                    </div>
-                  </div>
-
-                  {/* Quick stats */}
-                  <div className="grid grid-cols-2 gap-px bg-border">
-                    <div className="bg-card px-4 py-2">
-                      <p className="text-[9px] font-bold uppercase tracking-wider text-muted-foreground">
-                        Бонус к ставкам
-                      </p>
-                      <p className={`font-mono text-xs font-bold ${lv.bonusPct > 0 ? lv.color : ""}`}>
-                        {lv.bonusPct > 0 ? `+${lv.bonusPct}%` : "—"}
-                      </p>
-                    </div>
-                    <div className="bg-card px-4 py-2">
-                      <p className="text-[9px] font-bold uppercase tracking-wider text-muted-foreground">
-                        Скорость выплат
-                      </p>
-                      <p className="font-mono text-xs font-bold">
-                        {lv.payoutHours >= 24
-                          ? `${Math.round(lv.payoutHours / 24)} дн`
-                          : `${lv.payoutHours} ч`}
-                      </p>
-                    </div>
-                  </div>
-
-                  {/* Perks */}
-                  <ul className="divide-y divide-border">
-                    {lv.perks.map((p, pi) => (
-                      <li key={pi} className="flex items-start gap-3 px-4 py-2.5">
-                        <div className={`mt-0.5 grid size-6 shrink-0 place-items-center rounded ${lv.bg} ${lv.color}`}>
-                          <p.Icon className="size-3" />
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center gap-2">
+                          <p className={`text-sm font-bold ${lv.color}`}>{lv.name}</p>
+                          {isCurrent && (
+                            <span className="rounded-full bg-foreground px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-background">
+                              текущий
+                            </span>
+                          )}
+                          {isReached && !isCurrent && (
+                            <CheckCircle2 className="size-3.5 text-[color:var(--success)]" />
+                          )}
+                          {isLocked && <Lock className="size-3 text-muted-foreground" />}
                         </div>
-                        <div className="min-w-0 flex-1">
-                          <p className="text-[11px] font-bold leading-tight">{p.title}</p>
-                          <p className="text-[10px] leading-snug text-muted-foreground">
-                            {p.desc}
-                          </p>
-                        </div>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              );
-            })}
-          </div>
+                        <p className="text-[10px] text-muted-foreground">{lv.tagline}</p>
+                      </div>
+                      <div className="shrink-0 text-right">
+                        <p className="font-mono text-[10px] uppercase text-muted-foreground">от</p>
+                        <p className="font-mono text-xs font-bold tabular-nums">
+                          {fmt(lv.minEarned)} ₽
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Quick stats */}
+                    <div className="grid grid-cols-2 gap-px bg-border">
+                      <div className="bg-card px-4 py-2">
+                        <p className="text-[9px] font-bold uppercase tracking-wider text-muted-foreground">
+                          Бонус к ставкам
+                        </p>
+                        <p
+                          className={`font-mono text-xs font-bold ${lv.bonusPct > 0 ? lv.color : ""}`}
+                        >
+                          {lv.bonusPct > 0 ? `+${lv.bonusPct}%` : "—"}
+                        </p>
+                      </div>
+                      <div className="bg-card px-4 py-2">
+                        <p className="text-[9px] font-bold uppercase tracking-wider text-muted-foreground">
+                          Скорость выплат
+                        </p>
+                        <p className="font-mono text-xs font-bold">
+                          {lv.payoutHours >= 24
+                            ? `${Math.round(lv.payoutHours / 24)} дн`
+                            : `${lv.payoutHours} ч`}
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Perks */}
+                    <ul className="divide-y divide-border">
+                      {lv.perks.map((p, pi) => (
+                        <li key={pi} className="flex items-start gap-3 px-4 py-2.5">
+                          <div
+                            className={`mt-0.5 grid size-6 shrink-0 place-items-center rounded ${lv.bg} ${lv.color}`}
+                          >
+                            <p.Icon className="size-3" />
+                          </div>
+                          <div className="min-w-0 flex-1">
+                            <p className="text-[11px] font-bold leading-tight">{p.title}</p>
+                            <p className="text-[10px] leading-snug text-muted-foreground">
+                              {p.desc}
+                            </p>
+                          </div>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                );
+              })}
+            </div>
           )}
 
           {tab === "all" && (
-          <p className="mt-4 rounded-lg border border-border bg-secondary/40 p-3 text-center text-[10px] leading-relaxed text-muted-foreground">
-            Уровень пересчитывается автоматически по общему заработку.
-            Бонусы применяются к новым конверсиям, ускоренные выплаты — к новым заявкам.
-          </p>
+            <p className="mt-4 rounded-lg border border-border bg-secondary/40 p-3 text-center text-[10px] leading-relaxed text-muted-foreground">
+              Уровень пересчитывается автоматически по общему заработку. Бонусы применяются к новым
+              конверсиям, ускоренные выплаты — к новым заявкам.
+            </p>
           )}
 
-          {tab === "history" && (
-            historySorted.length === 0 ? (
+          {tab === "history" &&
+            (historySorted.length === 0 ? (
               <div className="rounded-xl border border-dashed border-border bg-secondary/30 p-6 text-center">
                 <Trophy className="mx-auto size-6 text-muted-foreground" />
                 <p className="mt-2 text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
                   Пока нет событий
                 </p>
                 <p className="mt-1 text-[10px] leading-snug text-muted-foreground">
-                  Как только вы достигнете нового уровня — этап появится здесь с датой и списком перков.
+                  Как только вы достигнете нового уровня — этап появится здесь с датой и списком
+                  перков.
                 </p>
               </div>
             ) : (
@@ -3912,9 +4430,15 @@ function LevelsSheet({
                       >
                         <span className="size-1.5 rounded-full bg-current" />
                       </span>
-                      <div className={`overflow-hidden rounded-xl border ${isLatest ? lv.ring : "border-border"} bg-card`}>
-                        <div className={`flex items-center gap-3 border-b border-border ${isLatest ? lv.bg : "bg-secondary/30"} px-3 py-2`}>
-                          <div className={`grid size-9 shrink-0 place-items-center rounded-lg bg-background border ${lv.ring} ${lv.color}`}>
+                      <div
+                        className={`overflow-hidden rounded-xl border ${isLatest ? lv.ring : "border-border"} bg-card`}
+                      >
+                        <div
+                          className={`flex items-center gap-3 border-b border-border ${isLatest ? lv.bg : "bg-secondary/30"} px-3 py-2`}
+                        >
+                          <div
+                            className={`grid size-9 shrink-0 place-items-center rounded-lg bg-background border ${lv.ring} ${lv.color}`}
+                          >
                             <lv.Icon className="size-4" />
                           </div>
                           <div className="min-w-0 flex-1">
@@ -3950,7 +4474,9 @@ function LevelsSheet({
                         <ul className="divide-y divide-border">
                           {lv.perks.map((p, pi) => (
                             <li key={pi} className="flex items-start gap-2.5 px-3 py-2">
-                              <div className={`mt-0.5 grid size-5 shrink-0 place-items-center rounded ${lv.bg} ${lv.color}`}>
+                              <div
+                                className={`mt-0.5 grid size-5 shrink-0 place-items-center rounded ${lv.bg} ${lv.color}`}
+                              >
                                 <p.Icon className="size-3" />
                               </div>
                               <p className="text-[11px] leading-tight">
@@ -3965,8 +4491,7 @@ function LevelsSheet({
                   );
                 })}
               </ol>
-            )
-          )}
+            ))}
         </div>
       </div>
     </div>
@@ -3999,7 +4524,9 @@ function OfferDetailSheet({
   return (
     <div
       className="fixed inset-0 z-50 flex items-end justify-center bg-foreground/40 backdrop-blur-sm sm:items-center"
-      onClick={(e) => { if (e.currentTarget === e.target) onClose(); }}
+      onClick={(e) => {
+        if (e.currentTarget === e.target) onClose();
+      }}
     >
       <div className="animate-in-up flex max-h-[92vh] w-full max-w-[440px] flex-col overflow-hidden rounded-t-2xl border border-border bg-background sm:rounded-2xl">
         {/* Header */}
@@ -4028,7 +4555,11 @@ function OfferDetailSheet({
         {/* Scrollable body */}
         <div className="flex-1 space-y-5 overflow-y-auto px-4 py-4">
           {offer.image && (
-            <img src={offer.image} alt={offer.name} className="h-40 w-full rounded-xl border border-border object-cover" />
+            <img
+              src={offer.image}
+              alt={offer.name}
+              className="h-40 w-full rounded-xl border border-border object-cover"
+            />
           )}
           {/* Payout hero */}
           <div className="rounded-xl border border-border bg-gradient-to-br from-secondary/60 to-transparent p-4">
@@ -4037,12 +4568,16 @@ function OfferDetailSheet({
                 Выплата за конверсию
               </p>
               {hasBoost && (
-                <span className={`flex items-center gap-1 rounded-full border ${level.ring} ${level.bg} px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider ${level.color}`}>
+                <span
+                  className={`flex items-center gap-1 rounded-full border ${level.ring} ${level.bg} px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider ${level.color}`}
+                >
                   <level.Icon className="size-2.5" /> +{level.bonusPct}% • {level.name}
                 </span>
               )}
             </div>
-            <p className="mt-1 font-mono text-2xl font-bold tabular-nums">{boosted.boostedPayout}</p>
+            <p className="mt-1 font-mono text-2xl font-bold tabular-nums">
+              {boosted.boostedPayout}
+            </p>
             {hasBoost && (
               <p className="mt-0.5 font-mono text-[10px] text-muted-foreground">
                 базово: <span className="line-through">{offer.payout}</span>
@@ -4060,7 +4595,11 @@ function OfferDetailSheet({
             <MetaCell Icon={Target} label="Цель" value={offer.goal} />
             <MetaCell Icon={Globe} label="Гео" value={offer.geo.join(" • ")} />
             <MetaCell Icon={Timer} label="Холд" value={offer.hold} />
-            <MetaCell Icon={ShieldCheck} label="Статус" value={offer.landing ? "Ссылка готова" : "Скоро"} />
+            <MetaCell
+              Icon={ShieldCheck}
+              label="Статус"
+              value={offer.landing ? "Ссылка готова" : "Скоро"}
+            />
           </div>
 
           {/* City payouts */}
@@ -4071,7 +4610,10 @@ function OfferDetailSheet({
               </h4>
               <div className="grid grid-cols-2 gap-1.5">
                 {offer.cityPayouts.map((c, i) => (
-                  <div key={i} className="flex items-center justify-between rounded-lg border border-border bg-secondary/40 px-2.5 py-1.5">
+                  <div
+                    key={i}
+                    className="flex items-center justify-between rounded-lg border border-border bg-secondary/40 px-2.5 py-1.5"
+                  >
                     <span className="truncate text-[12px] font-medium">{c.city}</span>
                     <span className="font-mono text-[12px] font-bold tabular-nums">
                       {c.amount.toLocaleString("ru-RU")} ₽
@@ -4081,8 +4623,6 @@ function OfferDetailSheet({
               </div>
             </section>
           )}
-
-
 
           {/* Description */}
           <section>
@@ -4115,7 +4655,10 @@ function OfferDetailSheet({
               </h5>
               <div className="flex flex-wrap gap-1">
                 {offer.allowed.map((a) => (
-                  <span key={a} className="rounded bg-[color:var(--success)]/10 px-2 py-0.5 text-[10px] font-medium text-[color:var(--success)]">
+                  <span
+                    key={a}
+                    className="rounded bg-[color:var(--success)]/10 px-2 py-0.5 text-[10px] font-medium text-[color:var(--success)]"
+                  >
                     {a}
                   </span>
                 ))}
@@ -4127,7 +4670,10 @@ function OfferDetailSheet({
               </h5>
               <div className="flex flex-wrap gap-1">
                 {offer.denied.map((a) => (
-                  <span key={a} className="rounded bg-destructive/10 px-2 py-0.5 text-[10px] font-medium text-destructive">
+                  <span
+                    key={a}
+                    className="rounded bg-destructive/10 px-2 py-0.5 text-[10px] font-medium text-destructive"
+                  >
                     {a}
                   </span>
                 ))}
@@ -4156,10 +4702,10 @@ function OfferDetailSheet({
               ))}
             </div>
             <p className="mt-2 text-[10px] text-muted-foreground">
-              Копирование ссылки автоматически регистрирует заказ — администратор обрабатывает его в системе.
+              Копирование ссылки автоматически регистрирует заказ — администратор обрабатывает его в
+              системе.
             </p>
           </section>
-
         </div>
 
         {/* Footer CTA */}
@@ -4179,7 +4725,8 @@ function OfferDetailSheet({
                 </>
               ) : (
                 <>
-                  <Copy className="size-3.5" /> {linked ? "Скопировать ссылку ещё раз" : "Скопировать ссылку"}
+                  <Copy className="size-3.5" />{" "}
+                  {linked ? "Скопировать ссылку ещё раз" : "Скопировать ссылку"}
                 </>
               )}
             </button>
@@ -4206,4 +4753,3 @@ function MetaCell({ Icon, label, value }: { Icon: LucideIcon; label: string; val
     </div>
   );
 }
-
