@@ -75,6 +75,9 @@ export const getLandingStats = createServerFn({ method: "GET" }).handler(
     });
 
     const { data, error } = await supa.rpc("get_landing_stats");
+    if (error) {
+      console.error("[landing-stats] rpc get_landing_stats failed:", error.message, error.code, error.details);
+    }
     if (error || !data) {
       return {
         partners: 0, totalPaid: 0, completedConversions: 0,
