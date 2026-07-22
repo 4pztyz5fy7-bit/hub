@@ -169,7 +169,7 @@ function LandingPage() {
           <div className="mx-auto max-w-3xl text-center">
             <div className="mx-auto inline-flex items-center gap-2 rounded-full border border-primary/30 bg-primary/10 px-3 py-1 text-[11px] font-bold uppercase tracking-widest text-primary">
               <span className="relative flex size-2">
-                <span className="absolute inset-0 animate-ping rounded-full bg-primary opacity-75" />
+                <span className="absolute inset-0 animate-ping rounded-full bg-primary opacity-75" style={{ animationDuration: "2.4s" }} />
                 <span className="relative inline-flex size-2 rounded-full bg-primary" />
               </span>
               {`${formatCount(onlineCount)} партнёров в сети`}
@@ -200,7 +200,7 @@ function LandingPage() {
           <div className="mt-12 overflow-hidden rounded-2xl border border-border bg-card/60 backdrop-blur">
             <div className="flex items-center gap-3 border-b border-border/60 px-4 py-2.5">
               <span className="relative flex size-2">
-                <span className="absolute inset-0 animate-ping rounded-full bg-emerald-500 opacity-75" />
+                <span className="absolute inset-0 animate-ping rounded-full bg-emerald-500 opacity-75" style={{ animationDuration: "2.4s" }} />
                 <span className="relative inline-flex size-2 rounded-full bg-emerald-500" />
               </span>
               <span className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground">Живая лента действий</span>
@@ -208,7 +208,7 @@ function LandingPage() {
             </div>
             <div className="relative overflow-hidden">
               {tickerItems.length > 0 ? (
-                <div className="flex animate-[marquee_50s_linear_infinite] gap-8 whitespace-nowrap py-3 px-4 text-sm">
+                <div className="flex animate-[marquee_120s_linear_infinite] gap-8 whitespace-nowrap py-3 px-4 text-sm">
                   {tickerItems.map((t) => {
                     const dot =
                       t.kind === "conversion" ? "bg-emerald-500"
