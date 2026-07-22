@@ -227,8 +227,8 @@ function AdminPage() {
     { id: "moderation", label: "Модерация", Icon: Shield, badge: moderationUnread },
     { id: "support", label: "Поддержка", Icon: Headphones, badge: supportUnread },
     { id: "competitions", label: "Соревнования", Icon: Trophy },
-    { id: "ai", label: "AI-аналитик", Icon: Sparkles },
-    { id: "ai_settings", label: "AI-настройки", Icon: Bot },
+    { id: "ai", label: "Аналитика", Icon: Sparkles },
+    { id: "ai_settings", label: "Настройки AI", Icon: Bot },
     { id: "email", label: "Почта / SMTP", Icon: Mail },
     { id: "team", label: "Команда", Icon: UserCog },
   ], [moderationUnread, supportUnread]);
