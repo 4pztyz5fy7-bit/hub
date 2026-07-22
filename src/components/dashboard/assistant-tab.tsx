@@ -33,9 +33,15 @@ export function AssistantTab() {
 
   const loadSnap = async () => {
     setSnapLoading(true);
-    try { setSnap(await snapFn({})); } catch { /* ignore */ }
+    try {
+      setSnap(await snapFn({}));
+    } catch (e) {
+      console.error("[assistant] snapshot error", e);
+      setError(translateError(e, "Не удалось загрузить статистику"));
+    }
     setSnapLoading(false);
   };
+
   useEffect(() => { void loadSnap(); /* eslint-disable-next-line react-hooks/exhaustive-deps */ }, []);
 
   useEffect(() => {
