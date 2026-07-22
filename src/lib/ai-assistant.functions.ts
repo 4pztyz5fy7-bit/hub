@@ -32,17 +32,23 @@ type ResolvedAiSettings = {
 };
 
 async function getResolvedAiSettings(supabaseAdmin: any): Promise<ResolvedAiSettings> {
-  const { data, error } = await supabaseAdmin
-    .from("ai_settings")
-    .select("enabled, provider, gemini_api_key, gemini_model, lovable_api_key, lovable_model, moderation_enabled, user_prompt_limit, admin_prompt_limit")
-    .eq("id", 1)
-    .maybeSingle();
-
-  if (error) {
-    console.error("[AI] failed to load ai_settings:", error.message);
+  let data: any = null;
+  try {
+    const res = await supabaseAdmin
+      .from("ai_settings")
+      .select("enabled, provider, gemini_api_key, gemini_model, lovable_api_key, lovable_model, moderation_enabled, user_prompt_limit, admin_prompt_limit")
+      .eq("id", 1)
+      .maybeSingle();
+    data = res.data;
+    if (res.error && !/schema cache|does not exist/i.test(res.error.message ?? "")) {
+      console.error("[AI] failed to load ai_settings:", res.error.message);
+    }
+  } catch (e: any) {
+    // Таблицы может не быть — используем env-переменные как fallback
   }
 
-  const enabled = data?.enabled ?? false;
+  const enabled = data?.enabled ?? true;
+
   const provider = (data?.provider as "gemini" | "lovable") ?? "gemini";
 
   return {
