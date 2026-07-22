@@ -1395,7 +1395,9 @@ CREATE POLICY "profiles update admin" ON public.profiles AS PERMISSIVE FOR UPDAT
 DROP POLICY IF EXISTS "profiles update own" ON public.profiles;
 CREATE POLICY "profiles update own" ON public.profiles AS PERMISSIVE FOR UPDATE TO authenticated USING ((auth.uid() = id)) WITH CHECK ((auth.uid() = id));
 DROP POLICY IF EXISTS "messages_insert_participant" ON public.support_messages;
-CREATE POLICY "messages_insert_participant" ON public.support_messages AS PERMISSIVE FOR INSERT TO authenticated WITH CHECK (((author_id = auth.uid()) AND (has_role(auth.uid(), 'admin'::app_role) OR (EXISTS ( SELECT 1);
+CREATE POLICY "messages_insert_participant" ON public.support_messages AS PERMISSIVE FOR INSERT TO authenticated WITH CHECK (((author_id = auth.uid()) AND (has_role(auth.uid(), 'admin'::app_role) OR (EXISTS (SELECT 1 FROM public.support_tickets t WHERE ((t.id = support_messages.ticket_id) AND (t.user_id = auth.uid())))))));
+DROP POLICY IF EXISTS "messages_select_ticket_participant" ON public.support_messages;
+CREATE POLICY "messages_select_ticket_participant" ON public.support_messages AS PERMISSIVE FOR SELECT TO authenticated USING ((has_role(auth.uid(), 'admin'::app_role) OR (EXISTS (SELECT 1 FROM public.support_tickets t WHERE ((t.id = support_messages.ticket_id) AND (t.user_id = auth.uid()))))));
 DROP POLICY IF EXISTS "tickets_insert_own" ON public.support_tickets;
 CREATE POLICY "tickets_insert_own" ON public.support_tickets AS PERMISSIVE FOR INSERT TO authenticated WITH CHECK ((auth.uid() = user_id));
 DROP POLICY IF EXISTS "tickets_select_own_or_admin" ON public.support_tickets;
