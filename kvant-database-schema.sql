@@ -11,6 +11,7 @@ CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
 -- =========================== ENUMS ===========================
 DO $$ BEGIN CREATE TYPE public.app_role AS ENUM ('admin','user'); EXCEPTION WHEN duplicate_object THEN NULL; END $$;
+
 DO $$ BEGIN CREATE TYPE public.level_tier AS ENUM ('start','silver','gold','platinum','diamond'); EXCEPTION WHEN duplicate_object THEN NULL; END $$;
 DO $$ BEGIN CREATE TYPE public.link_status AS ENUM ('new','review','approved','rejected','in_progress','completed','finished','paid'); EXCEPTION WHEN duplicate_object THEN NULL; END $$;
 DO $$ BEGIN CREATE TYPE public.payout_status AS ENUM ('pending','processing','paid','rejected'); EXCEPTION WHEN duplicate_object THEN NULL; END $$;
@@ -304,6 +305,31 @@ CREATE INDEX IF NOT EXISTS support_messages_ticket_idx ON public.support_message
 CREATE INDEX IF NOT EXISTS support_tickets_user_idx ON public.support_tickets USING btree (user_id, last_message_at DESC);
 
 -- ========================= FUNCTIONS =========================
+-- Role helper functions (needed by later policies and function bodies)
+CREATE OR REPLACE FUNCTION public.has_role(_user_id uuid, _role app_role)
+ RETURNS boolean
+ LANGUAGE sql
+ STABLE SECURITY DEFINER
+ SET search_path TO 'public'
+AS $function$
+  SELECT EXISTS (SELECT 1 FROM public.user_roles WHERE user_id = _user_id AND role = _role);
+$function$
+;
+CREATE OR REPLACE FUNCTION public.is_admin()
+ RETURNS boolean
+ LANGUAGE sql
+ STABLE SECURITY DEFINER
+ SET search_path TO 'public'
+AS $function$
+  SELECT EXISTS (
+    SELECT 1 FROM public.user_roles
+    WHERE user_id = auth.uid() AND role = 'admin'
+  );
+$function$
+;
+
+
+
 CREATE OR REPLACE FUNCTION public.admin_delete_payout(_id uuid)
  RETURNS jsonb
  LANGUAGE plpgsql
@@ -788,27 +814,6 @@ BEGIN
   ON CONFLICT (user_id, role) DO NOTHING;
   RETURN NEW;
 END;
-$function$
-;
-CREATE OR REPLACE FUNCTION public.has_role(_user_id uuid, _role app_role)
- RETURNS boolean
- LANGUAGE sql
- STABLE SECURITY DEFINER
- SET search_path TO 'public'
-AS $function$
-  SELECT EXISTS (SELECT 1 FROM public.user_roles WHERE user_id = _user_id AND role = _role);
-$function$
-;
-CREATE OR REPLACE FUNCTION public.is_admin()
- RETURNS boolean
- LANGUAGE sql
- STABLE SECURITY DEFINER
- SET search_path TO 'public'
-AS $function$
-  SELECT EXISTS (
-    SELECT 1 FROM public.user_roles
-    WHERE user_id = auth.uid() AND role = 'admin'
-  );
 $function$
 ;
 CREATE OR REPLACE FUNCTION public.is_leadership(_uid uuid DEFAULT auth.uid())
