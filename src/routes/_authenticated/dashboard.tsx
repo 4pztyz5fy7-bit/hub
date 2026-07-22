@@ -6,6 +6,7 @@ import { ProfileTab } from "@/components/dashboard/profile-tab";
 import { SupportTab } from "@/components/dashboard/support-tab";
 import { RewardsTab } from "@/components/dashboard/rewards-tab";
 import { BannerBoard } from "@/components/dashboard/banner-board";
+import { AmbientBackdrop } from "@/components/ambient-backdrop";
 import { t } from "@/lib/i18n";
 import { randomAvatarUrl } from "@/lib/avatars";
 import { useTrackOnline } from "@/lib/online-presence";
