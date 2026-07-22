@@ -1920,6 +1920,11 @@ function InfoTab({
         requestsCount={requests.length}
       />
 
+      {/* ============ Heatmap активности ============ */}
+      <ActivityHeatmap conversions={conversions} />
+
+
+
 
 
       {/* ============ Активность: табы ============ */}
