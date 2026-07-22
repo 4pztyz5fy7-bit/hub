@@ -78,6 +78,8 @@ export function AssistantTab() {
     }
   };
 
+  const disabled = aiEnabled === false;
+
   return (
     <div className="space-y-4 pb-24">
       {/* Header */}
@@ -92,6 +94,14 @@ export function AssistantTab() {
           </div>
         </div>
       </div>
+
+      {disabled && (
+        <div className="rounded-2xl border border-border bg-card p-6 text-center">
+          <Power className="mx-auto size-8 text-muted-foreground" />
+          <div className="mt-3 text-sm font-bold">AI-ассистент отключён</div>
+          <p className="mt-1 text-xs text-muted-foreground">Администратор временно выключил генеративный AI. Статистика ниже доступна как обычно.</p>
+        </div>
+      )}
 
       {/* Snapshot */}
       <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
