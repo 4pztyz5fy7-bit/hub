@@ -67,8 +67,10 @@ function LandingPage() {
             <a href="#manifesto" className="text-sm text-muted-foreground hover:text-foreground">Манифест</a>
             <a href="#levels" className="text-sm text-muted-foreground hover:text-foreground">Уровни</a>
             <a href="#how" className="text-sm text-muted-foreground hover:text-foreground">Как это работает</a>
+            <a href="#audience" className="text-sm text-muted-foreground hover:text-foreground">Кому подойдёт</a>
             <a href="/news" className="text-sm text-muted-foreground hover:text-foreground">Новости</a>
             <a href="#faq" className="text-sm text-muted-foreground hover:text-foreground">FAQ</a>
+
           </nav>
 
           <div className="hidden items-center gap-2 md:flex">
@@ -541,7 +543,135 @@ function LandingPage() {
         </div>
       </section>
 
+      {/* ДЛЯ КОГО */}
+      <section id="audience" className="border-t border-border/60 bg-secondary/20 py-16 md:py-24">
+        <div className="mx-auto max-w-6xl px-4">
+          <div className="mx-auto max-w-2xl text-center">
+            <div className="text-[11px] font-bold uppercase tracking-widest text-primary">Кому подойдёт</div>
+            <h2 className="mt-2 text-3xl font-black md:text-4xl">Работа в КВАНТ — для каждого</h2>
+            <p className="mt-3 text-muted-foreground">
+              Не важно, есть ли у вас опыт или свободный график — платформа подстраивается под ваш ритм жизни.
+              Начните зарабатывать из дома, между парами или после основной работы.
+            </p>
+          </div>
+
+          <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {[
+              {
+                icon: Feather,
+                title: "Мамам в декрете",
+                desc: "Совмещайте заботу о ребёнке и стабильный доход. Гибкий график, работа со смартфона, никаких офисов и дедлайнов.",
+                tag: "от 2 часов в день",
+              },
+              {
+                icon: Award,
+                title: "Студентам",
+                desc: "Первый серьёзный доход без опыта. Наставник на 30 дней, готовые связки и обучение — работайте между парами.",
+                tag: "удалённо",
+              },
+              {
+                icon: Rocket,
+                title: "Фрилансерам",
+                desc: "Дополнительный источник дохода к основной деятельности. API, постбэки, интеграции с любым трекером.",
+                tag: "гибко",
+              },
+              {
+                icon: Target,
+                title: "Специалистам по трафику",
+                desc: "Эксклюзивные офферы, повышенные ставки, персональный менеджер и приоритетные выплаты от 1 часа.",
+                tag: "PRO-условия",
+              },
+              {
+                icon: Globe,
+                title: "Пенсионерам и людям 50+",
+                desc: "Освойте новую цифровую профессию в своём темпе. Понятная база знаний и живая поддержка на русском 24/7.",
+                tag: "без возрастных лимитов",
+              },
+              {
+                icon: Clock,
+                title: "Работающим по найму",
+                desc: "Подработка вечером и в выходные без ущерба основной работе. Стабильный пассивный доход после первых кампаний.",
+                tag: "подработка",
+              },
+            ].map((a) => (
+              <article
+                key={a.title}
+                className="group relative overflow-hidden rounded-2xl border border-border bg-card p-5 transition hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-lg hover:shadow-primary/10"
+              >
+                <div className="flex items-start justify-between gap-3">
+                  <div className="grid size-11 place-items-center rounded-xl bg-primary/10 text-primary ring-1 ring-primary/20">
+                    <a.icon className="size-5" />
+                  </div>
+                  <span className="rounded-full border border-border bg-background px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+                    {a.tag}
+                  </span>
+                </div>
+                <h3 className="mt-4 text-base font-black">{a.title}</h3>
+                <p className="mt-1.5 text-sm leading-relaxed text-muted-foreground">{a.desc}</p>
+              </article>
+            ))}
+          </div>
+
+          <div className="mt-8 flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-xs text-muted-foreground">
+            {["Без вложений", "Без опыта", "Из любой точки мира", "Обучение бесплатно"].map((t) => (
+              <span key={t} className="inline-flex items-center gap-1.5"><Check className="size-3.5 text-primary" />{t}</span>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* СКОЛКОВО */}
+      <section id="skolkovo" className="border-t border-border/60 py-16 md:py-24">
+        <div className="mx-auto max-w-5xl px-4">
+          <div className="relative overflow-hidden rounded-3xl border border-primary/30 bg-gradient-to-br from-primary/10 via-card to-card p-8 md:p-12">
+            <div aria-hidden className="pointer-events-none absolute inset-0 -z-10 opacity-60">
+              <div className="absolute -right-24 -top-24 size-72 rounded-full bg-primary/25 blur-3xl ambient-blob-a" />
+              <div className="absolute -bottom-24 -left-24 size-72 rounded-full bg-primary/15 blur-3xl ambient-blob-b" />
+            </div>
+
+            <div className="grid gap-8 md:grid-cols-[auto_1fr] md:items-center">
+              <div className="flex items-center gap-4">
+                <div className="relative grid size-20 place-items-center rounded-2xl bg-primary/15 ring-1 ring-primary/30">
+                  <Diamond className="size-9 text-primary" />
+                  <span className="absolute -right-2 -top-2 grid size-7 place-items-center rounded-full bg-primary text-primary-foreground shadow-lg shadow-primary/30">
+                    <Check className="size-4" />
+                  </span>
+                </div>
+              </div>
+
+              <div>
+                <div className="inline-flex items-center gap-2 rounded-full border border-primary/30 bg-primary/10 px-3 py-1 text-[11px] font-bold uppercase tracking-widest text-primary">
+                  <ShieldCheck className="size-3" /> Официальное заявление
+                </div>
+                <h2 className="mt-3 text-2xl font-black leading-tight md:text-3xl">
+                  КВАНТ — резидент Фонда «Сколково»
+                </h2>
+                <p className="mt-3 max-w-2xl text-sm leading-relaxed text-muted-foreground md:text-base">
+                  Мы получили статус резидента инновационного центра «Сколково» — крупнейшей технологической площадки России.
+                  Это подтверждает уровень нашей IT-разработки, прозрачность бизнес-модели и открывает доступ к грантам,
+                  налоговым льготам и совместным исследованиям с ведущими компаниями рынка.
+                </p>
+
+                <div className="mt-6 grid gap-3 sm:grid-cols-3">
+                  {[
+                    { label: "Юридическая надёжность", desc: "Прозрачные договоры и защита партнёров" },
+                    { label: "Технологический уровень", desc: "Подтверждён экспертизой Сколково" },
+                    { label: "Инвестиции в развитие", desc: "Гранты и льготы направляем в продукт" },
+                  ].map((b) => (
+                    <div key={b.label} className="rounded-xl border border-border bg-background/60 p-3">
+                      <div className="text-xs font-black uppercase tracking-wider text-primary">{b.label}</div>
+                      <div className="mt-1 text-xs text-muted-foreground">{b.desc}</div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* FAQ */}
+
       <section id="faq" className="border-t border-border/60 py-16 md:py-24">
 
         <div className="mx-auto max-w-3xl px-4">
