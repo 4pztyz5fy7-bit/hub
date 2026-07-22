@@ -200,7 +200,7 @@ function LandingPage() {
           <div className="mt-12 overflow-hidden rounded-2xl border border-border bg-card/60 backdrop-blur">
             <div className="flex items-center gap-3 border-b border-border/60 px-4 py-2.5">
               <span className="relative flex size-2">
-                <span className="absolute inset-0 animate-ping rounded-full bg-emerald-500 opacity-75" />
+                <span className="absolute inset-0 animate-ping rounded-full bg-emerald-500 opacity-75" style={{ animationDuration: "2.4s" }} />
                 <span className="relative inline-flex size-2 rounded-full bg-emerald-500" />
               </span>
               <span className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground">Живая лента действий</span>
