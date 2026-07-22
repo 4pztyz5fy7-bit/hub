@@ -71,16 +71,28 @@ function LandingPage() {
   useEffect(() => {
     let cancelled = false;
     let timer: ReturnType<typeof setTimeout> | null = null;
-    const refresh = () => {
-      getLandingStats().then((s) => { if (!cancelled) setStats(s); }).catch(() => {});
+    const refresh = async () => {
+      let s: LandingStats | null = null;
+      try {
+        s = await getLandingStats();
+      } catch (e) {
+        console.warn("[landing] getLandingStats RPC failed, falling back to direct queries", e);
+      }
+      if (isStatsEmpty(s)) {
+        try {
+          const fb = await fetchLandingStatsClient();
+          if (!isStatsEmpty(fb)) s = fb;
+        } catch (e) {
+          console.warn("[landing] client fallback failed", e);
+        }
+      }
+      if (!cancelled && s) setStats(s);
     };
     const schedule = () => {
       if (timer) return;
-      timer = setTimeout(() => { timer = null; refresh(); }, 800);
+      timer = setTimeout(() => { timer = null; void refresh(); }, 800);
     };
-    // Initial refetch to bypass edge cache after hydration
-    refresh();
-    // Realtime: any change on stat-driving tables triggers a debounced refetch
+    void refresh();
     const channel = supabase
       .channel("landing-stats")
       .on("postgres_changes", { event: "*", schema: "public", table: "profiles" }, schedule)
@@ -89,10 +101,8 @@ function LandingPage() {
       .on("postgres_changes", { event: "*", schema: "public", table: "offers" }, schedule)
       .on("postgres_changes", { event: "*", schema: "public", table: "link_requests" }, schedule)
       .subscribe();
-    // Fallback poll every 30s in case Realtime is unavailable for anon
-    const poll = setInterval(refresh, 30000);
-    // Refresh when tab becomes visible again
-    const onVis = () => { if (document.visibilityState === "visible") refresh(); };
+    const poll = setInterval(() => void refresh(), 30000);
+    const onVis = () => { if (document.visibilityState === "visible") void refresh(); };
     document.addEventListener("visibilitychange", onVis);
     return () => {
       cancelled = true;
