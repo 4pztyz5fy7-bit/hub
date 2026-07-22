@@ -563,6 +563,20 @@ function DashboardPage() {
   const [userName, setUserName] = useState<string>("");
   const [userAvatar, setUserAvatar] = useState<string | null>(null);
   const [prefs, setPrefs] = useState<UserPrefs>(DEFAULT_PREFS);
+  const [paletteOpen, setPaletteOpen] = useState(false);
+  const navigatePage = useNavigate();
+
+  // Global ⌘K / Ctrl+K to toggle command palette
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") {
+        e.preventDefault();
+        setPaletteOpen((v) => !v);
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, []);
 
   // Track this user as online on the shared presence channel
   useTrackOnline(userId);
