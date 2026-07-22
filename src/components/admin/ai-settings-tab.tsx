@@ -11,7 +11,9 @@ export function AiSettingsTab() {
           </div>
           <div>
             <div className="text-sm font-bold">Настройки генеративного AI</div>
-            <div className="text-[11px] text-muted-foreground">Включение AI и выбор провайдера, модели и ключей</div>
+            <div className="text-[11px] text-muted-foreground">
+              Включение AI и выбор провайдера, модели и ключей
+            </div>
           </div>
         </div>
       </div>

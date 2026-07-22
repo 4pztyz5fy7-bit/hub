@@ -38,7 +38,9 @@ export function AssistantTab() {
           </div>
           <div>
             <div className="text-sm font-bold">AI-наставник КВАНТ</div>
-            <div className="text-[11px] text-muted-foreground">Персональные советы на основе твоей статистики</div>
+            <div className="text-[11px] text-muted-foreground">
+              Персональные советы на основе твоей статистики
+            </div>
           </div>
         </div>
       </div>
@@ -51,10 +53,30 @@ export function AssistantTab() {
 
       {/* Snapshot */}
       <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
-        <StatCard label="Баланс" value={snap ? `${snap.balance.toLocaleString("ru")} ₽` : "—"} icon={Wallet} loading={snapLoading} />
-        <StatCard label="За 7 дней" value={snap ? `${snap.last7Days.toLocaleString("ru")} ₽` : "—"} icon={Calendar} loading={snapLoading} />
-        <StatCard label="Конверсий" value={snap ? String(snap.conversionsCount) : "—"} icon={TrendingUp} loading={snapLoading} />
-        <StatCard label="Активных заявок" value={snap ? String(snap.activeRequests) : "—"} icon={Target} loading={snapLoading} />
+        <StatCard
+          label="Баланс"
+          value={snap ? `${snap.balance.toLocaleString("ru")} ₽` : "—"}
+          icon={Wallet}
+          loading={snapLoading}
+        />
+        <StatCard
+          label="За 7 дней"
+          value={snap ? `${snap.last7Days.toLocaleString("ru")} ₽` : "—"}
+          icon={Calendar}
+          loading={snapLoading}
+        />
+        <StatCard
+          label="Конверсий"
+          value={snap ? String(snap.conversionsCount) : "—"}
+          icon={TrendingUp}
+          loading={snapLoading}
+        />
+        <StatCard
+          label="Активных заявок"
+          value={snap ? String(snap.activeRequests) : "—"}
+          icon={Target}
+          loading={snapLoading}
+        />
       </div>
 
       {error && (
@@ -67,12 +89,22 @@ export function AssistantTab() {
 }
 
 function StatCard({
-  label, value, icon: Icon, loading,
-}: { label: string; value: string; icon: typeof Sparkles; loading?: boolean }) {
+  label,
+  value,
+  icon: Icon,
+  loading,
+}: {
+  label: string;
+  value: string;
+  icon: typeof Sparkles;
+  loading?: boolean;
+}) {
   return (
     <div className="rounded-xl border border-border bg-card p-3">
       <div className="flex items-center justify-between">
-        <div className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">{label}</div>
+        <div className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+          {label}
+        </div>
         <Icon className="size-3.5 text-muted-foreground" />
       </div>
       <div className="mt-1 text-sm font-bold">{loading ? "…" : value}</div>
