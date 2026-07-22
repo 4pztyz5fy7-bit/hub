@@ -22,6 +22,7 @@ const QUICK: { label: string; icon: typeof Sparkles; prompt: string }[] = [
 export function AssistantTab() {
   const askFn = useServerFn(askAssistant);
   const snapFn = useServerFn(getUserSnapshot);
+  const statusFn = useServerFn(getAiStatus);
 
   const [snap, setSnap] = useState<UserSnapshot | null>(null);
   const [snapLoading, setSnapLoading] = useState(true);
@@ -29,6 +30,7 @@ export function AssistantTab() {
   const [input, setInput] = useState("");
   const [sending, setSending] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [aiEnabled, setAiEnabled] = useState<boolean | null>(null);
   const scrollRef = useRef<HTMLDivElement | null>(null);
 
   const loadSnap = async () => {
@@ -42,7 +44,17 @@ export function AssistantTab() {
     setSnapLoading(false);
   };
 
-  useEffect(() => { void loadSnap(); /* eslint-disable-next-line react-hooks/exhaustive-deps */ }, []);
+  const loadStatus = async () => {
+    try {
+      const s = await statusFn({});
+      setAiEnabled(s.enabled);
+    } catch (e) {
+      console.error("[assistant] status error", e);
+      setAiEnabled(false);
+    }
+  };
+
+  useEffect(() => { void loadSnap(); void loadStatus(); /* eslint-disable-next-line react-hooks/exhaustive-deps */ }, []);
 
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
