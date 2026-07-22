@@ -6,11 +6,13 @@ import { ProfileTab } from "@/components/dashboard/profile-tab";
 import { SupportTab } from "@/components/dashboard/support-tab";
 import { RewardsTab } from "@/components/dashboard/rewards-tab";
 import { BannerBoard } from "@/components/dashboard/banner-board";
+import { CommandPalette } from "@/components/dashboard/command-palette";
+import { ActivityHeatmap } from "@/components/dashboard/activity-heatmap";
 import { AmbientBackdrop } from "@/components/ambient-backdrop";
 import { t } from "@/lib/i18n";
 import { randomAvatarUrl } from "@/lib/avatars";
 import { useTrackOnline } from "@/lib/online-presence";
-import { LogOut } from "lucide-react";
+import { LogOut, Command as CommandIcon } from "lucide-react";
 import {
   LayoutGrid,
   Package,
@@ -561,6 +563,19 @@ function DashboardPage() {
   const [userName, setUserName] = useState<string>("");
   const [userAvatar, setUserAvatar] = useState<string | null>(null);
   const [prefs, setPrefs] = useState<UserPrefs>(DEFAULT_PREFS);
+  const [paletteOpen, setPaletteOpen] = useState(false);
+
+  // Global ⌘K / Ctrl+K to toggle command palette
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") {
+        e.preventDefault();
+        setPaletteOpen((v) => !v);
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, []);
 
   // Track this user as online on the shared presence channel
   useTrackOnline(userId);
@@ -1093,23 +1108,53 @@ function DashboardPage() {
       <AmbientBackdrop variant="dashboard" />
 
       {/* Header */}
-      <header className="sticky top-0 z-30 flex h-14 items-center justify-between border-b border-border bg-background/80 px-4 backdrop-blur-md lg:px-8">
-        <div className="flex items-center gap-2.5">
-          <div className="flex size-6 items-center justify-center rounded-sm bg-foreground">
-            <div className="size-2.5 rotate-45 bg-background" />
+      <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b border-border/60 bg-background/70 px-4 backdrop-blur-xl lg:h-[68px] lg:px-8">
+        <div className="flex items-center gap-3 lg:gap-6">
+          <div className="flex items-center gap-2.5">
+            <div className="relative grid size-8 place-items-center overflow-hidden rounded-xl bg-gradient-to-br from-primary via-primary to-primary/70 text-primary-foreground shadow-lg shadow-primary/30">
+              <span className="font-mono text-sm font-black">К</span>
+              <div className="pointer-events-none absolute inset-0 bg-gradient-to-tr from-white/0 via-white/20 to-white/0" />
+            </div>
+            <div className="hidden flex-col leading-none sm:flex">
+              <span className="text-sm font-black uppercase tracking-tight">КВАНТ</span>
+              <span className="mt-0.5 font-mono text-[9px] uppercase tracking-[0.2em] text-muted-foreground">
+                partner os
+              </span>
+            </div>
           </div>
-          <span className="text-sm font-bold uppercase tracking-tight">КВАНТ</span>
+
+          {/* Command palette trigger — desktop */}
+          <button
+            onClick={() => setPaletteOpen(true)}
+            className="hidden items-center gap-2 rounded-xl border border-border/70 bg-secondary/60 px-3 py-1.5 text-left text-xs text-muted-foreground shadow-sm transition-all hover:border-primary/40 hover:bg-secondary hover:text-foreground lg:flex lg:min-w-[280px]"
+          >
+            <Search className="size-3.5" />
+            <span className="flex-1">Быстрый переход, поиск офферов…</span>
+            <kbd className="inline-flex items-center gap-0.5 rounded-md border border-border bg-background px-1.5 py-0.5 font-mono text-[10px] font-semibold">
+              ⌘K
+            </kbd>
+          </button>
         </div>
-        <div className="flex items-center gap-3">
+
+        <div className="flex items-center gap-2 lg:gap-3">
+          {/* Command palette trigger — mobile */}
+          <button
+            onClick={() => setPaletteOpen(true)}
+            aria-label="Быстрый поиск"
+            className="flex size-9 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-accent hover:text-foreground lg:hidden"
+          >
+            <Search className="size-4" />
+          </button>
+
           {prefs.notify_push && (
             <button
               aria-label="Уведомления"
               onClick={() => setNotifOpen(true)}
-              className="relative flex size-8 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+              className="relative flex size-9 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
             >
               <Bell className="size-4" />
               {unreadCount > 0 && (
-                <span className="absolute -right-0.5 -top-0.5 grid min-w-[16px] place-items-center rounded-full bg-primary px-1 font-mono text-[9px] font-bold leading-none text-primary-foreground">
+                <span className="absolute right-0.5 top-0.5 grid min-w-[16px] place-items-center rounded-full bg-primary px-1 font-mono text-[9px] font-bold leading-none text-primary-foreground ring-2 ring-background">
                   {unreadCount}
                 </span>
               )}
@@ -1118,7 +1163,7 @@ function DashboardPage() {
           <button
             onClick={() => setLevelsOpen(true)}
             aria-label="Открыть уровни"
-            className={`flex items-center gap-1.5 rounded-full border ${levelInfo.current.ring} ${levelInfo.current.bg} px-2.5 py-1 transition-transform active:scale-95`}
+            className={`hidden items-center gap-1.5 rounded-full border ${levelInfo.current.ring} ${levelInfo.current.bg} px-2.5 py-1 transition-transform hover:scale-[1.02] active:scale-95 sm:flex`}
           >
             <levelInfo.current.Icon className={`size-3.5 ${levelInfo.current.color}`} />
             <span className={`text-[10px] font-bold uppercase tracking-wider ${levelInfo.current.color}`}>
@@ -1129,7 +1174,7 @@ function DashboardPage() {
             <Link
               to="/admin"
               aria-label="Админ-панель"
-              className="flex size-8 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+              className="hidden size-9 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-accent hover:text-foreground sm:flex"
             >
               <Shield className="size-4" />
             </Link>
@@ -1137,7 +1182,7 @@ function DashboardPage() {
           <button
             onClick={() => setActive("profile")}
             aria-label="Профиль"
-            className={`grid size-8 place-items-center overflow-hidden rounded-full border font-mono text-[10px] font-semibold transition-all active:scale-95 ${
+            className={`grid size-9 place-items-center overflow-hidden rounded-full border-2 font-mono text-[10px] font-semibold transition-all active:scale-95 ${
               active === "profile" ? "border-primary ring-2 ring-primary/40" : "border-border bg-secondary hover:border-primary/60"
             }`}
           >
@@ -1154,6 +1199,7 @@ function DashboardPage() {
           </button>
         </div>
       </header>
+
 
       {/* Achievement unlocked floating toast */}
       {achToast && (
@@ -1212,7 +1258,7 @@ function DashboardPage() {
       )}
 
 
-      <main key={active} data-dashboard-main className="mx-auto w-full max-w-[420px] space-y-6 p-4 pb-28 lg:max-w-6xl lg:pb-10 lg:pl-[17rem] lg:pr-8 lg:pt-8">
+      <main key={active} data-dashboard-main className="mx-auto w-full max-w-[430px] space-y-6 p-4 pb-24 lg:max-w-6xl lg:pb-10 lg:pl-24 lg:pr-8 lg:pt-8">
         {active === "info" && (
           <InfoTab
             balance={balance}
@@ -1338,39 +1384,113 @@ function DashboardPage() {
 
 
 
-      {/* Bottom nav */}
-      <nav className="fixed bottom-0 left-0 right-0 z-30 flex h-16 items-center justify-around border-t border-border bg-background/95 px-2 backdrop-blur-md lg:bottom-auto lg:right-auto lg:top-14 lg:h-[calc(100vh-3.5rem)] lg:w-64 lg:flex-col lg:items-stretch lg:justify-start lg:gap-1 lg:border-r lg:border-t-0 lg:p-4">
-        {(
-          [
-            { id: "info", key: "nav_info", Icon: LayoutGrid },
-            { id: "offers", key: "nav_offers", Icon: Package },
-            { id: "requests", key: "nav_requests", Icon: Inbox },
-            { id: "stats", key: "nav_stats", Icon: BarChart3 },
-            { id: "payouts", key: "nav_payouts", Icon: Wallet },
-            { id: "ai", key: "nav_ai", Icon: Sparkles },
-            { id: "rewards", key: "nav_rewards", Icon: Trophy },
-            { id: "support", key: "nav_support", Icon: Headphones },
-          ] as const
-        ).map(({ id, key, Icon }) => (
-          <button
-            key={id}
-            onClick={() => setActive(id)}
-            className={`flex flex-col items-center gap-1 rounded-lg lg:w-full lg:flex-row lg:items-center lg:gap-3 lg:px-3 lg:py-2.5 lg:text-left lg:transition-colors ${
-              active === id
-                ? "text-primary lg:bg-primary/10"
-                : "text-muted-foreground lg:hover:bg-accent lg:hover:text-foreground"
-            }`}
-          >
-            <Icon className={`size-5 ${active === id ? "" : "opacity-60 lg:opacity-100"}`} />
-            <span className="text-[9px] font-bold uppercase tracking-tighter lg:text-xs lg:tracking-wider">{t(prefs.language, key)}</span>
-          </button>
-        ))}
-      </nav>
+      {/* ============ Navigation ============
+          Desktop: floating glass rail (icons + hover labels)
+          Mobile: pill-shaped floating bottom bar */}
+      {(() => {
+        const NAV = [
+          { id: "info" as const, key: "nav_info" as const, Icon: LayoutGrid, label: "Обзор" },
+          { id: "offers" as const, key: "nav_offers" as const, Icon: Package, label: "Офферы" },
+          { id: "requests" as const, key: "nav_requests" as const, Icon: Inbox, label: "Заявки" },
+          { id: "stats" as const, key: "nav_stats" as const, Icon: BarChart3, label: "Аналитика" },
+          { id: "payouts" as const, key: "nav_payouts" as const, Icon: Wallet, label: "Выплаты" },
+          { id: "ai" as const, key: "nav_ai" as const, Icon: Sparkles, label: "AI" },
+          { id: "rewards" as const, key: "nav_rewards" as const, Icon: Trophy, label: "Награды" },
+          { id: "support" as const, key: "nav_support" as const, Icon: Headphones, label: "Поддержка" },
+        ];
+        return (
+          <>
+            {/* Desktop floating rail */}
+            <nav className="pointer-events-none fixed left-4 top-1/2 z-30 hidden -translate-y-1/2 lg:block">
+              <div className="pointer-events-auto flex flex-col items-center gap-1 rounded-2xl border border-border/60 bg-card/80 p-2 shadow-xl shadow-primary/5 ring-1 ring-primary/5 backdrop-blur-xl">
+                {NAV.map(({ id, Icon, label }) => {
+                  const isActive = active === id;
+                  return (
+                    <div key={id} className="group relative">
+                      <button
+                        onClick={() => setActive(id)}
+                        aria-label={label}
+                        className={`relative grid size-11 place-items-center rounded-xl transition-all ${
+                          isActive
+                            ? "bg-gradient-to-br from-primary to-primary/70 text-primary-foreground shadow-md shadow-primary/40"
+                            : "text-muted-foreground hover:bg-accent hover:text-foreground"
+                        }`}
+                      >
+                        <Icon className="size-5" />
+                        {isActive && (
+                          <span className="pointer-events-none absolute -right-1.5 top-1/2 size-1.5 -translate-y-1/2 rounded-full bg-primary shadow-[0_0_8px_var(--primary)]" />
+                        )}
+                      </button>
+                      {/* Tooltip */}
+                      <span className="pointer-events-none absolute left-full top-1/2 z-10 ml-3 -translate-y-1/2 whitespace-nowrap rounded-md border border-border/70 bg-card px-2.5 py-1 text-xs font-semibold text-foreground opacity-0 shadow-lg transition-all group-hover:translate-x-0 group-hover:opacity-100">
+                        {label}
+                      </span>
+                    </div>
+                  );
+                })}
 
+                <div className="my-1 h-px w-8 bg-border/60" />
+
+                {/* ⌘K quick access */}
+                <button
+                  onClick={() => setPaletteOpen(true)}
+                  aria-label="Command"
+                  className="group/cmd relative grid size-11 place-items-center rounded-xl border border-primary/20 bg-primary/5 text-primary transition-all hover:bg-primary/10"
+                >
+                  <CommandIcon className="size-5" />
+                  <span className="pointer-events-none absolute left-full top-1/2 z-10 ml-3 -translate-y-1/2 whitespace-nowrap rounded-md border border-border/70 bg-card px-2.5 py-1 text-xs font-semibold text-foreground opacity-0 shadow-lg transition-all group-hover/cmd:opacity-100">
+                    Быстрый поиск · ⌘K
+                  </span>
+                </button>
+              </div>
+            </nav>
+
+            {/* Mobile floating pill nav */}
+            <nav className="fixed bottom-3 left-1/2 z-30 flex h-14 -translate-x-1/2 items-center gap-0.5 rounded-full border border-border/60 bg-card/90 px-1.5 shadow-2xl shadow-primary/10 ring-1 ring-primary/5 backdrop-blur-xl lg:hidden">
+              {NAV.map(({ id, Icon, label }) => {
+                const isActive = active === id;
+                return (
+                  <button
+                    key={id}
+                    onClick={() => setActive(id)}
+                    aria-label={label}
+                    className={`relative grid size-10 place-items-center rounded-full transition-all ${
+                      isActive
+                        ? "bg-gradient-to-br from-primary to-primary/70 text-primary-foreground shadow-md shadow-primary/40"
+                        : "text-muted-foreground active:scale-90"
+                    }`}
+                  >
+                    <Icon className="size-[18px]" />
+                  </button>
+                );
+              })}
+            </nav>
+          </>
+        );
+      })()}
+
+      {/* Command palette */}
+      <CommandPalette
+        open={paletteOpen}
+        onClose={() => setPaletteOpen(false)}
+        onNavigate={(t) => setActive(t as Tab)}
+        onOpenNotifs={() => setNotifOpen(true)}
+        onOpenLevels={() => setLevelsOpen(true)}
+        onOpenBank={openBank}
+        onOpenPayout={() => (bank ? setPayoutOpen(true) : openBank())}
+        isAdmin={isAdmin}
+        onOpenAdmin={() => navigate({ to: "/admin" })}
+        offers={offers.map((o) => ({ id: o.id, name: o.name, tag: o.tag, category: o.category }))}
+        onOpenOffer={(id) => {
+          const o = offers.find((x) => x.id === id);
+          if (o) setOfferDetail(o);
+        }}
+      />
 
     </div>
   );
 }
+
 
 /* ================================ Info ================================= */
 
@@ -1799,6 +1919,11 @@ function InfoTab({
         conversionsCount={conversions.filter((c) => c.status === "ok").length}
         requestsCount={requests.length}
       />
+
+      {/* ============ Heatmap активности ============ */}
+      <ActivityHeatmap conversions={conversions} />
+
+
 
 
 
