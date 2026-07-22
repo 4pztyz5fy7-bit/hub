@@ -99,24 +99,3 @@ export const updateAiSettings = createServerFn({ method: "POST" })
     return { ok: true };
   });
 
-export const getAiSettingsPublic = createServerFn({ method: "GET" })
-  .middleware([requireSupabaseAuth])
-  .handler(async ({ context }): Promise<Pick<AiSettings, "enabled" | "provider" | "user_prompt_limit" | "admin_prompt_limit">> => {
-    const { supabase } = context;
-    const { data, error } = await supabase
-      .from("ai_settings")
-      .select("enabled, provider, user_prompt_limit, admin_prompt_limit")
-      .eq("id", 1)
-      .maybeSingle();
-
-    if (error || !data) {
-      return { enabled: false, provider: "gemini", user_prompt_limit: 20, admin_prompt_limit: 50 };
-    }
-
-    return {
-      enabled: data.enabled,
-      provider: data.provider as "gemini" | "lovable",
-      user_prompt_limit: data.user_prompt_limit,
-      admin_prompt_limit: data.admin_prompt_limit,
-    };
-  });
