@@ -12,13 +12,50 @@ const AskSchema = z.object({
 });
 
 const LOVABLE_AI_URL = "https://ai.gateway.lovable.dev/v1/chat/completions";
-const MODEL = "google/gemini-2.5-flash";
-const GEMINI_MODEL = "gemini-2.5-flash";
 
 function readProviderKey(value: string | undefined) {
   const key = (value ?? "").trim().replace(/^['\"]|['\"]$/g, "");
   if (!key || key === "undefined" || key === "null" || key.includes("your_api_key")) return undefined;
   return key;
+}
+
+type ResolvedAiSettings = {
+  enabled: boolean;
+  provider: "gemini" | "lovable";
+  gemini_api_key: string | undefined;
+  gemini_model: string;
+  lovable_api_key: string | undefined;
+  lovable_model: string;
+  moderation_enabled: boolean;
+  user_prompt_limit: number;
+  admin_prompt_limit: number;
+};
+
+async function getResolvedAiSettings(supabaseAdmin: any): Promise<ResolvedAiSettings> {
+  const { data, error } = await supabaseAdmin
+    .from("ai_settings")
+    .select("enabled, provider, gemini_api_key, gemini_model, lovable_api_key, lovable_model, moderation_enabled, user_prompt_limit, admin_prompt_limit")
+    .eq("id", 1)
+    .maybeSingle();
+
+  if (error) {
+    console.error("[AI] failed to load ai_settings:", error.message);
+  }
+
+  const enabled = data?.enabled ?? false;
+  const provider = (data?.provider as "gemini" | "lovable") ?? "gemini";
+
+  return {
+    enabled,
+    provider,
+    gemini_api_key: readProviderKey(data?.gemini_api_key ?? process.env.GEMINI_API_KEY ?? process.env.GOOGLE_API_KEY),
+    gemini_model: data?.gemini_model ?? process.env.GEMINI_MODEL ?? "gemini-2.5-flash",
+    lovable_api_key: readProviderKey(data?.lovable_api_key ?? process.env.LOVABLE_API_KEY),
+    lovable_model: data?.lovable_model ?? process.env.LOVABLE_MODEL ?? "google/gemini-2.5-flash",
+    moderation_enabled: data?.moderation_enabled ?? true,
+    user_prompt_limit: data?.user_prompt_limit ?? 20,
+    admin_prompt_limit: data?.admin_prompt_limit ?? 50,
+  };
 }
 
 function toGeminiContents(system: string, messages: z.infer<typeof MessageSchema>[]) {
