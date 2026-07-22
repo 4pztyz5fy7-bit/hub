@@ -214,7 +214,7 @@ pm2 startup                # выполнить строку, которую о�
 ### 4.6 Nginx как reverse-proxy + HTTPS
 
 ```bash
-nano /etc/nginx/sites-available/kvantm
+nano /etc/nginx/sites-available/hub
 ```
 
 Вставьте:
@@ -243,7 +243,7 @@ server {
 Сохранить, активировать:
 
 ```bash
-ln -s /etc/nginx/sites-available/kvantm /etc/nginx/sites-enabled/
+ln -s /etc/nginx/sites-available/hub /etc/nginx/sites-enabled/
 rm /etc/nginx/sites-enabled/default   # если есть
 nginx -t
 systemctl reload nginx

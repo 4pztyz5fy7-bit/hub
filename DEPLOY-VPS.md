@@ -353,14 +353,14 @@ Minimum interval: 60
 
 1. В Lovable в чате: **+** → **GitHub** → **Connect project**.
 2. Авторизоваться в GitHub → **Create Repository**.
-3. Имя, например `kvantm`. Готово.
+3. Имя, например `hub`. Готово.
 4. Сделайте репо **приватным**: страница репо → **Settings** → **Change visibility** → **Private**.
 
 ### Создать «ключ» для скачивания на сервер
 
 1. GitHub → аватарка → **Settings** → **Developer settings**.
 2. **Personal access tokens** → **Tokens (classic)** → **Generate new token (classic)**.
-3. `Note`: `vps-kvantm`, `Expiration`: `90 days`, галочка **`repo`**.
+3. `Note`: `vps-hub`, `Expiration`: `90 days`, галочка **`repo`**.
 4. **Generate token** → **скопировать** `ghp_...` в блокнот.
 
 ---
@@ -384,13 +384,13 @@ cd /var/www
 ### 7.3 Скачать код (замените ВАШЛОГИН и ВАШТОКЕН)
 
 ```bash
-git clone https://ВАШЛОГИН:ВАШТОКЕН@github.com/ВАШЛОГИН/kvantm.git
+git clone https://ВАШЛОГИН:ВАШТОКЕН@github.com/ВАШЛОГИН/hub.git
 ```
 
 ### 7.4 Перейти в папку проекта
 
 ```bash
-cd kvantm
+cd hub
 ```
 
 ### 7.5 Открыть файл настроек
@@ -446,7 +446,7 @@ bun run build
 #### Способ А — PM2 (проще всего, рекомендуется)
 
 ```bash
-pm2 start "bun run start" --name kvantm --cwd /var/www/kvantm
+pm2 start "bun run start" --name hub --cwd /var/www/hub
 pm2 save
 pm2 startup systemd
 ```
@@ -459,14 +459,14 @@ pm2 startup systemd
 pm2 status
 ```
 
-Должно быть `kvantm | online`.
+Должно быть `hub | online`.
 
 #### Способ Б — systemd-сервис (без PM2)
 
 Если не хотите ставить PM2, создайте родной сервис Ubuntu.
 
 ```bash
-nano /etc/systemd/system/kvantm.service
+nano /etc/systemd/system/hub.service
 ```
 
 Вставьте:
@@ -479,7 +479,7 @@ After=network.target
 [Service]
 Type=simple
 User=root
-WorkingDirectory=/var/www/kvantm
+WorkingDirectory=/var/www/hub
 Environment=PORT=3000
 ExecStart=/usr/local/bin/bun run start
 Restart=on-failure
@@ -493,9 +493,9 @@ WantedBy=multi-user.target
 
 ```bash
 systemctl daemon-reload
-systemctl enable kvantm
-systemctl start kvantm
-systemctl status kvantm
+systemctl enable hub
+systemctl start hub
+systemctl status hub
 ```
 
 Должно быть `active (running)`.
@@ -518,8 +518,8 @@ CMD ["bun", "run", "start"]
 Собрать и запустить:
 
 ```bash
-docker build -t kvantm .
-docker run -d --name kvantm -p 3000:3000 --env-file /var/www/kvantm/.env --restart unless-stopped kvantm
+docker build -t hub .
+docker run -d --name hub -p 3000:3000 --env-file /var/www/hub/.env --restart unless-stopped hub
 ```
 
 Проверить:
@@ -531,15 +531,15 @@ docker ps
 #### Способ Г — ручной запуск (только для теста, не для постоянной работы)
 
 ```bash
-cd /var/www/kvantm
-nohup bun run start > /var/log/kvantm.log 2>&1 &
+cd /var/www/hub
+nohup bun run start > /var/log/hub.log 2>&1 &
 ```
 
 Или через `screen`:
 
 ```bash
-screen -S kvantm
-cd /var/www/kvantm && bun run start
+screen -S hub
+cd /var/www/hub && bun run start
 # выйти из screen без остановки: Ctrl+A, затем D
 ```
 
@@ -552,7 +552,7 @@ cd /var/www/kvantm && bun run start
 ### 8.1 Nginx
 
 ```bash
-nano /etc/nginx/sites-available/kvantm
+nano /etc/nginx/sites-available/hub
 ```
 
 Вставить:
@@ -588,7 +588,7 @@ server {
 ### 8.2 Активировать конфиг Nginx
 
 ```bash
-ln -s /etc/nginx/sites-available/kvantm /etc/nginx/sites-enabled/
+ln -s /etc/nginx/sites-available/hub /etc/nginx/sites-enabled/
 ```
 
 ### 8.3 Удалить стандартный конфиг
@@ -671,7 +671,7 @@ Reply-To:       support@kvantm.tech
 ### 10.1 Перейти в папку проекта
 
 ```bash
-cd /var/www/kvantm
+cd /var/www/hub
 ```
 
 ### 10.2 Скачать изменения
@@ -696,9 +696,9 @@ bun run build
 
 В зависимости от способа запуска:
 
-- **PM2:** `pm2 restart kvantm`
-- **systemd:** `systemctl restart kvantm`
-- **Docker:** `docker restart kvantm`
+- **PM2:** `pm2 restart hub`
+- **systemd:** `systemctl restart hub`
+- **Docker:** `docker restart hub`
 - **nohup/screen:** остановите процесс (`kill` или `Ctrl+C`), затем запустите заново
 
 30–60 секунд, готово.
@@ -710,19 +710,19 @@ bun run build
 Если используете **PM2**:
 
 ```bash
-echo "alias update='cd /var/www/kvantm && git pull && bun install && bun run build && pm2 restart kvantm'" >> ~/.bashrc
+echo "alias update='cd /var/www/hub && git pull && bun install && bun run build && pm2 restart hub'" >> ~/.bashrc
 ```
 
 Если используете **systemd**:
 
 ```bash
-echo "alias update='cd /var/www/kvantm && git pull && bun install && bun run build && systemctl restart kvantm'" >> ~/.bashrc
+echo "alias update='cd /var/www/hub && git pull && bun install && bun run build && systemctl restart hub'" >> ~/.bashrc
 ```
 
 Если используете **Docker**:
 
 ```bash
-echo "alias update='cd /var/www/kvantm && git pull && bun install && bun run build && docker restart kvantm'" >> ~/.bashrc
+echo "alias update='cd /var/www/hub && git pull && bun install && bun run build && docker restart hub'" >> ~/.bashrc
 ```
 
 Загрузить настройки:
@@ -743,10 +743,10 @@ update
 
 | Что нужно | PM2 | systemd | Docker |
 |---|---|---|---|
-| Статус сайта | `pm2 status` | `systemctl status kvantm` | `docker ps` |
-| Свежие ошибки | `pm2 logs kvantm` (выход — Ctrl+C) | `journalctl -u kvantm -f` (выход — Ctrl+C) | `docker logs -f kvantm` |
-| Перезапуск | `pm2 restart kvantm` | `systemctl restart kvantm` | `docker restart kvantm` |
-| Остановить | `pm2 stop kvantm` | `systemctl stop kvantm` | `docker stop kvantm` |
+| Статус сайта | `pm2 status` | `systemctl status hub` | `docker ps` |
+| Свежие ошибки | `pm2 logs hub` (выход — Ctrl+C) | `journalctl -u hub -f` (выход — Ctrl+C) | `docker logs -f hub` |
+| Перезапуск | `pm2 restart hub` | `systemctl restart hub` | `docker restart hub` |
+| Остановить | `pm2 stop hub` | `systemctl stop hub` | `docker stop hub` |
 | Место на диске | `df -h` | `df -h` | `df -h` |
 | Память | `free -h` | `free -h` | `free -h` |
 | Общий монитор | `htop` (выход — q) | `htop` | `htop` |
@@ -758,9 +758,9 @@ update
 
 | Проблема | Что сделать |
 |---|---|
-| Сайт не открывается вообще | Проверьте статус по выбранному способу: `pm2 status`, `systemctl status kvantm` или `docker ps`. Посмотрите логи. |
+| Сайт не открывается вообще | Проверьте статус по выбранному способу: `pm2 status`, `systemctl status hub` или `docker ps`. Посмотрите логи. |
 | Открывается только по IP, но не по домену | DNS ещё не обновился — подождать; проверить `ping kvantm.tech` |
-| `502 Bad Gateway` | Перезапустить процесс (`pm2 restart kvantm` / `systemctl restart kvantm` / `docker restart kvantm`) и посмотреть логи |
+| `502 Bad Gateway` | Перезапустить процесс (`pm2 restart hub` / `systemctl restart hub` / `docker restart hub`) и посмотреть логи |
 | Порты 80/443 не пускают | Проверить **Firewall в панели Timeweb** — открыты ли 80 и 443 |
 | Логин не работает / белый экран | Не те ключи Supabase в `.env` → правим → `bun run build` → перезапускаем процесс |
 | `Failed to fetch` | В Supabase → Auth → URL Configuration нет `https://kvantm.tech/**` |
