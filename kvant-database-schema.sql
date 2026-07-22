@@ -11,6 +11,31 @@ CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
 -- =========================== ENUMS ===========================
 DO $$ BEGIN CREATE TYPE public.app_role AS ENUM ('admin','user'); EXCEPTION WHEN duplicate_object THEN NULL; END $$;
+
+-- Core role helpers (must exist before policies/functions that reference them)
+CREATE OR REPLACE FUNCTION public.has_role(_user_id uuid, _role app_role)
+ RETURNS boolean
+ LANGUAGE sql
+ STABLE SECURITY DEFINER
+ SET search_path TO 'public'
+AS $function$
+  SELECT EXISTS (SELECT 1 FROM public.user_roles WHERE user_id = _user_id AND role = _role);
+$function$
+;
+CREATE OR REPLACE FUNCTION public.is_admin()
+ RETURNS boolean
+ LANGUAGE sql
+ STABLE SECURITY DEFINER
+ SET search_path TO 'public'
+AS $function$
+  SELECT EXISTS (
+    SELECT 1 FROM public.user_roles
+    WHERE user_id = auth.uid() AND role = 'admin'
+  );
+$function$
+;
+
+
 DO $$ BEGIN CREATE TYPE public.level_tier AS ENUM ('start','silver','gold','platinum','diamond'); EXCEPTION WHEN duplicate_object THEN NULL; END $$;
 DO $$ BEGIN CREATE TYPE public.link_status AS ENUM ('new','review','approved','rejected','in_progress','completed','finished','paid'); EXCEPTION WHEN duplicate_object THEN NULL; END $$;
 DO $$ BEGIN CREATE TYPE public.payout_status AS ENUM ('pending','processing','paid','rejected'); EXCEPTION WHEN duplicate_object THEN NULL; END $$;
@@ -788,27 +813,6 @@ BEGIN
   ON CONFLICT (user_id, role) DO NOTHING;
   RETURN NEW;
 END;
-$function$
-;
-CREATE OR REPLACE FUNCTION public.has_role(_user_id uuid, _role app_role)
- RETURNS boolean
- LANGUAGE sql
- STABLE SECURITY DEFINER
- SET search_path TO 'public'
-AS $function$
-  SELECT EXISTS (SELECT 1 FROM public.user_roles WHERE user_id = _user_id AND role = _role);
-$function$
-;
-CREATE OR REPLACE FUNCTION public.is_admin()
- RETURNS boolean
- LANGUAGE sql
- STABLE SECURITY DEFINER
- SET search_path TO 'public'
-AS $function$
-  SELECT EXISTS (
-    SELECT 1 FROM public.user_roles
-    WHERE user_id = auth.uid() AND role = 'admin'
-  );
 $function$
 ;
 CREATE OR REPLACE FUNCTION public.is_leadership(_uid uuid DEFAULT auth.uid())
