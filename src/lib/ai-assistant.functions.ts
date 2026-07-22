@@ -12,13 +12,50 @@ const AskSchema = z.object({
 });
 
 const LOVABLE_AI_URL = "https://ai.gateway.lovable.dev/v1/chat/completions";
-const MODEL = "google/gemini-2.5-flash";
-const GEMINI_MODEL = "gemini-2.5-flash";
 
 function readProviderKey(value: string | undefined) {
   const key = (value ?? "").trim().replace(/^['\"]|['\"]$/g, "");
   if (!key || key === "undefined" || key === "null" || key.includes("your_api_key")) return undefined;
   return key;
+}
+
+type ResolvedAiSettings = {
+  enabled: boolean;
+  provider: "gemini" | "lovable";
+  gemini_api_key: string | undefined;
+  gemini_model: string;
+  lovable_api_key: string | undefined;
+  lovable_model: string;
+  moderation_enabled: boolean;
+  user_prompt_limit: number;
+  admin_prompt_limit: number;
+};
+
+async function getResolvedAiSettings(supabaseAdmin: any): Promise<ResolvedAiSettings> {
+  const { data, error } = await supabaseAdmin
+    .from("ai_settings")
+    .select("enabled, provider, gemini_api_key, gemini_model, lovable_api_key, lovable_model, moderation_enabled, user_prompt_limit, admin_prompt_limit")
+    .eq("id", 1)
+    .maybeSingle();
+
+  if (error) {
+    console.error("[AI] failed to load ai_settings:", error.message);
+  }
+
+  const enabled = data?.enabled ?? false;
+  const provider = (data?.provider as "gemini" | "lovable") ?? "gemini";
+
+  return {
+    enabled,
+    provider,
+    gemini_api_key: readProviderKey(data?.gemini_api_key ?? process.env.GEMINI_API_KEY ?? process.env.GOOGLE_API_KEY),
+    gemini_model: data?.gemini_model ?? process.env.GEMINI_MODEL ?? "gemini-2.5-flash",
+    lovable_api_key: readProviderKey(data?.lovable_api_key ?? process.env.LOVABLE_API_KEY),
+    lovable_model: data?.lovable_model ?? process.env.LOVABLE_MODEL ?? "google/gemini-2.5-flash",
+    moderation_enabled: data?.moderation_enabled ?? true,
+    user_prompt_limit: data?.user_prompt_limit ?? 20,
+    admin_prompt_limit: data?.admin_prompt_limit ?? 50,
+  };
 }
 
 function toGeminiContents(system: string, messages: z.infer<typeof MessageSchema>[]) {
@@ -37,24 +74,39 @@ function toGeminiContents(system: string, messages: z.infer<typeof MessageSchema
   };
 }
 
-async function callLovableAI(system: string, messages: z.infer<typeof MessageSchema>[]) {
-  const lovableKey = readProviderKey(process.env.LOVABLE_API_KEY);
-  const geminiKey = readProviderKey(process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY);
+async function callLovableAI(system: string, messages: z.infer<typeof MessageSchema>[], settings?: ResolvedAiSettings) {
+  const resolved = settings ?? {
+    enabled: true,
+    provider: "gemini" as const,
+    gemini_api_key: readProviderKey(process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY),
+    gemini_model: process.env.GEMINI_MODEL ?? "gemini-2.5-flash",
+    lovable_api_key: readProviderKey(process.env.LOVABLE_API_KEY),
+    lovable_model: process.env.LOVABLE_MODEL ?? "google/gemini-2.5-flash",
+    moderation_enabled: true,
+    user_prompt_limit: 20,
+    admin_prompt_limit: 50,
+  };
 
-  // Для self-hosted / VPS приоритет у прямого Gemini: ему не нужен LOVABLE_API_KEY.
-  const useGemini = !!geminiKey;
-  if (!lovableKey && !geminiKey) {
-    console.error("[AI] Ни LOVABLE_API_KEY, ни GEMINI_API_KEY не заданы");
+  if (!resolved.enabled) {
+    throw new Error("AI-ассистент временно отключён администратором.");
+  }
+
+  const useGemini = resolved.provider === "gemini";
+  const apiKey = useGemini ? resolved.gemini_api_key : resolved.lovable_api_key;
+
+  if (!apiKey) {
+    console.error("[AI] API-ключ не задан для провайдера", resolved.provider);
     throw new Error("AI недоступен: сервер не настроен. Обратитесь к администратору.");
   }
 
   const provider = useGemini ? "Gemini" : "Lovable AI";
+  const model = useGemini ? resolved.gemini_model : resolved.lovable_model;
   const url = useGemini
-    ? `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${encodeURIComponent(geminiKey!)}`
+    ? `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${encodeURIComponent(apiKey)}`
     : LOVABLE_AI_URL;
   const headers: Record<string, string> = { "Content-Type": "application/json" };
   if (!useGemini) {
-    headers["Lovable-API-Key"] = lovableKey!;
+    headers["Lovable-API-Key"] = apiKey;
   }
 
   let res: Response;
@@ -63,7 +115,7 @@ async function callLovableAI(system: string, messages: z.infer<typeof MessageSch
       method: "POST",
       headers,
       body: JSON.stringify({
-        model: useGemini ? GEMINI_MODEL : MODEL,
+        model,
         ...(useGemini
           ? toGeminiContents(system, messages)
           : { messages: [{ role: "system", content: system }, ...messages] }),
@@ -166,7 +218,9 @@ export const getUserSnapshot = createServerFn({ method: "GET" })
     };
   });
 
-async function moderateQuery(text: string): Promise<{ flagged: boolean; category: "illegal" | "offtopic" | "ok"; reason: string }> {
+async function moderateQuery(text: string, settings: ResolvedAiSettings): Promise<{ flagged: boolean; category: "illegal" | "offtopic" | "ok"; reason: string }> {
+  if (!settings.enabled) return { flagged: false, category: "ok", reason: "" };
+
   const sys =
     `Ты — лёгкий модератор чата AI-наставника CPA-сети КВАНТ. Классифицируй ПОСЛЕДНИЙ вопрос пользователя. ` +
     `Верни СТРОГО JSON без пояснений в формате: {"category":"illegal|offtopic|ok","reason":"кратко на русском"}.\n` +
@@ -174,7 +228,7 @@ async function moderateQuery(text: string): Promise<{ flagged: boolean; category
     `- "offtopic" — если запрос явно НЕ связан с арбитражем трафика, CPA, маркетингом, рекламой, трафиком, лидами, клиентами, заработком онлайн, офферами, аналитикой, креативами, источниками трафика, воронкой продаж, платформой КВАНТ или бизнесом в целом.\n` +
     `- "ok" — всё остальное: в том числе "как привлечь человека/клиента", "где взять трафик", "как настроить рекламу", "какой оффер лучше", "как поднять CR", "как масштабироваться", "какие креативы использовать", вопросы по выплатам, конверсиям, статистике и работе в КВАНТ.`;
   try {
-    const raw = await callLovableAI(sys, [{ role: "user", content: text.slice(0, 2000) }]);
+    const raw = await callLovableAI(sys, [{ role: "user", content: text.slice(0, 2000) }], settings);
     const m = raw.match(/\{[\s\S]*\}/);
     if (!m) return { flagged: false, category: "ok", reason: "" };
     const parsed = JSON.parse(m[0]) as { category?: string; reason?: string };
@@ -206,10 +260,21 @@ export const askAssistant = createServerFn({ method: "POST" })
   .inputValidator((d) => AskSchema.parse(d))
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const settings = await getResolvedAiSettings(supabaseAdmin);
+
+    if (!settings.enabled) {
+      return { answer: "AI-ассистент временно отключён администратором.", flagged: false };
+    }
+
+    const userMsgCount = data.messages.filter((m) => m.role === "user").length;
+    if (userMsgCount > settings.user_prompt_limit) {
+      return { answer: `Достигнут лимит сообщений (${settings.user_prompt_limit}). Попробуй позже.`, flagged: false };
+    }
 
     const lastUser = [...data.messages].reverse().find((m) => m.role === "user");
-    if (lastUser) {
-      const mod = await moderateQuery(lastUser.content);
+    if (lastUser && settings.moderation_enabled) {
+      const mod = await moderateQuery(lastUser.content, settings);
       if (mod.category === "illegal") {
         const { data: prof } = await supabase.from("profiles").select("display_name,email").eq("id", userId).maybeSingle();
         const label = prof?.display_name || prof?.email || "Партнёр";
@@ -253,7 +318,7 @@ export const askAssistant = createServerFn({ method: "POST" })
       `- Конверсий: ${okConv.length}\n\n` +
       `АКТУАЛЬНЫЕ ОФФЕРЫ (топ по EPC):\n${offersBrief || "нет активных офферов"}`;
 
-    const answer = await callLovableAI(system, data.messages);
+    const answer = await callLovableAI(system, data.messages, settings);
     return { answer, flagged: false };
   });
 
@@ -357,6 +422,17 @@ export const askAdminAnalyst = createServerFn({ method: "POST" })
     await assertAdmin(supabase);
 
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const settings = await getResolvedAiSettings(supabaseAdmin);
+
+    if (!settings.enabled) {
+      return { answer: "AI-аналитик временно отключён администратором." };
+    }
+
+    const userMsgCount = data.messages.filter((m) => m.role === "user").length;
+    if (userMsgCount > settings.admin_prompt_limit) {
+      return { answer: `Достигнут лимит сообщений (${settings.admin_prompt_limit}). Попробуйте позже.` };
+    }
+
     const [convRes, payRes, offersRes, profRes] = await Promise.all([
       supabaseAdmin.from("conversions").select("amount,status,offer_name,user_id,created_at").order("created_at", { ascending: false }).limit(300),
       supabaseAdmin.from("payout_requests").select("amount,status,created_at").order("created_at", { ascending: false }).limit(100),
@@ -385,6 +461,14 @@ export const askAdminAnalyst = createServerFn({ method: "POST" })
       `Отвечай ровно настолько подробно, насколько нужно: короткие вопросы — коротко, разбор ситуации — по шагам, с цифрами, выводами и следующим действием. Проактивно указывай на риски, аномалии и точки роста. ` +
       `Только на основе данных ниже; если данных не хватает — прямо скажи об этом.\n\nСВОДКА: ${brief}\n\nОФФЕРЫ: ${topOffersLine}`;
 
-    const answer = await callLovableAI(system, data.messages);
+    const answer = await callLovableAI(system, data.messages, settings);
     return { answer };
+  });
+
+export const getAiStatus = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }): Promise<{ enabled: boolean; provider: "gemini" | "lovable" }> => {
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const settings = await getResolvedAiSettings(supabaseAdmin);
+    return { enabled: settings.enabled, provider: settings.provider };
   });

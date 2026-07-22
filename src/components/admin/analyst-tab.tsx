@@ -3,9 +3,9 @@ import { useEffect, useRef, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import {
   Sparkles, Send, Loader2, Users, Package, DollarSign, Wallet,
-  TrendingUp, AlertTriangle, RefreshCw, Trophy, Activity,
+  TrendingUp, AlertTriangle, RefreshCw, Trophy, Activity, Power,
 } from "lucide-react";
-import { askAdminAnalyst, getAdminSnapshot, type AdminSnapshot } from "@/lib/ai-assistant.functions";
+import { askAdminAnalyst, getAiStatus, getAdminSnapshot, type AdminSnapshot } from "@/lib/ai-assistant.functions";
 
 type Msg = { role: "user" | "assistant"; content: string };
 
@@ -21,6 +21,7 @@ const QUICK: { label: string; icon: typeof Sparkles; prompt: string }[] = [
 export function AdminAnalystTab() {
   const askFn = useServerFn(askAdminAnalyst);
   const snapFn = useServerFn(getAdminSnapshot);
+  const statusFn = useServerFn(getAiStatus);
 
   const [snap, setSnap] = useState<AdminSnapshot | null>(null);
   const [snapLoading, setSnapLoading] = useState(true);
@@ -28,6 +29,7 @@ export function AdminAnalystTab() {
   const [input, setInput] = useState("");
   const [sending, setSending] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [aiEnabled, setAiEnabled] = useState<boolean | null>(null);
   const scrollRef = useRef<HTMLDivElement | null>(null);
 
   const load = async () => {
@@ -35,7 +37,18 @@ export function AdminAnalystTab() {
     try { setSnap(await snapFn({})); } catch { /* ignore */ }
     setSnapLoading(false);
   };
-  useEffect(() => { void load(); /* eslint-disable-next-line react-hooks/exhaustive-deps */ }, []);
+
+  const loadStatus = async () => {
+    try {
+      const s = await statusFn({});
+      setAiEnabled(s.enabled);
+    } catch (e) {
+      console.error("[analyst] status error", e);
+      setAiEnabled(false);
+    }
+  };
+
+  useEffect(() => { void load(); void loadStatus(); /* eslint-disable-next-line react-hooks/exhaustive-deps */ }, []);
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
   }, [messages, sending]);
@@ -58,6 +71,8 @@ export function AdminAnalystTab() {
     }
   };
 
+  const disabled = aiEnabled === false;
+
   return (
     <div className="space-y-4">
       <div className="rounded-2xl border border-border bg-gradient-to-br from-primary/10 via-card to-card p-4">
@@ -74,6 +89,14 @@ export function AdminAnalystTab() {
           </button>
         </div>
       </div>
+
+      {disabled && (
+        <div className="rounded-2xl border border-border bg-card p-6 text-center">
+          <Power className="mx-auto size-8 text-muted-foreground" />
+          <div className="mt-3 text-sm font-bold">AI-аналитик отключён</div>
+          <p className="mt-1 text-xs text-muted-foreground">Включите генеративный AI в разделе «AI-настройки» админ-панели.</p>
+        </div>
+      )}
 
       <div className="grid grid-cols-2 gap-2 md:grid-cols-4">
         <Stat label="Партнёры" value={snap?.users} icon={Users} loading={snapLoading} />
@@ -101,7 +124,7 @@ export function AdminAnalystTab() {
           {QUICK.map((q) => (
             <button
               key={q.label}
-              disabled={sending}
+              disabled={sending || disabled}
               onClick={() => void send(q.prompt)}
               className="flex items-center gap-2 rounded-xl border border-border bg-background px-3 py-2 text-left text-xs hover:border-primary/40 hover:bg-accent disabled:opacity-50"
             >
@@ -147,13 +170,13 @@ export function AdminAnalystTab() {
           <input
             value={input}
             onChange={(e) => setInput(e.target.value)}
-            placeholder="Спросите у AI-аналитика…"
+            placeholder={disabled ? "AI-аналитик отключён" : "Спросите у AI-аналитика…"}
             className="flex-1 rounded-lg border border-border bg-background px-3 py-2 text-xs outline-none focus:border-primary"
-            disabled={sending}
+            disabled={sending || disabled}
           />
           <button
             type="submit"
-            disabled={sending || !input.trim()}
+            disabled={sending || !input.trim() || disabled}
             className="grid size-9 place-items-center rounded-lg bg-primary text-primary-foreground disabled:opacity-50"
             aria-label="Отправить"
           >
