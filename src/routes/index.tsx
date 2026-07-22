@@ -787,7 +787,7 @@ function AuthDialog({ initialMode, onClose }: { initialMode: Mode; onClose: () =
         const avatar = randomAvatarUrl(em);
         const { data: signUpData, error: err } = await supabase.auth.signUp({
           email: em, password: pw,
-          options: { emailRedirectTo: window.location.origin, data: { display_name: displayName.trim(), avatar_url: avatar } },
+          options: { emailRedirectTo: `${window.location.origin}/dashboard?verified=1`, data: { display_name: displayName.trim(), avatar_url: avatar } },
         });
         if (err) throw err;
         if (signUpData.user) {
