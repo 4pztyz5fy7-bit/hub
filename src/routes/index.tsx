@@ -1,42 +1,28 @@
 import { translateError } from "@/lib/errors-ru";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { z } from "zod";
 import {
   Loader2, Mail, Lock, User, Rocket, ShieldCheck, TrendingUp, Zap, Trophy,
   X, ArrowRight, Wallet, BarChart3, Headphones, Star, Check, Menu, Sparkles,
-  Clock, Users, Target, Gift, MessageCircle, CreditCard, Globe, Award,
+  Clock, Target, Gift, MessageCircle, CreditCard, Globe, Award,
+  Compass, Layers, Radar, Cpu, Network, Infinity as InfinityIcon, Diamond, Feather, Waypoints,
 } from "lucide-react";
-import type { LandingStats } from "@/lib/landing-stats.functions";
-import { fetchLandingStatsClient } from "@/lib/landing-stats-fallback";
 import { randomAvatarUrl } from "@/lib/avatars";
-import { useOnlineCount } from "@/lib/online-presence";
-
-function formatRub(n: number): string {
-  if (n >= 1_000_000_000) return `₽${(n / 1_000_000_000).toFixed(n >= 10_000_000_000 ? 0 : 1)} млрд`;
-  if (n >= 1_000_000) return `₽${(n / 1_000_000).toFixed(n >= 10_000_000 ? 0 : 1)} млн`;
-  if (n >= 1_000) return `₽${(n / 1_000).toFixed(0)} тыс`;
-  return `₽${Math.round(n)}`;
-}
-function formatCount(n: number): string {
-  return new Intl.NumberFormat("ru-RU").format(n);
-}
-
-
+import { AmbientBackdrop } from "@/components/ambient-backdrop";
 
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "КВАНТ — партнёрская платформа с быстрыми выплатами" },
-      { name: "description", content: "Топовые офферы, прозрачная статистика в реальном времени и выплаты от 1 часа. Присоединяйтесь к партнёрской платформе КВАНТ." },
+      { title: "КВАНТ — партнёрская платформа нового поколения" },
+      { name: "description", content: "Экосистема для профессионалов трафика: проверенные офферы, честные правила, менеджеры 24/7 и выплаты от одного часа." },
       { property: "og:title", content: "КВАНТ — партнёрская платформа" },
-      { property: "og:description", content: "Офферы, статистика, выплаты — всё в одном кабинете." },
+      { property: "og:description", content: "Экосистема, инструменты и сообщество для профессионалов трафика." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
     ],
   }),
-  staleTime: 15_000,
   component: LandingPage,
 });
 
@@ -52,9 +38,6 @@ function LandingPage() {
   const [initialMode, setInitialMode] = useState<Mode>("login");
   const [menuOpen, setMenuOpen] = useState(false);
 
-  const [stats, setStats] = useState<LandingStats | null>(null);
-  const onlineCount = useOnlineCount();
-
   useEffect(() => {
     let cancelled = false;
     supabase.auth.getSession().then(({ data }) => {
@@ -66,62 +49,22 @@ function LandingPage() {
     return () => { cancelled = true; sub.subscription.unsubscribe(); };
   }, [navigate]);
 
-  useEffect(() => {
-    let cancelled = false;
-    let timer: ReturnType<typeof setTimeout> | null = null;
-    const refresh = async () => {
-      try {
-        const s = await fetchLandingStatsClient();
-        if (!cancelled) setStats(s);
-      } catch (e) {
-        console.warn("[landing] direct queries failed", e);
-      }
-    };
-    const schedule = () => {
-      if (timer) return;
-      timer = setTimeout(() => { timer = null; void refresh(); }, 800);
-    };
-    void refresh();
-    const channel = supabase
-      .channel("landing-stats")
-      .on("postgres_changes", { event: "*", schema: "public", table: "profiles" }, schedule)
-      .on("postgres_changes", { event: "*", schema: "public", table: "conversions" }, schedule)
-      .on("postgres_changes", { event: "*", schema: "public", table: "payout_requests" }, schedule)
-      .on("postgres_changes", { event: "*", schema: "public", table: "offers" }, schedule)
-      .on("postgres_changes", { event: "*", schema: "public", table: "link_requests" }, schedule)
-      .subscribe();
-    const poll = setInterval(() => void refresh(), 30000);
-    const onVis = () => { if (document.visibilityState === "visible") void refresh(); };
-    document.addEventListener("visibilitychange", onVis);
-    return () => {
-      cancelled = true;
-      if (timer) clearTimeout(timer);
-      clearInterval(poll);
-      document.removeEventListener("visibilitychange", onVis);
-      supabase.removeChannel(channel);
-    };
-  }, []);
-
-
   const openAuth = (m: Mode) => { setInitialMode(m); setAuthOpen(true); setMenuOpen(false); };
 
-  const tickerItems = useMemo(() => {
-    const items = stats?.ticker ?? [];
-    if (items.length === 0) return [];
-    return items.concat(items).map((t, i) => ({ ...t, key: i }));
-  }, [stats]);
-
   return (
-    <div className="min-h-screen bg-background text-foreground">
+    <div className="relative min-h-screen bg-background text-foreground">
+      <AmbientBackdrop variant="landing" />
+
       {/* NAV */}
-      <header className="sticky top-0 z-30 border-b border-border/60 bg-background/80 backdrop-blur">
+      <header className="sticky top-0 z-30 border-b border-border/60 bg-background/70 backdrop-blur-xl">
         <div className="mx-auto flex h-14 max-w-6xl items-center justify-between px-4">
           <a href="#top" className="flex items-center gap-2">
             <div className="grid size-8 place-items-center rounded-lg bg-primary text-primary-foreground font-black">К</div>
             <span className="text-sm font-black tracking-wider">КВАНТ</span>
           </a>
           <nav className="hidden items-center gap-6 md:flex">
-            <a href="#offers" className="text-sm text-muted-foreground hover:text-foreground">Офферы</a>
+            <a href="#ecosystem" className="text-sm text-muted-foreground hover:text-foreground">Экосистема</a>
+            <a href="#manifesto" className="text-sm text-muted-foreground hover:text-foreground">Манифест</a>
             <a href="#levels" className="text-sm text-muted-foreground hover:text-foreground">Уровни</a>
             <a href="#how" className="text-sm text-muted-foreground hover:text-foreground">Как это работает</a>
             <a href="/news" className="text-sm text-muted-foreground hover:text-foreground">Новости</a>
@@ -143,7 +86,8 @@ function LandingPage() {
         {menuOpen && (
           <div className="border-t border-border bg-background md:hidden">
             <div className="mx-auto flex max-w-6xl flex-col gap-1 px-4 py-3">
-              <a href="#offers" onClick={() => setMenuOpen(false)} className="rounded-md px-2 py-2 text-sm hover:bg-secondary">Офферы</a>
+              <a href="#ecosystem" onClick={() => setMenuOpen(false)} className="rounded-md px-2 py-2 text-sm hover:bg-secondary">Экосистема</a>
+              <a href="#manifesto" onClick={() => setMenuOpen(false)} className="rounded-md px-2 py-2 text-sm hover:bg-secondary">Манифест</a>
               <a href="#levels" onClick={() => setMenuOpen(false)} className="rounded-md px-2 py-2 text-sm hover:bg-secondary">Уровни</a>
               <a href="#how" onClick={() => setMenuOpen(false)} className="rounded-md px-2 py-2 text-sm hover:bg-secondary">Как это работает</a>
               <a href="/news" onClick={() => setMenuOpen(false)} className="rounded-md px-2 py-2 text-sm hover:bg-secondary">Новости</a>
@@ -153,40 +97,32 @@ function LandingPage() {
                 <button onClick={() => openAuth("register")} className="flex-1 rounded-lg bg-primary px-3 py-2 text-sm font-bold text-primary-foreground">Начать</button>
               </div>
             </div>
-
           </div>
         )}
       </header>
 
       {/* HERO */}
       <section id="top" className="relative overflow-hidden">
-        <div aria-hidden className="pointer-events-none absolute inset-0 -z-10">
-          <div className="absolute left-1/2 top-[-140px] size-[620px] -translate-x-1/2 rounded-full bg-primary/25 blur-3xl" />
-          <div className="absolute left-[5%] top-40 size-[280px] rounded-full bg-primary/10 blur-3xl" />
-          <div className="absolute right-[5%] top-60 size-[320px] rounded-full bg-primary/15 blur-3xl" />
-        </div>
-        <div className="mx-auto max-w-6xl px-4 pb-14 pt-12 md:pb-20 md:pt-20">
+        <div className="mx-auto max-w-6xl px-4 pb-16 pt-14 md:pb-24 md:pt-24">
           <div className="mx-auto max-w-3xl text-center">
             <div className="mx-auto inline-flex items-center gap-2 rounded-full border border-primary/30 bg-primary/10 px-3 py-1 text-[11px] font-bold uppercase tracking-widest text-primary">
-              <span className="relative flex size-2">
-                <span className="absolute inset-0 animate-ping rounded-full bg-primary opacity-75" style={{ animationDuration: "2.4s" }} />
-                <span className="relative inline-flex size-2 rounded-full bg-primary" />
-              </span>
-              {`${formatCount(onlineCount)} партнёров в сети`}
+              <Sparkles className="size-3" />
+              Партнёрская экосистема нового поколения
             </div>
             <h1 className="mt-5 text-4xl font-black leading-[1.05] tracking-tight sm:text-5xl md:text-[64px]">
-              Зарабатывайте на рекомендациях с{" "}
-              <span className="bg-gradient-to-br from-primary via-primary to-primary/50 bg-clip-text text-transparent">КВАНТ</span>
+              Мы строим{" "}
+              <span className="bg-gradient-to-br from-primary via-primary to-primary/40 bg-clip-text text-transparent">пространство</span>,<br className="hidden md:block" />
+              где трафик становится делом жизни
             </h1>
             <p className="mx-auto mt-5 max-w-2xl text-base leading-relaxed text-muted-foreground md:text-lg">
-              {stats && stats.offersCount > 0 ? `${stats.offersCount} проверенных офферов` : "Проверенные офферы"}, живая статистика в реальном времени и выплаты <span className="font-bold text-foreground">от 1 часа</span>.{stats && stats.totalPaid > 0 ? <> Партнёры вывели <span className="font-bold text-foreground">{formatRub(stats.totalPaid)}</span> — присоединяйтесь.</> : " Присоединяйтесь."}
+              КВАНТ — это не про «ещё одну сетку». Это экосистема из проверенных офферов, честных правил, менеджеров с реальным опытом и сообщества, которое двигает индустрию вперёд.
             </p>
             <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
               <button onClick={() => openAuth("register")} className="group inline-flex w-full items-center justify-center gap-2 rounded-xl bg-primary px-6 py-3.5 text-sm font-bold text-primary-foreground shadow-lg shadow-primary/25 transition hover:bg-primary/90 hover:shadow-xl hover:shadow-primary/40 sm:w-auto">
-                Создать аккаунт <ArrowRight className="size-4 transition group-hover:translate-x-0.5" />
+                Стать частью КВАНТ <ArrowRight className="size-4 transition group-hover:translate-x-0.5" />
               </button>
-              <button onClick={() => openAuth("login")} className="inline-flex w-full items-center justify-center rounded-xl border border-border bg-card px-6 py-3.5 text-sm font-bold hover:bg-secondary sm:w-auto">
-                У меня уже есть аккаунт
+              <button onClick={() => openAuth("login")} className="inline-flex w-full items-center justify-center rounded-xl border border-border bg-card/70 px-6 py-3.5 text-sm font-bold backdrop-blur hover:bg-secondary sm:w-auto">
+                Войти в кабинет
               </button>
             </div>
             <ul className="mt-5 flex flex-wrap items-center justify-center gap-x-5 gap-y-2 text-xs text-muted-foreground">
@@ -196,123 +132,113 @@ function LandingPage() {
             </ul>
           </div>
 
-          {/* Live ticker */}
-          <div className="mt-12 overflow-hidden rounded-2xl border border-border bg-card/60 backdrop-blur">
-            <div className="flex items-center gap-3 border-b border-border/60 px-4 py-2.5">
-              <span className="relative flex size-2">
-                <span className="absolute inset-0 animate-ping rounded-full bg-emerald-500 opacity-75" style={{ animationDuration: "2.4s" }} />
-                <span className="relative inline-flex size-2 rounded-full bg-emerald-500" />
-              </span>
-              <span className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground">Живая лента действий</span>
-              <span className="ml-auto text-[11px] text-muted-foreground">обновление в реальном времени</span>
-            </div>
-            <div className="relative overflow-hidden">
-              {tickerItems.length > 0 ? (
-                <div className="flex animate-[marquee_120s_linear_infinite] gap-8 whitespace-nowrap py-3 px-4 text-sm">
-                  {tickerItems.map((t) => {
-                    const dot =
-                      t.kind === "conversion" ? "bg-emerald-500"
-                      : t.kind === "payout" ? "bg-primary"
-                      : t.kind === "signup" ? "bg-sky-500"
-                      : t.kind === "offer" ? "bg-amber-500"
-                      : "bg-muted-foreground";
-                    const badge =
-                      t.kind === "conversion" ? "bg-emerald-500/15 text-emerald-500"
-                      : "bg-primary/15 text-primary";
-                    return (
-                      <span key={t.key} className="inline-flex items-center gap-2 text-muted-foreground">
-                        <span className={`size-1.5 rounded-full ${dot}`} />
-                        <span className="font-bold text-foreground">{t.who}</span>
-                        <span>{t.text}</span>
-                        {typeof t.amount === "number" && t.amount > 0 && (
-                          <span className={`rounded-md px-2 py-0.5 text-xs font-bold ${badge}`}>
-                            +{formatRub(t.amount)}
-                          </span>
-                        )}
-                      </span>
-                    );
-                  })}
+          {/* Ecosystem chips */}
+          <div className="relative mx-auto mt-14 max-w-4xl">
+            <svg aria-hidden viewBox="0 0 800 260" className="pointer-events-none absolute inset-0 h-full w-full opacity-30">
+              <defs>
+                <linearGradient id="ln" x1="0" x2="1">
+                  <stop offset="0" stopColor="currentColor" stopOpacity="0" />
+                  <stop offset="0.5" stopColor="currentColor" stopOpacity="1" />
+                  <stop offset="1" stopColor="currentColor" stopOpacity="0" />
+                </linearGradient>
+              </defs>
+              <g className="text-primary" stroke="url(#ln)" strokeWidth="1" fill="none">
+                <path d="M60 130 C 220 30, 320 30, 400 130" className="ambient-dash" />
+                <path d="M740 130 C 580 230, 480 230, 400 130" className="ambient-dash" />
+                <path d="M60 130 C 220 230, 320 230, 400 130" className="ambient-dash" />
+                <path d="M740 130 C 580 30, 480 30, 400 130" className="ambient-dash" />
+              </g>
+            </svg>
+            <div className="relative grid grid-cols-2 gap-3 md:grid-cols-4">
+              {[
+                { Icon: Rocket, t: "Офферы" },
+                { Icon: Radar, t: "Аналитика" },
+                { Icon: Wallet, t: "Выплаты" },
+                { Icon: Headphones, t: "Поддержка" },
+              ].map((c, i) => (
+                <div key={c.t} className="group relative flex items-center gap-2 rounded-2xl border border-border bg-card/70 p-3 backdrop-blur-md transition hover:border-primary/40" style={{ animation: `kvant-slide-up .6s ease ${i * 0.08}s both` }}>
+                  <div className="grid size-8 place-items-center rounded-lg bg-primary/10 text-primary">
+                    <c.Icon className="size-4" />
+                  </div>
+                  <span className="text-sm font-bold">{c.t}</span>
                 </div>
-              ) : (
-                <div className="px-4 py-4 text-center text-xs text-muted-foreground">
-                  Первые действия появятся здесь, как только партнёры начнут работу.
-                </div>
-              )}
+              ))}
             </div>
           </div>
+        </div>
+      </section>
 
-          {/* Big stats */}
-          <div className="mt-8 grid grid-cols-2 gap-3 md:grid-cols-4">
+      {/* ECOSYSTEM */}
+      <section id="ecosystem" className="relative border-t border-border/60 bg-secondary/20 py-16 md:py-24">
+        <div className="mx-auto max-w-6xl px-4">
+          <div className="max-w-2xl">
+            <div className="text-[11px] font-bold uppercase tracking-widest text-primary">Экосистема</div>
+            <h2 className="mt-2 text-3xl font-black md:text-4xl">Вертикали, с которыми мы работаем</h2>
+            <p className="mt-3 text-muted-foreground">Мы не гонимся за количеством. Каждое направление курирует профильный менеджер, который знает продукт изнутри и умеет собирать связки.</p>
+          </div>
+          <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {[
-              { v: formatCount(onlineCount), l: "партнёров в сети", Icon: Users },
-              { v: stats ? formatRub(stats.totalPaid) : "—", l: "выплачено партнёрам", Icon: Wallet },
-              { v: stats ? formatCount(stats.completedConversions) : "—", l: "подтверждённых конверсий", Icon: TrendingUp },
-              { v: stats ? formatCount(stats.offersCount) : "—", l: "активных офферов", Icon: Rocket },
-            ].map((s) => (
-              <div key={s.l} className="rounded-2xl border border-border bg-card/60 p-4 backdrop-blur">
-                <s.Icon className="size-4 text-primary" />
-                <div className="mt-3 bg-gradient-to-br from-foreground to-foreground/60 bg-clip-text text-2xl font-black text-transparent md:text-3xl">{s.v}</div>
-                <div className="mt-1 text-[10px] uppercase tracking-wider text-muted-foreground md:text-[11px]">{s.l}</div>
+              { Icon: CreditCard, title: "Финтех", desc: "Карты, кредиты, брокеры, необанки. Продукты для массового рынка и премиум-сегмента.", tags: ["РФ", "СНГ", "EU"] },
+              { Icon: Layers, title: "EdTech", desc: "Онлайн-школы, курсы, языковые платформы, детское образование.", tags: ["РФ", "СНГ"] },
+              { Icon: Compass, title: "Travel & Lifestyle", desc: "Отели, авиабилеты, страхование путешественников, аренда авто.", tags: ["World"] },
+              { Icon: Cpu, title: "SaaS & IT", desc: "B2B-инструменты, VPN, облачные хранилища, антивирусы.", tags: ["РФ", "EU", "US"] },
+              { Icon: Gift, title: "Гэмблинг & Беттинг", desc: "Топовые бренды с прозрачными холдами и постоянными эксклюзивами.", tags: ["РФ", "СНГ", "LATAM"] },
+              { Icon: Feather, title: "Wellness", desc: "Нутра, добавки, косметика, программы здоровья. Только сертифицированные бренды.", tags: ["РФ", "СНГ"] },
+            ].map((v) => (
+              <div key={v.title} className="group relative overflow-hidden rounded-2xl border border-border bg-card p-5 transition hover:-translate-y-0.5 hover:border-primary/40">
+                <div className="pointer-events-none absolute -right-16 -top-16 size-40 rounded-full bg-primary/10 opacity-0 blur-2xl transition group-hover:opacity-100" />
+                <div className="grid size-10 place-items-center rounded-xl bg-primary/10 text-primary">
+                  <v.Icon className="size-5" />
+                </div>
+                <h3 className="mt-4 text-base font-bold">{v.title}</h3>
+                <p className="mt-1.5 text-sm text-muted-foreground">{v.desc}</p>
+                <div className="mt-4 flex flex-wrap gap-1.5 border-t border-border pt-3">
+                  {v.tags.map((t) => (
+                    <span key={t} className="rounded-md bg-secondary px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">{t}</span>
+                  ))}
+                </div>
               </div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* OFFERS */}
-      <section id="offers" className="border-t border-border/60 bg-secondary/20 py-16 md:py-24">
-        <div className="mx-auto max-w-6xl px-4">
-          <div className="flex flex-wrap items-end justify-between gap-4">
-            <div className="max-w-2xl">
-              <div className="text-[11px] font-bold uppercase tracking-widest text-primary">Каталог</div>
-              <h2 className="mt-2 text-3xl font-black md:text-4xl">Топовые офферы недели</h2>
-              <p className="mt-3 text-muted-foreground">{stats ? `${stats.offersCount} рекламодателей` : "Рекламодатели"}: финтех, EdTech, travel, SaaS. Эксклюзивные ставки — недоступны напрямую.</p>
-            </div>
-            <button onClick={() => openAuth("register")} className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-card px-3.5 py-2 text-sm font-bold hover:bg-secondary">
-              Смотреть все <ArrowRight className="size-4" />
-            </button>
+      {/* MANIFESTO */}
+      <section id="manifesto" className="relative overflow-hidden py-16 md:py-24">
+        <div aria-hidden className="pointer-events-none absolute inset-0 -z-10">
+          <div className="absolute left-1/2 top-0 size-[500px] -translate-x-1/2 rounded-full bg-primary/10 blur-3xl ambient-blob-a" />
+        </div>
+        <div className="mx-auto max-w-5xl px-4">
+          <div className="text-center">
+            <div className="text-[11px] font-bold uppercase tracking-widest text-primary">Манифест</div>
+            <h2 className="mt-2 text-3xl font-black md:text-4xl">Во что мы верим</h2>
+            <p className="mx-auto mt-3 max-w-2xl text-muted-foreground">Шесть принципов, которые определяют каждое наше решение — от того, какие офферы мы берём в каталог, до того, как разбираем спорные ситуации.</p>
           </div>
-          {stats && stats.offers.length === 0 ? (
-            <div className="mt-10 rounded-2xl border border-dashed border-border bg-card/50 p-10 text-center text-sm text-muted-foreground">
-              Пока нет активных офферов. Загляните чуть позже.
-            </div>
-          ) : (
-            <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              {(stats?.offers ?? []).map((o) => (
-                <div key={o.id} className="group relative flex flex-col rounded-2xl border border-border bg-card p-5 transition hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-lg hover:shadow-primary/5">
-                  {o.is_new && (
-                    <span className="absolute -top-2 right-4 inline-flex items-center gap-1 rounded-full bg-primary px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-primary-foreground">
-                      <Zap className="size-3" /> New
-                    </span>
-                  )}
-                  <div className="flex items-center justify-between">
-                    <span className="rounded-full bg-secondary px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">{o.category ?? "Оффер"}</span>
-                    <Star className="size-4 text-primary" />
-                  </div>
-                  <h3 className="mt-3 text-base font-bold">{o.name}</h3>
-                  <div className="mt-4 grid flex-1 grid-cols-3 gap-3 border-t border-border pt-4">
-                    <div>
-                      <div className="text-[10px] uppercase tracking-wider text-muted-foreground">Выплата</div>
-                      <div className="mt-0.5 text-sm font-bold text-primary">{o.payout}</div>
-                    </div>
-                    <div>
-                      <div className="text-[10px] uppercase tracking-wider text-muted-foreground">CR</div>
-                      <div className="mt-0.5 text-sm font-bold">{o.cr > 0 ? `${o.cr}%` : "—"}</div>
-                    </div>
-                    <div>
-                      <div className="text-[10px] uppercase tracking-wider text-muted-foreground">EPC</div>
-                      <div className="mt-0.5 text-sm font-bold">{o.epc > 0 ? `₽${o.epc}` : "—"}</div>
-                    </div>
-                  </div>
+          <div className="mt-12 grid gap-4 md:grid-cols-2">
+            {[
+              { Icon: ShieldCheck, t: "Честность важнее выручки", d: "Мы никогда не отменяем выплаты задним числом. Все правила игры — на столе с первого дня." },
+              { Icon: Network, t: "Партнёр — не «трафик»", d: "Каждый партнёр — это человек с целями и семьёй. Менеджеры это помнят и работают так, как хотели бы, чтобы работали с ними." },
+              { Icon: Diamond, t: "Продукт важнее упаковки", d: "Мы берём в каталог только те бренды, которыми пользуемся сами или доверяем безоговорочно." },
+              { Icon: InfinityIcon, t: "Долгосрочные отношения", d: "Проще сделать одного партнёра счастливым на 5 лет, чем каждый месяц находить новых — и это дешевле для всех." },
+              { Icon: Waypoints, t: "Прозрачность процессов", d: "Любое решение можно объяснить: формула ставки, причина холда, критерии антифрода — всё документируется." },
+              { Icon: Sparkles, t: "Комьюнити > конкуренция", d: "Мы собираем не «сетку», а сообщество. Митапы, закрытые чаты, обмен связками, менторство новичков." },
+            ].map((p, i) => (
+              <div key={p.t} className="relative rounded-2xl border border-border bg-card/70 p-6 backdrop-blur" style={{ animation: `kvant-slide-up .6s ease ${i * 0.05}s both` }}>
+                <div className="absolute left-6 top-6 grid size-10 place-items-center rounded-xl bg-primary/10 text-primary">
+                  <p.Icon className="size-5" />
                 </div>
-              ))}
-            </div>
-          )}
+                <div className="pl-14">
+                  <h3 className="text-base font-bold">{p.t}</h3>
+                  <p className="mt-1.5 text-sm leading-relaxed text-muted-foreground">{p.d}</p>
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
       </section>
 
       {/* FEATURES */}
-      <section id="features" className="py-16 md:py-24">
+      <section id="features" className="border-t border-border/60 bg-secondary/20 py-16 md:py-24">
         <div className="mx-auto max-w-6xl px-4">
           <div className="max-w-2xl">
             <div className="text-[11px] font-bold uppercase tracking-widest text-primary">Инструменты</div>
@@ -321,15 +247,15 @@ function LandingPage() {
           </div>
           <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {[
-              { Icon: Rocket, title: "40+ офферов", desc: "Финансы, EdTech, travel, финтех, SaaS — с эксклюзивными условиями." },
-              { Icon: BarChart3, title: "Живая статистика", desc: "EPC, CR, holds и когорты — всё обновляется в реальном времени." },
+              { Icon: Rocket, title: "Курируемый каталог", desc: "Финансы, EdTech, travel, финтех, SaaS — с эксклюзивными условиями и живыми менеджерами." },
+              { Icon: BarChart3, title: "Живая аналитика", desc: "EPC, CR, holds и когорты — в удобном интерфейсе, без выгрузок в Excel." },
               { Icon: Wallet, title: "Быстрые выплаты", desc: "От 72 часов на старте до 1 часа на «Платине». Минималка ₽1 000." },
               { Icon: TrendingUp, title: "Уровни и бонусы", desc: "+5%…+15% к ставкам, укороченные холды, приоритет модерации." },
               { Icon: Headphones, title: "Личный менеджер", desc: "С уровня «Золото» — 24/7. Знает ваши источники и KPI." },
               { Icon: ShieldCheck, title: "Честные правила", desc: "Публичная антифрод-политика, никаких блокировок задним числом." },
               { Icon: Target, title: "S2S постбэки", desc: "Полноценная интеграция с вашим трекером — Keitaro, Binom, RedTrack." },
               { Icon: Globe, title: "Любые источники", desc: "Контекст, таргет, SEO, Telegram, YouTube, push, in-app, офлайн." },
-              { Icon: Gift, title: "Конкурсы и призы", desc: "Ежемесячно: MacBook, iPhone, поездки в Дубай для топ-партнёров." },
+              { Icon: Gift, title: "Конкурсы и призы", desc: "Ежемесячно: техника, поездки и денежные призы для топ-партнёров." },
             ].map((f) => (
               <div key={f.title} className="group rounded-2xl border border-border bg-card p-5 transition hover:border-primary/40 hover:shadow-sm">
                 <div className="grid size-10 place-items-center rounded-xl bg-primary/10 text-primary transition group-hover:bg-primary group-hover:text-primary-foreground">
@@ -344,7 +270,7 @@ function LandingPage() {
       </section>
 
       {/* LEVELS */}
-      <section id="levels" className="border-t border-border/60 bg-secondary/20 py-16 md:py-24">
+      <section id="levels" className="border-t border-border/60 py-16 md:py-24">
         <div className="mx-auto max-w-6xl px-4">
           <div className="max-w-2xl">
             <div className="text-[11px] font-bold uppercase tracking-widest text-primary">Прогресс</div>
@@ -385,7 +311,7 @@ function LandingPage() {
       </section>
 
       {/* HOW IT WORKS */}
-      <section id="how" className="py-16 md:py-24">
+      <section id="how" className="border-t border-border/60 bg-secondary/20 py-16 md:py-24">
         <div className="mx-auto max-w-6xl px-4">
           <div className="max-w-2xl">
             <div className="text-[11px] font-bold uppercase tracking-widest text-primary">За 3 шага</div>
@@ -416,6 +342,38 @@ function LandingPage() {
         </div>
       </section>
 
+      {/* ROADMAP */}
+      <section className="relative border-t border-border/60 py-16 md:py-24">
+        <div className="mx-auto max-w-5xl px-4">
+          <div className="max-w-2xl">
+            <div className="text-[11px] font-bold uppercase tracking-widest text-primary">Дорожная карта</div>
+            <h2 className="mt-2 text-3xl font-black md:text-4xl">Куда мы движемся</h2>
+            <p className="mt-3 text-muted-foreground">Мы не обещаем «раскрыть данные позже». Вот вехи, над которыми работаем открыто.</p>
+          </div>
+          <div className="relative mt-12">
+            <div aria-hidden className="absolute left-4 top-0 h-full w-px bg-gradient-to-b from-primary/60 via-primary/30 to-transparent md:left-1/2" />
+            <div className="space-y-8">
+              {[
+                { q: "Сейчас", t: "Живая аналитика v2", d: "Новый интерфейс дашборда, когорты, кастомные метрики и экспорт в BI-инструменты." },
+                { q: "Следующий этап", t: "Мобильное приложение", d: "iOS и Android с push-уведомлениями по конверсиям, холдам и выплатам." },
+                { q: "В работе", t: "Открытое API v3", d: "Публичный REST + webhooks, песочница и SDK для JavaScript и Python." },
+                { q: "На горизонте", t: "Академия КВАНТ", d: "Бесплатная образовательная платформа для новичков: связки, антифрод, налоги, юр. вопросы." },
+              ].map((r, i) => (
+                <div key={r.t} className={`relative flex flex-col gap-3 md:flex-row md:items-center ${i % 2 ? "md:flex-row-reverse" : ""}`}>
+                  <div className="hidden flex-1 md:block" />
+                  <div className="absolute left-4 top-4 grid size-3 -translate-x-1/2 place-items-center rounded-full bg-primary shadow-[0_0_16px] shadow-primary md:left-1/2" />
+                  <div className="ml-10 flex-1 rounded-2xl border border-border bg-card p-5 md:ml-0 md:mx-6">
+                    <div className="text-[11px] font-bold uppercase tracking-widest text-primary">{r.q}</div>
+                    <div className="mt-1.5 text-base font-bold">{r.t}</div>
+                    <p className="mt-1.5 text-sm text-muted-foreground">{r.d}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* TESTIMONIALS */}
       <section className="border-t border-border/60 bg-secondary/20 py-16 md:py-24">
         <div className="mx-auto max-w-6xl px-4">
@@ -425,9 +383,9 @@ function LandingPage() {
           </div>
           <div className="mt-10 grid gap-4 md:grid-cols-3">
             {[
-              { name: "Артём К.", role: "Арбитражник, ~₽800k/мес", text: "Раньше лил на 3 сетки параллельно. С КВАНТом одной хватает — офферы жирнее, холды короче, менеджер быстрее." },
-              { name: "Мария О.", role: "Команда, 8 человек", text: "Субаккаунты + API постбэков закрыли все наши боли. Управление командой стало занимать 20 минут в день, а не два часа." },
-              { name: "Дмитрий В.", role: "Новичок, 3 месяца", text: "Начал с нуля, менеджер новичка провёл за руку по первым связкам. На 4-й день вышел в плюс, сейчас стабильно ₽120k." },
+              { name: "Артём К.", role: "Арбитражник", text: "Раньше лил на 3 сетки параллельно. С КВАНТом одной хватает — офферы жирнее, холды короче, менеджер быстрее." },
+              { name: "Мария О.", role: "Команда, 8 человек", text: "Субаккаунты и API постбэков закрыли все наши боли. Управление командой стало занимать 20 минут в день, а не два часа." },
+              { name: "Дмитрий В.", role: "Новичок, 3 месяца", text: "Начал с нуля, менеджер новичка провёл за руку по первым связкам. На 4-й день вышел в плюс." },
             ].map((t) => (
               <div key={t.name} className="rounded-2xl border border-border bg-card p-6">
                 <div className="flex gap-0.5 text-primary">
@@ -447,27 +405,8 @@ function LandingPage() {
         </div>
       </section>
 
-      {/* NUMBERS STRIP */}
-      <section className="border-t border-border/60 py-16 md:py-20">
-        <div className="mx-auto max-w-6xl px-4">
-          <div className="grid grid-cols-2 gap-6 text-center md:grid-cols-4">
-            {[
-              { v: stats ? `₽${formatCount(stats.avgEpc)}` : "—", l: "средний EPC по топ-офферам" },
-              { v: stats ? formatCount(stats.offersCount) : "—", l: "активных офферов" },
-              { v: stats ? formatCount(stats.completedConversions) : "—", l: "подтверждённых конверсий" },
-              { v: stats ? formatRub(stats.totalPaid) : "—", l: "выплачено партнёрам" },
-            ].map((s) => (
-              <div key={s.l}>
-                <div className="bg-gradient-to-br from-primary to-primary/50 bg-clip-text text-3xl font-black text-transparent md:text-4xl">{s.v}</div>
-                <div className="mt-2 text-[11px] uppercase tracking-wider text-muted-foreground">{s.l}</div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
       {/* FAQ */}
-      <section id="faq" className="border-t border-border/60 bg-secondary/20 py-16 md:py-24">
+      <section id="faq" className="border-t border-border/60 py-16 md:py-24">
         <div className="mx-auto max-w-3xl px-4">
           <div className="text-center">
             <div className="text-[11px] font-bold uppercase tracking-widest text-primary">FAQ</div>
@@ -476,8 +415,8 @@ function LandingPage() {
           <div className="mt-10 space-y-3">
             {[
               { q: "Нужен ли опыт в арбитраже?", a: "Нет. База знаний, гайды по офферам, менеджер новичка на первые 30 дней и живой чат поддержки — вы не останетесь один." },
-              { q: "Как быстро приходят выплаты?", a: "От 72 часов на старте, от 1 часа на «Платине». В прошлом месяце средний срок по всей сети составил 8 ч 12 мин." },
-              { q: "Есть ли минимальная сумма вывода?", a: "1 000 ₽. Способы: карта РФ, USDT (TRC-20/ERC-20), СБП, банковский перевод для ИП и юрлиц, WMZ, Payoneer." },
+              { q: "Как быстро приходят выплаты?", a: "От 72 часов на старте, от 1 часа на «Платине». Все сроки закреплены в оферте." },
+              { q: "Есть ли минимальная сумма вывода?", a: "1 000 ₽. Способы: карта РФ, USDT (TRC-20/ERC-20), СБП, банковский перевод для ИП и юрлиц." },
               { q: "Можно ли лить с бурж-трафика?", a: "Да, но условия зависят от оффера — часть работает только по РФ/СНГ, часть открыта на бурж. Уточняйте в карточке оффера." },
               { q: "Что с антифродом?", a: "Публичный регламент, никаких блокировок задним числом. Все спорные ситуации разбираются с логами и скриншотами в открытом тикете." },
               { q: "Есть ли API и постбэки?", a: "Да. Полноценный REST API, S2S-постбэки с макросами, интеграции с Keitaro, Binom, RedTrack и любым кастомным трекером." },
@@ -499,14 +438,14 @@ function LandingPage() {
         <div className="mx-auto max-w-4xl px-4">
           <div className="relative overflow-hidden rounded-3xl border border-border bg-card p-8 text-center md:p-14">
             <div aria-hidden className="pointer-events-none absolute inset-0 -z-10 opacity-60">
-              <div className="absolute -right-24 -top-24 size-72 rounded-full bg-primary/25 blur-3xl" />
-              <div className="absolute -bottom-24 -left-24 size-72 rounded-full bg-primary/15 blur-3xl" />
+              <div className="absolute -right-24 -top-24 size-72 rounded-full bg-primary/25 blur-3xl ambient-blob-a" />
+              <div className="absolute -bottom-24 -left-24 size-72 rounded-full bg-primary/15 blur-3xl ambient-blob-b" />
             </div>
             <div className="mx-auto inline-flex items-center gap-2 rounded-full border border-primary/30 bg-primary/10 px-3 py-1 text-[11px] font-bold uppercase tracking-widest text-primary">
               <MessageCircle className="size-3" /> Регистрация меньше минуты
             </div>
-            <h2 className="mt-4 text-3xl font-black md:text-4xl">Готовы начать зарабатывать?</h2>
-            <p className="mx-auto mt-3 max-w-lg text-muted-foreground">Первый оффер можно запустить сразу. Первая выплата — уже сегодня.</p>
+            <h2 className="mt-4 text-3xl font-black md:text-4xl">Готовы стать частью КВАНТ?</h2>
+            <p className="mx-auto mt-3 max-w-lg text-muted-foreground">Первый оффер можно запустить сразу после регистрации.</p>
             <div className="mt-7 flex flex-col items-center justify-center gap-3 sm:flex-row">
               <button onClick={() => openAuth("register")} className="group inline-flex w-full items-center justify-center gap-2 rounded-xl bg-primary px-6 py-3.5 text-sm font-bold text-primary-foreground shadow-lg shadow-primary/25 transition hover:bg-primary/90 hover:shadow-primary/40 sm:w-auto">
                 Создать аккаунт <ArrowRight className="size-4 transition group-hover:translate-x-0.5" />
@@ -523,8 +462,6 @@ function LandingPage() {
           </div>
         </div>
       </section>
-
-
 
       {/* FOOTER */}
       <footer className="border-t border-border/60 py-8">
@@ -543,7 +480,6 @@ function LandingPage() {
           <p className="text-xs text-muted-foreground">Партнёрская платформа для профессионалов трафика.</p>
         </div>
       </footer>
-
 
       {authOpen && <AuthDialog initialMode={initialMode} onClose={() => setAuthOpen(false)} />}
     </div>
@@ -587,7 +523,6 @@ function AuthDialog({ initialMode, onClose }: { initialMode: Mode; onClose: () =
           options: { emailRedirectTo: window.location.origin, data: { display_name: displayName.trim(), avatar_url: avatar } },
         });
         if (err) throw err;
-        // Best-effort: ensure the profile row has the avatar (in case the trigger doesn't pick it up).
         if (signUpData.user) {
           try { await supabase.from("profiles").update({ avatar_url: avatar }).eq("id", signUpData.user.id); } catch { /* ignore */ }
         }
@@ -669,7 +604,6 @@ function AuthDialog({ initialMode, onClose }: { initialMode: Mode; onClose: () =
               <a href="/privacy" target="_blank" rel="noreferrer" className="font-bold text-primary hover:underline">политикой конфиденциальности</a>.
             </p>
           )}
-
 
           <p className="pt-1 text-center text-[11px] text-muted-foreground">
             {mode === "login" ? (
