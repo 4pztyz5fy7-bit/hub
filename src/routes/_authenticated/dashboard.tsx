@@ -6,6 +6,7 @@ import { ProfileTab } from "@/components/dashboard/profile-tab";
 import { SupportTab } from "@/components/dashboard/support-tab";
 import { RewardsTab } from "@/components/dashboard/rewards-tab";
 import { BannerBoard } from "@/components/dashboard/banner-board";
+import { AmbientBackdrop } from "@/components/ambient-backdrop";
 import { t } from "@/lib/i18n";
 import { randomAvatarUrl } from "@/lib/avatars";
 import { useTrackOnline } from "@/lib/online-presence";
@@ -1088,7 +1089,9 @@ function DashboardPage() {
   /* ============================== Render ============================== */
 
   return (
-    <div className="min-h-screen bg-background text-foreground selection:bg-primary/10">
+    <div className="relative min-h-screen bg-background text-foreground selection:bg-primary/10">
+      <AmbientBackdrop variant="dashboard" />
+
       {/* Header */}
       <header className="sticky top-0 z-30 flex h-14 items-center justify-between border-b border-border bg-background/80 px-4 backdrop-blur-md lg:px-8">
         <div className="flex items-center gap-2.5">
