@@ -208,7 +208,7 @@ function LandingPage() {
             </div>
             <div className="relative overflow-hidden">
               {tickerItems.length > 0 ? (
-                <div className="flex animate-[marquee_50s_linear_infinite] gap-8 whitespace-nowrap py-3 px-4 text-sm">
+                <div className="flex animate-[marquee_120s_linear_infinite] gap-8 whitespace-nowrap py-3 px-4 text-sm">
                   {tickerItems.map((t) => {
                     const dot =
                       t.kind === "conversion" ? "bg-emerald-500"
