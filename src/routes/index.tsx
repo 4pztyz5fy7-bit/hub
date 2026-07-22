@@ -8,8 +8,8 @@ import {
   X, ArrowRight, Wallet, BarChart3, Headphones, Star, Check, Menu, Sparkles,
   Clock, Users, Target, Gift, MessageCircle, CreditCard, Globe, Award,
 } from "lucide-react";
-import { getLandingStats, type LandingStats } from "@/lib/landing-stats.functions";
-import { fetchLandingStatsClient, isStatsEmpty } from "@/lib/landing-stats-fallback";
+import type { LandingStats } from "@/lib/landing-stats.functions";
+import { fetchLandingStatsClient } from "@/lib/landing-stats-fallback";
 import { randomAvatarUrl } from "@/lib/avatars";
 import { useOnlineCount } from "@/lib/online-presence";
 
