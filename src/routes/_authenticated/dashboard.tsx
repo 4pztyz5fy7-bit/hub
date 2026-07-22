@@ -1090,7 +1090,7 @@ function DashboardPage() {
   return (
     <div className="min-h-screen bg-background text-foreground selection:bg-primary/10">
       {/* Header */}
-      <header className="sticky top-0 z-30 flex h-14 items-center justify-between border-b border-border bg-background/80 px-4 backdrop-blur-md">
+      <header className="sticky top-0 z-30 flex h-14 items-center justify-between border-b border-border bg-background/80 px-4 backdrop-blur-md lg:px-8">
         <div className="flex items-center gap-2.5">
           <div className="flex size-6 items-center justify-center rounded-sm bg-foreground">
             <div className="size-2.5 rotate-45 bg-background" />
@@ -1209,7 +1209,7 @@ function DashboardPage() {
       )}
 
 
-      <main key={active} className="mx-auto max-w-[420px] space-y-6 p-4 pb-28">
+      <main key={active} className="mx-auto w-full max-w-[420px] space-y-6 p-4 pb-28 lg:max-w-6xl lg:pb-10 lg:pl-[17rem] lg:pr-8 lg:pt-8">
         {active === "info" && (
           <InfoTab
             balance={balance}
@@ -1336,7 +1336,7 @@ function DashboardPage() {
 
 
       {/* Bottom nav */}
-      <nav className="fixed bottom-0 left-0 right-0 z-30 flex h-16 items-center justify-around border-t border-border bg-background/95 px-2 backdrop-blur-md">
+      <nav className="fixed bottom-0 left-0 right-0 z-30 flex h-16 items-center justify-around border-t border-border bg-background/95 px-2 backdrop-blur-md lg:bottom-auto lg:right-auto lg:top-14 lg:h-[calc(100vh-3.5rem)] lg:w-64 lg:flex-col lg:items-stretch lg:justify-start lg:gap-1 lg:border-r lg:border-t-0 lg:p-4">
         {(
           [
             { id: "info", key: "nav_info", Icon: LayoutGrid },
@@ -1352,15 +1352,18 @@ function DashboardPage() {
           <button
             key={id}
             onClick={() => setActive(id)}
-            className={`flex flex-col items-center gap-1 ${
-              active === id ? "text-primary" : "text-muted-foreground"
+            className={`flex flex-col items-center gap-1 rounded-lg lg:w-full lg:flex-row lg:items-center lg:gap-3 lg:px-3 lg:py-2.5 lg:text-left lg:transition-colors ${
+              active === id
+                ? "text-primary lg:bg-primary/10"
+                : "text-muted-foreground lg:hover:bg-accent lg:hover:text-foreground"
             }`}
           >
-            <Icon className={`size-5 ${active === id ? "" : "opacity-60"}`} />
-            <span className="text-[9px] font-bold uppercase tracking-tighter">{t(prefs.language, key)}</span>
+            <Icon className={`size-5 ${active === id ? "" : "opacity-60 lg:opacity-100"}`} />
+            <span className="text-[9px] font-bold uppercase tracking-tighter lg:text-xs lg:tracking-wider">{t(prefs.language, key)}</span>
           </button>
         ))}
       </nav>
+
 
     </div>
   );
