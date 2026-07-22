@@ -47,10 +47,12 @@ export const getTeamManagementData = createServerFn({ method: "GET" })
     if (memError) throw new Error(memError.message);
 
     const ids = Array.from(
-      new Set([
-        ...(members ?? []).map((m) => m.user_id),
-        ...(members ?? []).map((m) => m.assigned_by).filter(Boolean),
-      ]),
+      new Set(
+        [
+          ...(members ?? []).map((m) => m.user_id),
+          ...(members ?? []).map((m) => m.assigned_by),
+        ].filter((id): id is string => typeof id === "string" && id.length > 0),
+      ),
     );
 
     let profiles: any[] = [];
