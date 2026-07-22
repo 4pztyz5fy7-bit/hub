@@ -258,10 +258,21 @@ export const askAssistant = createServerFn({ method: "POST" })
   .inputValidator((d) => AskSchema.parse(d))
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const settings = await getResolvedAiSettings(supabaseAdmin);
+
+    if (!settings.enabled) {
+      return { answer: "AI-ассистент временно отключён администратором.", flagged: false };
+    }
+
+    const userMsgCount = data.messages.filter((m) => m.role === "user").length;
+    if (userMsgCount > settings.user_prompt_limit) {
+      return { answer: `Достигнут лимит сообщений (${settings.user_prompt_limit}). Попробуй позже.`, flagged: false };
+    }
 
     const lastUser = [...data.messages].reverse().find((m) => m.role === "user");
-    if (lastUser) {
-      const mod = await moderateQuery(lastUser.content);
+    if (lastUser && settings.moderation_enabled) {
+      const mod = await moderateQuery(lastUser.content, settings);
       if (mod.category === "illegal") {
         const { data: prof } = await supabase.from("profiles").select("display_name,email").eq("id", userId).maybeSingle();
         const label = prof?.display_name || prof?.email || "Партнёр";
@@ -305,7 +316,7 @@ export const askAssistant = createServerFn({ method: "POST" })
       `- Конверсий: ${okConv.length}\n\n` +
       `АКТУАЛЬНЫЕ ОФФЕРЫ (топ по EPC):\n${offersBrief || "нет активных офферов"}`;
 
-    const answer = await callLovableAI(system, data.messages);
+    const answer = await callLovableAI(system, data.messages, settings);
     return { answer, flagged: false };
   });
 
