@@ -169,7 +169,7 @@ function LandingPage() {
           <div className="mx-auto max-w-3xl text-center">
             <div className="mx-auto inline-flex items-center gap-2 rounded-full border border-primary/30 bg-primary/10 px-3 py-1 text-[11px] font-bold uppercase tracking-widest text-primary">
               <span className="relative flex size-2">
-                <span className="absolute inset-0 animate-ping rounded-full bg-primary opacity-75" />
+                <span className="absolute inset-0 animate-ping rounded-full bg-primary opacity-75" style={{ animationDuration: "2.4s" }} />
                 <span className="relative inline-flex size-2 rounded-full bg-primary" />
               </span>
               {`${formatCount(onlineCount)} партнёров в сети`}
