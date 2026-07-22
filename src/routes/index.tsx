@@ -8,8 +8,8 @@ import {
   X, ArrowRight, Wallet, BarChart3, Headphones, Star, Check, Menu, Sparkles,
   Clock, Users, Target, Gift, MessageCircle, CreditCard, Globe, Award,
 } from "lucide-react";
-import { getLandingStats, type LandingStats } from "@/lib/landing-stats.functions";
-import { fetchLandingStatsClient, isStatsEmpty } from "@/lib/landing-stats-fallback";
+import type { LandingStats } from "@/lib/landing-stats.functions";
+import { fetchLandingStatsClient } from "@/lib/landing-stats-fallback";
 import { randomAvatarUrl } from "@/lib/avatars";
 import { useOnlineCount } from "@/lib/online-presence";
 
@@ -36,7 +36,6 @@ export const Route = createFileRoute("/")({
       { name: "twitter:card", content: "summary_large_image" },
     ],
   }),
-  loader: () => getLandingStats().catch(() => null),
   staleTime: 15_000,
   component: LandingPage,
 });
@@ -53,8 +52,7 @@ function LandingPage() {
   const [initialMode, setInitialMode] = useState<Mode>("login");
   const [menuOpen, setMenuOpen] = useState(false);
 
-  const initialStats = Route.useLoaderData() as LandingStats | null;
-  const [stats, setStats] = useState<LandingStats | null>(initialStats);
+  const [stats, setStats] = useState<LandingStats | null>(null);
   const onlineCount = useOnlineCount();
 
   useEffect(() => {
@@ -72,21 +70,12 @@ function LandingPage() {
     let cancelled = false;
     let timer: ReturnType<typeof setTimeout> | null = null;
     const refresh = async () => {
-      let s: LandingStats | null = null;
       try {
-        s = await getLandingStats();
+        const s = await fetchLandingStatsClient();
+        if (!cancelled) setStats(s);
       } catch (e) {
-        console.warn("[landing] getLandingStats RPC failed, falling back to direct queries", e);
+        console.warn("[landing] direct queries failed", e);
       }
-      if (isStatsEmpty(s)) {
-        try {
-          const fb = await fetchLandingStatsClient();
-          if (!isStatsEmpty(fb)) s = fb;
-        } catch (e) {
-          console.warn("[landing] client fallback failed", e);
-        }
-      }
-      if (!cancelled && s) setStats(s);
     };
     const schedule = () => {
       if (timer) return;
