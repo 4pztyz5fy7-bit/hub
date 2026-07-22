@@ -53,6 +53,51 @@ export type Database = {
         }
         Relationships: []
       }
+      ai_settings: {
+        Row: {
+          admin_prompt_limit: number
+          enabled: boolean
+          gemini_api_key: string | null
+          gemini_model: string
+          id: number
+          lovable_api_key: string | null
+          lovable_model: string
+          moderation_enabled: boolean
+          provider: string
+          updated_at: string
+          updated_by: string | null
+          user_prompt_limit: number
+        }
+        Insert: {
+          admin_prompt_limit?: number
+          enabled?: boolean
+          gemini_api_key?: string | null
+          gemini_model?: string
+          id?: number
+          lovable_api_key?: string | null
+          lovable_model?: string
+          moderation_enabled?: boolean
+          provider?: string
+          updated_at?: string
+          updated_by?: string | null
+          user_prompt_limit?: number
+        }
+        Update: {
+          admin_prompt_limit?: number
+          enabled?: boolean
+          gemini_api_key?: string | null
+          gemini_model?: string
+          id?: number
+          lovable_api_key?: string | null
+          lovable_model?: string
+          moderation_enabled?: boolean
+          provider?: string
+          updated_at?: string
+          updated_by?: string | null
+          user_prompt_limit?: number
+        }
+        Relationships: []
+      }
       banners: {
         Row: {
           active: boolean
