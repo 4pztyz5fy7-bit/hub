@@ -3,9 +3,9 @@ import { useEffect, useRef, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import {
   Sparkles, Send, Loader2, Users, Package, DollarSign, Wallet,
-  TrendingUp, AlertTriangle, RefreshCw, Trophy, Activity,
+  TrendingUp, AlertTriangle, RefreshCw, Trophy, Activity, Power,
 } from "lucide-react";
-import { askAdminAnalyst, getAdminSnapshot, type AdminSnapshot } from "@/lib/ai-assistant.functions";
+import { askAdminAnalyst, getAiStatus, getAdminSnapshot, type AdminSnapshot } from "@/lib/ai-assistant.functions";
 
 type Msg = { role: "user" | "assistant"; content: string };
 
