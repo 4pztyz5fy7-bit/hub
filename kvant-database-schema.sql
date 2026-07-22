@@ -314,7 +314,7 @@ DECLARE
   _row public.payout_requests%ROWTYPE;
   _amount_str text;
 BEGIN
-  IF NOT public.has_role(auth.uid(), 'admin') THEN
+  IF NOT public.has_role(auth.uid(), 'admin'::public.app_role) THEN
     RAISE EXCEPTION 'forbidden' USING ERRCODE = '42501';
   END IF;
 
@@ -361,7 +361,7 @@ DECLARE
   _earned numeric := 0;
   _conv_id uuid;
 BEGIN
-  IF NOT public.has_role(auth.uid(), 'admin') THEN
+  IF NOT public.has_role(auth.uid(), 'admin'::public.app_role) THEN
     RAISE EXCEPTION 'forbidden' USING ERRCODE = '42501';
   END IF;
 
@@ -602,7 +602,7 @@ AS $function$
       JOIN public.team_positions tp ON tp.id = tm.position_id
       WHERE tm.user_id = auth.uid()
       LIMIT 1),
-    CASE WHEN public.has_role(auth.uid(), 'admin') THEN
+    CASE WHEN public.has_role(auth.uid(), 'admin'::public.app_role) THEN
       jsonb_build_object(
         'position_code', 'legacy_admin',
         'position_name', 'Администратор',
@@ -1136,7 +1136,7 @@ CREATE OR REPLACE FUNCTION public.support_tickets_guard()
  SET search_path TO 'public'
 AS $function$
 BEGIN
-  IF public.has_role(auth.uid(), 'admin') THEN
+  IF public.has_role(auth.uid(), 'admin'::public.app_role) THEN
     RETURN NEW;
   END IF;
   -- Regular user updating own ticket: preserve admin-only fields
