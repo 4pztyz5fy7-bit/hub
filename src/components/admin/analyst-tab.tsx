@@ -21,6 +21,7 @@ const QUICK: { label: string; icon: typeof Sparkles; prompt: string }[] = [
 export function AdminAnalystTab() {
   const askFn = useServerFn(askAdminAnalyst);
   const snapFn = useServerFn(getAdminSnapshot);
+  const statusFn = useServerFn(getAiStatus);
 
   const [snap, setSnap] = useState<AdminSnapshot | null>(null);
   const [snapLoading, setSnapLoading] = useState(true);
@@ -28,6 +29,7 @@ export function AdminAnalystTab() {
   const [input, setInput] = useState("");
   const [sending, setSending] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [aiEnabled, setAiEnabled] = useState<boolean | null>(null);
   const scrollRef = useRef<HTMLDivElement | null>(null);
 
   const load = async () => {
@@ -35,7 +37,18 @@ export function AdminAnalystTab() {
     try { setSnap(await snapFn({})); } catch { /* ignore */ }
     setSnapLoading(false);
   };
-  useEffect(() => { void load(); /* eslint-disable-next-line react-hooks/exhaustive-deps */ }, []);
+
+  const loadStatus = async () => {
+    try {
+      const s = await statusFn({});
+      setAiEnabled(s.enabled);
+    } catch (e) {
+      console.error("[analyst] status error", e);
+      setAiEnabled(false);
+    }
+  };
+
+  useEffect(() => { void load(); void loadStatus(); /* eslint-disable-next-line react-hooks/exhaustive-deps */ }, []);
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
   }, [messages, sending]);
