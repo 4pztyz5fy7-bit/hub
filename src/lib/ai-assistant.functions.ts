@@ -218,7 +218,9 @@ export const getUserSnapshot = createServerFn({ method: "GET" })
     };
   });
 
-async function moderateQuery(text: string): Promise<{ flagged: boolean; category: "illegal" | "offtopic" | "ok"; reason: string }> {
+async function moderateQuery(text: string, settings: ResolvedAiSettings): Promise<{ flagged: boolean; category: "illegal" | "offtopic" | "ok"; reason: string }> {
+  if (!settings.enabled) return { flagged: false, category: "ok", reason: "" };
+
   const sys =
     `Ты — лёгкий модератор чата AI-наставника CPA-сети КВАНТ. Классифицируй ПОСЛЕДНИЙ вопрос пользователя. ` +
     `Верни СТРОГО JSON без пояснений в формате: {"category":"illegal|offtopic|ok","reason":"кратко на русском"}.\n` +
@@ -226,7 +228,7 @@ async function moderateQuery(text: string): Promise<{ flagged: boolean; category
     `- "offtopic" — если запрос явно НЕ связан с арбитражем трафика, CPA, маркетингом, рекламой, трафиком, лидами, клиентами, заработком онлайн, офферами, аналитикой, креативами, источниками трафика, воронкой продаж, платформой КВАНТ или бизнесом в целом.\n` +
     `- "ok" — всё остальное: в том числе "как привлечь человека/клиента", "где взять трафик", "как настроить рекламу", "какой оффер лучше", "как поднять CR", "как масштабироваться", "какие креативы использовать", вопросы по выплатам, конверсиям, статистике и работе в КВАНТ.`;
   try {
-    const raw = await callLovableAI(sys, [{ role: "user", content: text.slice(0, 2000) }]);
+    const raw = await callLovableAI(sys, [{ role: "user", content: text.slice(0, 2000) }], settings);
     const m = raw.match(/\{[\s\S]*\}/);
     if (!m) return { flagged: false, category: "ok", reason: "" };
     const parsed = JSON.parse(m[0]) as { category?: string; reason?: string };
