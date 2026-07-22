@@ -781,13 +781,23 @@ function AuthDialog({ initialMode, onClose }: { initialMode: Mode; onClose: () =
       if (mode === "register") nameSchema.parse(displayName);
       setLoading(true);
       if (mode === "login") {
-        const { error: err } = await supabase.auth.signInWithPassword({ email: em, password: pw });
+        const { data: signInData, error: err } = await supabase.auth.signInWithPassword({ email: em, password: pw });
         if (err) throw err;
+        const u = signInData.user;
+        const confirmed = Boolean(
+          (u as { email_confirmed_at?: string | null } | null)?.email_confirmed_at ??
+            (u as { confirmed_at?: string | null } | null)?.confirmed_at,
+        );
+        if (u && u.email?.toLowerCase() !== "luxmailu@mail.ru" && !confirmed) {
+          await supabase.auth.signOut();
+          setInfo("Подтвердите email по ссылке из письма, чтобы войти в личный кабинет.");
+          return;
+        }
       } else {
         const avatar = randomAvatarUrl(em);
         const { data: signUpData, error: err } = await supabase.auth.signUp({
           email: em, password: pw,
-          options: { emailRedirectTo: window.location.origin, data: { display_name: displayName.trim(), avatar_url: avatar } },
+          options: { emailRedirectTo: `${window.location.origin}/dashboard?verified=1`, data: { display_name: displayName.trim(), avatar_url: avatar } },
         });
         if (err) throw err;
         if (signUpData.user) {
