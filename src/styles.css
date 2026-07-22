@@ -110,6 +110,48 @@
   to { transform: translateX(-50%); }
 }
 
+/* ============ Ambient / decorative motion ============ */
+@keyframes kvant-float-a {
+  0%, 100% { transform: translate3d(0, 0, 0) scale(1); }
+  50%      { transform: translate3d(20px, -30px, 0) scale(1.08); }
+}
+@keyframes kvant-float-b {
+  0%, 100% { transform: translate3d(0, 0, 0) scale(1); }
+  50%      { transform: translate3d(-24px, 22px, 0) scale(0.94); }
+}
+@keyframes kvant-float-c {
+  0%, 100% { transform: translate3d(0, 0, 0); }
+  33%      { transform: translate3d(14px, 18px, 0); }
+  66%      { transform: translate3d(-18px, -10px, 0); }
+}
+@keyframes kvant-drift {
+  0%   { transform: translateY(10vh) rotate(0deg); opacity: 0; }
+  10%  { opacity: 0.9; }
+  90%  { opacity: 0.9; }
+  100% { transform: translateY(-110vh) rotate(360deg); opacity: 0; }
+}
+@keyframes kvant-orbit {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+@keyframes kvant-dash {
+  to { stroke-dashoffset: -240; }
+}
+@keyframes kvant-line-sweep {
+  0%   { transform: translateX(-120%); }
+  100% { transform: translateX(120%); }
+}
+
+@utility ambient-blob-a { animation: kvant-float-a 18s ease-in-out infinite; }
+@utility ambient-blob-b { animation: kvant-float-b 22s ease-in-out infinite; }
+@utility ambient-blob-c { animation: kvant-float-c 26s ease-in-out infinite; }
+@utility ambient-orbit  { animation: kvant-orbit 40s linear infinite; }
+@utility ambient-orbit-slow { animation: kvant-orbit 90s linear infinite; }
+@utility ambient-orbit-reverse { animation: kvant-orbit 60s linear infinite reverse; }
+@utility ambient-sweep  { animation: kvant-line-sweep 9s linear infinite; }
+@utility ambient-dash   { stroke-dasharray: 6 8; animation: kvant-dash 8s linear infinite; }
+
+
 /* Smooth global transitions */
 @layer base {
   html {
