@@ -49,13 +49,36 @@ export default {
     try {
       const handler = await getServerEntry();
       const response = await handler.fetch(request, env, ctx);
-      return await normalizeCatastrophicSsrResponse(response);
+      return withSecurityHeaders(await normalizeCatastrophicSsrResponse(response), request);
     } catch (error) {
       console.error(error);
-      return new Response(renderErrorPage(), {
+      return withSecurityHeaders(new Response(renderErrorPage(), {
         status: 500,
         headers: { "content-type": "text/html; charset=utf-8" },
-      });
+      }), request);
     }
   },
 };
+
+function withSecurityHeaders(response: Response, request: Request): Response {
+  const headers = new Headers(response.headers);
+  const existingCsp = headers.get("content-security-policy");
+  const mixedContentPolicy = "upgrade-insecure-requests";
+
+  if (!existingCsp) {
+    headers.set("content-security-policy", mixedContentPolicy);
+  } else if (!existingCsp.includes(mixedContentPolicy)) {
+    headers.set("content-security-policy", `${existingCsp}; ${mixedContentPolicy}`);
+  }
+
+  const url = new URL(request.url);
+  if (url.protocol === "https:") {
+    headers.set("strict-transport-security", "max-age=31536000; includeSubDomains; preload");
+  }
+
+  return new Response(response.body, {
+    status: response.status,
+    statusText: response.statusText,
+    headers,
+  });
+}
