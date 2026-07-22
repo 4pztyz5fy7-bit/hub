@@ -52,8 +52,7 @@ function LandingPage() {
   const [initialMode, setInitialMode] = useState<Mode>("login");
   const [menuOpen, setMenuOpen] = useState(false);
 
-  const initialStats = Route.useLoaderData() as LandingStats | null;
-  const [stats, setStats] = useState<LandingStats | null>(initialStats);
+  const [stats, setStats] = useState<LandingStats | null>(null);
   const onlineCount = useOnlineCount();
 
   useEffect(() => {
@@ -71,21 +70,12 @@ function LandingPage() {
     let cancelled = false;
     let timer: ReturnType<typeof setTimeout> | null = null;
     const refresh = async () => {
-      let s: LandingStats | null = null;
       try {
-        s = await getLandingStats();
+        const s = await fetchLandingStatsClient();
+        if (!cancelled) setStats(s);
       } catch (e) {
-        console.warn("[landing] getLandingStats RPC failed, falling back to direct queries", e);
+        console.warn("[landing] direct queries failed", e);
       }
-      if (isStatsEmpty(s)) {
-        try {
-          const fb = await fetchLandingStatsClient();
-          if (!isStatsEmpty(fb)) s = fb;
-        } catch (e) {
-          console.warn("[landing] client fallback failed", e);
-        }
-      }
-      if (!cancelled && s) setStats(s);
     };
     const schedule = () => {
       if (timer) return;
