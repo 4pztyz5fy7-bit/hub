@@ -71,6 +71,8 @@ export function AdminAnalystTab() {
     }
   };
 
+  const disabled = aiEnabled === false;
+
   return (
     <div className="space-y-4">
       <div className="rounded-2xl border border-border bg-gradient-to-br from-primary/10 via-card to-card p-4">
@@ -87,6 +89,14 @@ export function AdminAnalystTab() {
           </button>
         </div>
       </div>
+
+      {disabled && (
+        <div className="rounded-2xl border border-border bg-card p-6 text-center">
+          <Power className="mx-auto size-8 text-muted-foreground" />
+          <div className="mt-3 text-sm font-bold">AI-аналитик отключён</div>
+          <p className="mt-1 text-xs text-muted-foreground">Включите генеративный AI в разделе «AI-настройки» админ-панели.</p>
+        </div>
+      )}
 
       <div className="grid grid-cols-2 gap-2 md:grid-cols-4">
         <Stat label="Партнёры" value={snap?.users} icon={Users} loading={snapLoading} />
