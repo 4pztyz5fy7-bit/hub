@@ -328,6 +328,7 @@ function AdminPage() {
         {tab === "moderation" && canRender("moderation") && <ModerationTab meId={meId} onCountChange={setModerationUnread} />}
         {tab === "support" && canRender("support") && <AdminSupportTab meId={meId} onCountChange={setSupportUnread} />}
         {tab === "ai" && canRender("ai") && <AdminAnalystTab />}
+        {tab === "ai_settings" && canRender("ai_settings") && <AiSettingsTab />}
         {tab === "competitions" && canRender("competitions") && <AdminCompetitionsTab />}
         {tab === "email" && canRender("email") && <AdminEmailSettingsTab />}
         {tab === "team" && perms.is_leadership && <TeamTab />}
