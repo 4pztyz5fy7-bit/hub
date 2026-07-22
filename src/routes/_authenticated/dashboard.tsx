@@ -564,7 +564,6 @@ function DashboardPage() {
   const [userAvatar, setUserAvatar] = useState<string | null>(null);
   const [prefs, setPrefs] = useState<UserPrefs>(DEFAULT_PREFS);
   const [paletteOpen, setPaletteOpen] = useState(false);
-  const navigatePage = useNavigate();
 
   // Global ⌘K / Ctrl+K to toggle command palette
   useEffect(() => {
