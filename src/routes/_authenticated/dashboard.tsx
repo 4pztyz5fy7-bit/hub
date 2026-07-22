@@ -1090,7 +1090,7 @@ function DashboardPage() {
   return (
     <div className="min-h-screen bg-background text-foreground selection:bg-primary/10">
       {/* Header */}
-      <header className="sticky top-0 z-30 flex h-14 items-center justify-between border-b border-border bg-background/80 px-4 backdrop-blur-md">
+      <header className="sticky top-0 z-30 flex h-14 items-center justify-between border-b border-border bg-background/80 px-4 backdrop-blur-md lg:px-8">
         <div className="flex items-center gap-2.5">
           <div className="flex size-6 items-center justify-center rounded-sm bg-foreground">
             <div className="size-2.5 rotate-45 bg-background" />
