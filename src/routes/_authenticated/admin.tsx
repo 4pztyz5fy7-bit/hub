@@ -8,7 +8,7 @@ import {
   BarChart3, Search, Download, Copy, RefreshCw, Send, Filter, MoreHorizontal,
   TrendingUp, DollarSign, UserCheck, Activity, ChevronRight, Eye, Ban, Sparkles,
   Headphones, Megaphone, Newspaper,
-  Trophy, Mail, UserCog, Crown,
+  Trophy, Mail, UserCog, Crown, Bot,
 } from "lucide-react";
 import { AdminAnalystTab } from "@/components/admin/analyst-tab";
 import { AdminSupportTab } from "@/components/admin/support-tab";
@@ -16,6 +16,7 @@ import { AdminBannersTab } from "@/components/admin/banners-tab";
 import { AdminNewsTab } from "@/components/admin/news-tab";
 import { AdminCompetitionsTab } from "@/components/admin/admin-competitions-tab";
 import { AdminEmailSettingsTab } from "@/components/admin/email-settings-tab";
+import { AiSettingsTab } from "@/components/admin/ai-settings-tab";
 
 export const Route = createFileRoute("/_authenticated/admin")({
   head: () => ({ meta: [{ title: "Админ-панель — КВАНТ" }] }),
@@ -45,7 +46,7 @@ function useRealtimeReload(tables: string[], reload: () => void, channelKey?: st
 }
 
 /* =========================== TYPES =========================== */
-type TabId = "overview" | "users" | "offers" | "payouts" | "requests" | "conversions" | "broadcast" | "banners" | "news" | "moderation" | "support" | "ai" | "competitions" | "email" | "team";
+type TabId = "overview" | "users" | "offers" | "payouts" | "requests" | "conversions" | "broadcast" | "banners" | "news" | "moderation" | "support" | "ai" | "ai_settings" | "competitions" | "email" | "team";
 
 type TeamPerms = { position_code: string | null; position_name: string | null; is_leadership: boolean; permissions: string[] };
 
