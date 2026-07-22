@@ -170,13 +170,13 @@ export function AdminAnalystTab() {
           <input
             value={input}
             onChange={(e) => setInput(e.target.value)}
-            placeholder="Спросите у AI-аналитика…"
+            placeholder={disabled ? "AI-аналитик отключён" : "Спросите у AI-аналитика…"}
             className="flex-1 rounded-lg border border-border bg-background px-3 py-2 text-xs outline-none focus:border-primary"
-            disabled={sending}
+            disabled={sending || disabled}
           />
           <button
             type="submit"
-            disabled={sending || !input.trim()}
+            disabled={sending || !input.trim() || disabled}
             className="grid size-9 place-items-center rounded-lg bg-primary text-primary-foreground disabled:opacity-50"
             aria-label="Отправить"
           >
