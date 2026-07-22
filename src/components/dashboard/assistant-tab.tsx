@@ -123,7 +123,7 @@ export function AssistantTab() {
           {QUICK.map((q) => (
             <button
               key={q.label}
-              disabled={sending}
+              disabled={sending || disabled}
               onClick={() => void send(q.prompt)}
               className="flex items-center gap-2 rounded-xl border border-border bg-background px-3 py-2 text-left text-xs hover:border-primary/40 hover:bg-accent disabled:opacity-50"
             >
