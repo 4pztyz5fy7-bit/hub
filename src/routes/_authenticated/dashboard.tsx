@@ -1384,39 +1384,113 @@ function DashboardPage() {
 
 
 
-      {/* Bottom nav */}
-      <nav className="fixed bottom-0 left-0 right-0 z-30 flex h-16 items-center justify-around border-t border-border bg-background/95 px-2 backdrop-blur-md lg:bottom-auto lg:right-auto lg:top-14 lg:h-[calc(100vh-3.5rem)] lg:w-64 lg:flex-col lg:items-stretch lg:justify-start lg:gap-1 lg:border-r lg:border-t-0 lg:p-4">
-        {(
-          [
-            { id: "info", key: "nav_info", Icon: LayoutGrid },
-            { id: "offers", key: "nav_offers", Icon: Package },
-            { id: "requests", key: "nav_requests", Icon: Inbox },
-            { id: "stats", key: "nav_stats", Icon: BarChart3 },
-            { id: "payouts", key: "nav_payouts", Icon: Wallet },
-            { id: "ai", key: "nav_ai", Icon: Sparkles },
-            { id: "rewards", key: "nav_rewards", Icon: Trophy },
-            { id: "support", key: "nav_support", Icon: Headphones },
-          ] as const
-        ).map(({ id, key, Icon }) => (
-          <button
-            key={id}
-            onClick={() => setActive(id)}
-            className={`flex flex-col items-center gap-1 rounded-lg lg:w-full lg:flex-row lg:items-center lg:gap-3 lg:px-3 lg:py-2.5 lg:text-left lg:transition-colors ${
-              active === id
-                ? "text-primary lg:bg-primary/10"
-                : "text-muted-foreground lg:hover:bg-accent lg:hover:text-foreground"
-            }`}
-          >
-            <Icon className={`size-5 ${active === id ? "" : "opacity-60 lg:opacity-100"}`} />
-            <span className="text-[9px] font-bold uppercase tracking-tighter lg:text-xs lg:tracking-wider">{t(prefs.language, key)}</span>
-          </button>
-        ))}
-      </nav>
+      {/* ============ Navigation ============
+          Desktop: floating glass rail (icons + hover labels)
+          Mobile: pill-shaped floating bottom bar */}
+      {(() => {
+        const NAV = [
+          { id: "info" as const, key: "nav_info" as const, Icon: LayoutGrid, label: "Обзор" },
+          { id: "offers" as const, key: "nav_offers" as const, Icon: Package, label: "Офферы" },
+          { id: "requests" as const, key: "nav_requests" as const, Icon: Inbox, label: "Заявки" },
+          { id: "stats" as const, key: "nav_stats" as const, Icon: BarChart3, label: "Аналитика" },
+          { id: "payouts" as const, key: "nav_payouts" as const, Icon: Wallet, label: "Выплаты" },
+          { id: "ai" as const, key: "nav_ai" as const, Icon: Sparkles, label: "AI" },
+          { id: "rewards" as const, key: "nav_rewards" as const, Icon: Trophy, label: "Награды" },
+          { id: "support" as const, key: "nav_support" as const, Icon: Headphones, label: "Поддержка" },
+        ];
+        return (
+          <>
+            {/* Desktop floating rail */}
+            <nav className="pointer-events-none fixed left-4 top-1/2 z-30 hidden -translate-y-1/2 lg:block">
+              <div className="pointer-events-auto flex flex-col items-center gap-1 rounded-2xl border border-border/60 bg-card/80 p-2 shadow-xl shadow-primary/5 ring-1 ring-primary/5 backdrop-blur-xl">
+                {NAV.map(({ id, Icon, label }) => {
+                  const isActive = active === id;
+                  return (
+                    <div key={id} className="group relative">
+                      <button
+                        onClick={() => setActive(id)}
+                        aria-label={label}
+                        className={`relative grid size-11 place-items-center rounded-xl transition-all ${
+                          isActive
+                            ? "bg-gradient-to-br from-primary to-primary/70 text-primary-foreground shadow-md shadow-primary/40"
+                            : "text-muted-foreground hover:bg-accent hover:text-foreground"
+                        }`}
+                      >
+                        <Icon className="size-5" />
+                        {isActive && (
+                          <span className="pointer-events-none absolute -right-1.5 top-1/2 size-1.5 -translate-y-1/2 rounded-full bg-primary shadow-[0_0_8px_var(--primary)]" />
+                        )}
+                      </button>
+                      {/* Tooltip */}
+                      <span className="pointer-events-none absolute left-full top-1/2 z-10 ml-3 -translate-y-1/2 whitespace-nowrap rounded-md border border-border/70 bg-card px-2.5 py-1 text-xs font-semibold text-foreground opacity-0 shadow-lg transition-all group-hover:translate-x-0 group-hover:opacity-100">
+                        {label}
+                      </span>
+                    </div>
+                  );
+                })}
 
+                <div className="my-1 h-px w-8 bg-border/60" />
+
+                {/* ⌘K quick access */}
+                <button
+                  onClick={() => setPaletteOpen(true)}
+                  aria-label="Command"
+                  className="group/cmd relative grid size-11 place-items-center rounded-xl border border-primary/20 bg-primary/5 text-primary transition-all hover:bg-primary/10"
+                >
+                  <CommandIcon className="size-5" />
+                  <span className="pointer-events-none absolute left-full top-1/2 z-10 ml-3 -translate-y-1/2 whitespace-nowrap rounded-md border border-border/70 bg-card px-2.5 py-1 text-xs font-semibold text-foreground opacity-0 shadow-lg transition-all group-hover/cmd:opacity-100">
+                    Быстрый поиск · ⌘K
+                  </span>
+                </button>
+              </div>
+            </nav>
+
+            {/* Mobile floating pill nav */}
+            <nav className="fixed bottom-3 left-1/2 z-30 flex h-14 -translate-x-1/2 items-center gap-0.5 rounded-full border border-border/60 bg-card/90 px-1.5 shadow-2xl shadow-primary/10 ring-1 ring-primary/5 backdrop-blur-xl lg:hidden">
+              {NAV.map(({ id, Icon, label }) => {
+                const isActive = active === id;
+                return (
+                  <button
+                    key={id}
+                    onClick={() => setActive(id)}
+                    aria-label={label}
+                    className={`relative grid size-10 place-items-center rounded-full transition-all ${
+                      isActive
+                        ? "bg-gradient-to-br from-primary to-primary/70 text-primary-foreground shadow-md shadow-primary/40"
+                        : "text-muted-foreground active:scale-90"
+                    }`}
+                  >
+                    <Icon className="size-[18px]" />
+                  </button>
+                );
+              })}
+            </nav>
+          </>
+        );
+      })()}
+
+      {/* Command palette */}
+      <CommandPalette
+        open={paletteOpen}
+        onClose={() => setPaletteOpen(false)}
+        onNavigate={(t) => setActive(t as Tab)}
+        onOpenNotifs={() => setNotifOpen(true)}
+        onOpenLevels={() => setLevelsOpen(true)}
+        onOpenBank={openBank}
+        onOpenPayout={() => (bank ? setPayoutOpen(true) : openBank())}
+        isAdmin={isAdmin}
+        onOpenAdmin={() => navigate({ to: "/admin" })}
+        offers={offers.map((o) => ({ id: o.id, name: o.name, tag: o.tag, category: o.category }))}
+        onOpenOffer={(id) => {
+          const o = offers.find((x) => x.id === id);
+          if (o) setOfferDetail(o);
+        }}
+      />
 
     </div>
   );
 }
+
 
 /* ================================ Info ================================= */
 
