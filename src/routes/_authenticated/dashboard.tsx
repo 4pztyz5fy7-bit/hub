@@ -1108,23 +1108,53 @@ function DashboardPage() {
       <AmbientBackdrop variant="dashboard" />
 
       {/* Header */}
-      <header className="sticky top-0 z-30 flex h-14 items-center justify-between border-b border-border bg-background/80 px-4 backdrop-blur-md lg:px-8">
-        <div className="flex items-center gap-2.5">
-          <div className="flex size-6 items-center justify-center rounded-sm bg-foreground">
-            <div className="size-2.5 rotate-45 bg-background" />
+      <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b border-border/60 bg-background/70 px-4 backdrop-blur-xl lg:h-[68px] lg:px-8">
+        <div className="flex items-center gap-3 lg:gap-6">
+          <div className="flex items-center gap-2.5">
+            <div className="relative grid size-8 place-items-center overflow-hidden rounded-xl bg-gradient-to-br from-primary via-primary to-primary/70 text-primary-foreground shadow-lg shadow-primary/30">
+              <span className="font-mono text-sm font-black">К</span>
+              <div className="pointer-events-none absolute inset-0 bg-gradient-to-tr from-white/0 via-white/20 to-white/0" />
+            </div>
+            <div className="hidden flex-col leading-none sm:flex">
+              <span className="text-sm font-black uppercase tracking-tight">КВАНТ</span>
+              <span className="mt-0.5 font-mono text-[9px] uppercase tracking-[0.2em] text-muted-foreground">
+                partner os
+              </span>
+            </div>
           </div>
-          <span className="text-sm font-bold uppercase tracking-tight">КВАНТ</span>
+
+          {/* Command palette trigger — desktop */}
+          <button
+            onClick={() => setPaletteOpen(true)}
+            className="hidden items-center gap-2 rounded-xl border border-border/70 bg-secondary/60 px-3 py-1.5 text-left text-xs text-muted-foreground shadow-sm transition-all hover:border-primary/40 hover:bg-secondary hover:text-foreground lg:flex lg:min-w-[280px]"
+          >
+            <Search className="size-3.5" />
+            <span className="flex-1">Быстрый переход, поиск офферов…</span>
+            <kbd className="inline-flex items-center gap-0.5 rounded-md border border-border bg-background px-1.5 py-0.5 font-mono text-[10px] font-semibold">
+              ⌘K
+            </kbd>
+          </button>
         </div>
-        <div className="flex items-center gap-3">
+
+        <div className="flex items-center gap-2 lg:gap-3">
+          {/* Command palette trigger — mobile */}
+          <button
+            onClick={() => setPaletteOpen(true)}
+            aria-label="Быстрый поиск"
+            className="flex size-9 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-accent hover:text-foreground lg:hidden"
+          >
+            <Search className="size-4" />
+          </button>
+
           {prefs.notify_push && (
             <button
               aria-label="Уведомления"
               onClick={() => setNotifOpen(true)}
-              className="relative flex size-8 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+              className="relative flex size-9 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
             >
               <Bell className="size-4" />
               {unreadCount > 0 && (
-                <span className="absolute -right-0.5 -top-0.5 grid min-w-[16px] place-items-center rounded-full bg-primary px-1 font-mono text-[9px] font-bold leading-none text-primary-foreground">
+                <span className="absolute right-0.5 top-0.5 grid min-w-[16px] place-items-center rounded-full bg-primary px-1 font-mono text-[9px] font-bold leading-none text-primary-foreground ring-2 ring-background">
                   {unreadCount}
                 </span>
               )}
@@ -1133,7 +1163,7 @@ function DashboardPage() {
           <button
             onClick={() => setLevelsOpen(true)}
             aria-label="Открыть уровни"
-            className={`flex items-center gap-1.5 rounded-full border ${levelInfo.current.ring} ${levelInfo.current.bg} px-2.5 py-1 transition-transform active:scale-95`}
+            className={`hidden items-center gap-1.5 rounded-full border ${levelInfo.current.ring} ${levelInfo.current.bg} px-2.5 py-1 transition-transform hover:scale-[1.02] active:scale-95 sm:flex`}
           >
             <levelInfo.current.Icon className={`size-3.5 ${levelInfo.current.color}`} />
             <span className={`text-[10px] font-bold uppercase tracking-wider ${levelInfo.current.color}`}>
@@ -1144,7 +1174,7 @@ function DashboardPage() {
             <Link
               to="/admin"
               aria-label="Админ-панель"
-              className="flex size-8 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+              className="hidden size-9 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-accent hover:text-foreground sm:flex"
             >
               <Shield className="size-4" />
             </Link>
@@ -1152,7 +1182,7 @@ function DashboardPage() {
           <button
             onClick={() => setActive("profile")}
             aria-label="Профиль"
-            className={`grid size-8 place-items-center overflow-hidden rounded-full border font-mono text-[10px] font-semibold transition-all active:scale-95 ${
+            className={`grid size-9 place-items-center overflow-hidden rounded-full border-2 font-mono text-[10px] font-semibold transition-all active:scale-95 ${
               active === "profile" ? "border-primary ring-2 ring-primary/40" : "border-border bg-secondary hover:border-primary/60"
             }`}
           >
@@ -1169,6 +1199,7 @@ function DashboardPage() {
           </button>
         </div>
       </header>
+
 
       {/* Achievement unlocked floating toast */}
       {achToast && (
