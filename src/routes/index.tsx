@@ -67,8 +67,10 @@ function LandingPage() {
             <a href="#manifesto" className="text-sm text-muted-foreground hover:text-foreground">Манифест</a>
             <a href="#levels" className="text-sm text-muted-foreground hover:text-foreground">Уровни</a>
             <a href="#how" className="text-sm text-muted-foreground hover:text-foreground">Как это работает</a>
+            <a href="#audience" className="text-sm text-muted-foreground hover:text-foreground">Кому подойдёт</a>
             <a href="/news" className="text-sm text-muted-foreground hover:text-foreground">Новости</a>
             <a href="#faq" className="text-sm text-muted-foreground hover:text-foreground">FAQ</a>
+
           </nav>
 
           <div className="hidden items-center gap-2 md:flex">
