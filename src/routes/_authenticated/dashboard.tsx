@@ -1209,7 +1209,7 @@ function DashboardPage() {
       )}
 
 
-      <main key={active} className="mx-auto max-w-[420px] space-y-6 p-4 pb-28">
+      <main key={active} className="mx-auto w-full max-w-[420px] space-y-6 p-4 pb-28 lg:max-w-6xl lg:pb-10 lg:pl-[17rem] lg:pr-8 lg:pt-8">
         {active === "info" && (
           <InfoTab
             balance={balance}
