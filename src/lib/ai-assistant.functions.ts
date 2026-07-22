@@ -74,24 +74,39 @@ function toGeminiContents(system: string, messages: z.infer<typeof MessageSchema
   };
 }
 
-async function callLovableAI(system: string, messages: z.infer<typeof MessageSchema>[]) {
-  const lovableKey = readProviderKey(process.env.LOVABLE_API_KEY);
-  const geminiKey = readProviderKey(process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY);
+async function callLovableAI(system: string, messages: z.infer<typeof MessageSchema>[], settings?: ResolvedAiSettings) {
+  const resolved = settings ?? {
+    enabled: true,
+    provider: "gemini" as const,
+    gemini_api_key: readProviderKey(process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY),
+    gemini_model: process.env.GEMINI_MODEL ?? "gemini-2.5-flash",
+    lovable_api_key: readProviderKey(process.env.LOVABLE_API_KEY),
+    lovable_model: process.env.LOVABLE_MODEL ?? "google/gemini-2.5-flash",
+    moderation_enabled: true,
+    user_prompt_limit: 20,
+    admin_prompt_limit: 50,
+  };
 
-  // Для self-hosted / VPS приоритет у прямого Gemini: ему не нужен LOVABLE_API_KEY.
-  const useGemini = !!geminiKey;
-  if (!lovableKey && !geminiKey) {
-    console.error("[AI] Ни LOVABLE_API_KEY, ни GEMINI_API_KEY не заданы");
+  if (!resolved.enabled) {
+    throw new Error("AI-ассистент временно отключён администратором.");
+  }
+
+  const useGemini = resolved.provider === "gemini";
+  const apiKey = useGemini ? resolved.gemini_api_key : resolved.lovable_api_key;
+
+  if (!apiKey) {
+    console.error("[AI] API-ключ не задан для провайдера", resolved.provider);
     throw new Error("AI недоступен: сервер не настроен. Обратитесь к администратору.");
   }
 
   const provider = useGemini ? "Gemini" : "Lovable AI";
+  const model = useGemini ? resolved.gemini_model : resolved.lovable_model;
   const url = useGemini
-    ? `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${encodeURIComponent(geminiKey!)}`
+    ? `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${encodeURIComponent(apiKey)}`
     : LOVABLE_AI_URL;
   const headers: Record<string, string> = { "Content-Type": "application/json" };
   if (!useGemini) {
-    headers["Lovable-API-Key"] = lovableKey!;
+    headers["Lovable-API-Key"] = apiKey;
   }
 
   let res: Response;
@@ -100,7 +115,7 @@ async function callLovableAI(system: string, messages: z.infer<typeof MessageSch
       method: "POST",
       headers,
       body: JSON.stringify({
-        model: useGemini ? GEMINI_MODEL : MODEL,
+        model,
         ...(useGemini
           ? toGeminiContents(system, messages)
           : { messages: [{ role: "system", content: system }, ...messages] }),
