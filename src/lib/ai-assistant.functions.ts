@@ -422,6 +422,17 @@ export const askAdminAnalyst = createServerFn({ method: "POST" })
     await assertAdmin(supabase);
 
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const settings = await getResolvedAiSettings(supabaseAdmin);
+
+    if (!settings.enabled) {
+      return { answer: "AI-аналитик временно отключён администратором." };
+    }
+
+    const userMsgCount = data.messages.filter((m) => m.role === "user").length;
+    if (userMsgCount > settings.admin_prompt_limit) {
+      return { answer: `Достигнут лимит сообщений (${settings.admin_prompt_limit}). Попробуйте позже.` };
+    }
+
     const [convRes, payRes, offersRes, profRes] = await Promise.all([
       supabaseAdmin.from("conversions").select("amount,status,offer_name,user_id,created_at").order("created_at", { ascending: false }).limit(300),
       supabaseAdmin.from("payout_requests").select("amount,status,created_at").order("created_at", { ascending: false }).limit(100),
@@ -450,6 +461,14 @@ export const askAdminAnalyst = createServerFn({ method: "POST" })
       `Отвечай ровно настолько подробно, насколько нужно: короткие вопросы — коротко, разбор ситуации — по шагам, с цифрами, выводами и следующим действием. Проактивно указывай на риски, аномалии и точки роста. ` +
       `Только на основе данных ниже; если данных не хватает — прямо скажи об этом.\n\nСВОДКА: ${brief}\n\nОФФЕРЫ: ${topOffersLine}`;
 
-    const answer = await callLovableAI(system, data.messages);
+    const answer = await callLovableAI(system, data.messages, settings);
     return { answer };
+  });
+
+export const getAiStatus = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }): Promise<{ enabled: boolean; provider: "gemini" | "lovable" }> => {
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const settings = await getResolvedAiSettings(supabaseAdmin);
+    return { enabled: settings.enabled, provider: settings.provider };
   });
