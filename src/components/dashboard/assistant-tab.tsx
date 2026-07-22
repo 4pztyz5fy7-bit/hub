@@ -175,13 +175,13 @@ export function AssistantTab() {
           <input
             value={input}
             onChange={(e) => setInput(e.target.value)}
-            placeholder="Спроси у AI-наставника…"
+            placeholder={disabled ? "AI-ассистент отключён" : "Спроси у AI-наставника…"}
             className="flex-1 rounded-lg border border-border bg-background px-3 py-2 text-xs outline-none focus:border-primary"
-            disabled={sending}
+            disabled={sending || disabled}
           />
           <button
             type="submit"
-            disabled={sending || !input.trim()}
+            disabled={sending || !input.trim() || disabled}
             className="grid size-9 place-items-center rounded-lg bg-primary text-primary-foreground disabled:opacity-50"
             aria-label="Отправить"
           >
