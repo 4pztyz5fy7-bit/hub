@@ -1,5 +1,6 @@
 import { translateError } from "@/lib/errors-ru";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { useServerFn } from "@tanstack/react-start";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import {
@@ -50,6 +51,13 @@ import { AdminNewsTab } from "@/components/admin/news-tab";
 import { AdminCompetitionsTab } from "@/components/admin/admin-competitions-tab";
 import { AdminEmailSettingsTab } from "@/components/admin/email-settings-tab";
 import { AiSettingsTab } from "@/components/admin/ai-settings-tab";
+import {
+  assignTeamMember,
+  deleteTeamPosition,
+  getTeamManagementData,
+  removeTeamMember,
+  saveTeamPosition,
+} from "@/lib/team-management.functions";
 
 export const Route = createFileRoute("/_authenticated/admin")({
   head: () => ({ meta: [{ title: "Админ-панель — КВАНТ" }] }),
@@ -3859,32 +3867,25 @@ function TeamTab() {
   const [showAssign, setShowAssign] = useState(false);
   const [editPos, setEditPos] = useState<TeamPosition | null>(null);
   const [showNewPos, setShowNewPos] = useState(false);
+  const loadTeamData = useServerFn(getTeamManagementData);
+  const deletePositionFn = useServerFn(deleteTeamPosition);
+  const removeMemberFn = useServerFn(removeTeamMember);
 
   const load = useCallback(async () => {
     setLoading(true);
-    const [{ data: pos }, { data: mem }] = await Promise.all([
-      supabase.from("team_positions").select("*").order("sort_order"),
-      supabase.from("team_members").select("*").order("assigned_at", { ascending: false }),
-    ]);
-    setPositions((pos ?? []) as TeamPosition[]);
-    setMembers((mem ?? []) as TeamMember[]);
-    const ids = Array.from(
-      new Set([
-        ...(mem ?? []).map((m: any) => m.user_id),
-        ...(mem ?? []).map((m: any) => m.assigned_by).filter(Boolean),
-      ]),
-    );
-    if (ids.length) {
-      const { data: prof } = await supabase
-        .from("profiles")
-        .select("id,email,display_name,telegram,created_at")
-        .in("id", ids);
+    try {
+      const data = await loadTeamData();
+      setPositions((data.positions ?? []) as TeamPosition[]);
+      setMembers((data.members ?? []) as TeamMember[]);
       const map: Record<string, Profile> = {};
-      for (const p of (prof ?? []) as Profile[]) map[p.id] = p;
+      for (const p of (data.profiles ?? []) as Profile[]) map[p.id] = p;
       setProfiles(map);
+    } catch (error: unknown) {
+      alert("Ошибка загрузки команды: " + translateError(error));
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
-  }, []);
+  }, [loadTeamData]);
 
   useEffect(() => {
     void load();
@@ -3893,9 +3894,12 @@ function TeamTab() {
 
   const removeMember = async (userId: string) => {
     if (!confirm("Снять сотрудника с должности? Он потеряет доступ к админ-панели.")) return;
-    const { error } = await supabase.from("team_members").delete().eq("user_id", userId);
-    if (error) alert("Ошибка: " + translateError(error));
-    else load();
+    try {
+      await removeMemberFn({ data: { user_id: userId } });
+      load();
+    } catch (error: unknown) {
+      alert("Ошибка: " + translateError(error));
+    }
   };
 
   const deletePosition = async (id: string, isSystem: boolean) => {
@@ -3909,9 +3913,12 @@ function TeamTab() {
       return;
     }
     if (!confirm("Удалить должность?")) return;
-    const { error } = await supabase.from("team_positions").delete().eq("id", id);
-    if (error) alert("Ошибка: " + translateError(error));
-    else load();
+    try {
+      await deletePositionFn({ data: { id } });
+      load();
+    } catch (error: unknown) {
+      alert("Ошибка: " + translateError(error));
+    }
   };
 
   if (loading) return <CenterLoader label="Загрузка команды" />;
@@ -4096,6 +4103,7 @@ function AssignMemberSheet({
   const [selected, setSelected] = useState<Profile | null>(null);
   const [saving, setSaving] = useState(false);
   const [err, setErr] = useState<string | null>(null);
+  const assignMemberFn = useServerFn(assignTeamMember);
   const assignedIds = useMemo(() => new Set(members.map((m) => m.user_id)), [members]);
 
   useEffect(() => {
@@ -4119,12 +4127,14 @@ function AssignMemberSheet({
     if (!selected || !posId) return;
     setSaving(true);
     setErr(null);
-    const { error } = await supabase
-      .from("team_members")
-      .upsert({ user_id: selected.id, position_id: posId }, { onConflict: "user_id" });
-    setSaving(false);
-    if (error) setErr(translateError(error));
-    else onDone();
+    try {
+      await assignMemberFn({ data: { user_id: selected.id, position_id: posId } });
+      onDone();
+    } catch (error: unknown) {
+      setErr(translateError(error));
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
@@ -4254,6 +4264,7 @@ function PositionEditor({
   const [isLeadership, setIsLeadership] = useState(position?.is_leadership ?? false);
   const [saving, setSaving] = useState(false);
   const [err, setErr] = useState<string | null>(null);
+  const savePositionFn = useServerFn(saveTeamPosition);
 
   const toggle = (k: string) =>
     setPermissions((s) => (s.includes(k) ? s.filter((x) => x !== k) : [...s, k]));
@@ -4268,18 +4279,21 @@ function PositionEditor({
         .toLowerCase()
         .replace(/[^a-z0-9_]+/g, "_") || `pos_${Date.now()}`;
     const payload = {
+      ...(position?.id ? { id: position.id } : {}),
       name: name.trim(),
       code: finalCode,
       description: description.trim() || null,
       permissions: isLeadership ? ["*"] : permissions.filter((p) => p !== "*"),
       is_leadership: isLeadership,
     };
-    const { error } = isNew
-      ? await supabase.from("team_positions").insert(payload)
-      : await supabase.from("team_positions").update(payload).eq("id", position!.id);
-    setSaving(false);
-    if (error) setErr(translateError(error));
-    else onDone();
+    try {
+      await savePositionFn({ data: payload });
+      onDone();
+    } catch (error: unknown) {
+      setErr(translateError(error));
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
