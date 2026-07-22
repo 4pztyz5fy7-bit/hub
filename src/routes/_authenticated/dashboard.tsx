@@ -6,6 +6,7 @@ import { ProfileTab } from "@/components/dashboard/profile-tab";
 import { SupportTab } from "@/components/dashboard/support-tab";
 import { RewardsTab } from "@/components/dashboard/rewards-tab";
 import { BannerBoard } from "@/components/dashboard/banner-board";
+import { EmailVerifiedBanner } from "@/components/dashboard/email-verified-banner";
 import { CommandPalette } from "@/components/dashboard/command-palette";
 import { ActivityHeatmap } from "@/components/dashboard/activity-heatmap";
 import { AmbientBackdrop } from "@/components/ambient-backdrop";
