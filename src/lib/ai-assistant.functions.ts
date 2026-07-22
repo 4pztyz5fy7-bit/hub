@@ -12,27 +12,48 @@ const AskSchema = z.object({
 });
 
 const LOVABLE_AI_URL = "https://ai.gateway.lovable.dev/v1/chat/completions";
-const GEMINI_OPENAI_URL = "https://generativelanguage.googleapis.com/v1beta/openai/chat/completions";
 const MODEL = "google/gemini-2.5-flash";
 const GEMINI_MODEL = "gemini-2.5-flash";
 
-async function callLovableAI(system: string, messages: z.infer<typeof MessageSchema>[]) {
-  const lovableKey = process.env.LOVABLE_API_KEY;
-  const geminiKey = process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY;
+function readProviderKey(value: string | undefined) {
+  const key = (value ?? "").trim().replace(/^['\"]|['\"]$/g, "");
+  if (!key || key === "undefined" || key === "null" || key.includes("your_api_key")) return undefined;
+  return key;
+}
 
-  // Приоритет: Lovable Gateway → прямой Google Gemini (для self-hosted / VPS).
-  const useGemini = !lovableKey && !!geminiKey;
+function toGeminiContents(system: string, messages: z.infer<typeof MessageSchema>[]) {
+  const systemText = [system, ...messages.filter((m) => m.role === "system").map((m) => m.content)].join("\n\n");
+  const contents = messages
+    .filter((m) => m.role !== "system")
+    .map((m) => ({
+      role: m.role === "assistant" ? "model" : "user",
+      parts: [{ text: m.content }],
+    }));
+
+  return {
+    systemInstruction: { parts: [{ text: systemText }] },
+    contents: contents.length ? contents : [{ role: "user", parts: [{ text: "Продолжи." }] }],
+    generationConfig: { temperature: 0.4 },
+  };
+}
+
+async function callLovableAI(system: string, messages: z.infer<typeof MessageSchema>[]) {
+  const lovableKey = readProviderKey(process.env.LOVABLE_API_KEY);
+  const geminiKey = readProviderKey(process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY);
+
+  // Для self-hosted / VPS приоритет у прямого Gemini: ему не нужен LOVABLE_API_KEY.
+  const useGemini = !!geminiKey;
   if (!lovableKey && !geminiKey) {
     console.error("[AI] Ни LOVABLE_API_KEY, ни GEMINI_API_KEY не заданы");
     throw new Error("AI недоступен: сервер не настроен. Обратитесь к администратору.");
   }
 
-  const url = useGemini ? GEMINI_OPENAI_URL : LOVABLE_AI_URL;
+  const provider = useGemini ? "Gemini" : "Lovable AI";
+  const url = useGemini
+    ? `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${encodeURIComponent(geminiKey!)}`
+    : LOVABLE_AI_URL;
   const headers: Record<string, string> = { "Content-Type": "application/json" };
-  if (useGemini) {
-    headers.Authorization = `Bearer ${geminiKey}`;
-  } else {
-    headers.Authorization = `Bearer ${lovableKey}`;
+  if (!useGemini) {
     headers["Lovable-API-Key"] = lovableKey!;
   }
 
@@ -43,7 +64,9 @@ async function callLovableAI(system: string, messages: z.infer<typeof MessageSch
       headers,
       body: JSON.stringify({
         model: useGemini ? GEMINI_MODEL : MODEL,
-        messages: [{ role: "system", content: system }, ...messages],
+        ...(useGemini
+          ? toGeminiContents(system, messages)
+          : { messages: [{ role: "system", content: system }, ...messages] }),
         temperature: 0.4,
       }),
     });
@@ -55,17 +78,23 @@ async function callLovableAI(system: string, messages: z.infer<typeof MessageSch
   if (res.status === 429) throw new Error("Слишком много запросов. Попробуйте через минуту.");
   if (res.status === 402) throw new Error("Кредиты AI исчерпаны. Обратитесь к администратору.");
   if (res.status === 401 || res.status === 403) {
-    console.error("[AI] Ключ отклонён провайдером:", res.status, await res.text().catch(() => ""));
-    throw new Error("AI недоступен: неверный ключ провайдера. Обратитесь к администратору.");
+    console.error(`[AI] ${provider} отклонил ключ:`, res.status, await res.text().catch(() => ""));
+    throw new Error(`AI недоступен: неверный ключ ${provider}. Обратитесь к администратору.`);
   }
   if (!res.ok) {
     const body = await res.text().catch(() => "");
-    console.error("[AI] Ошибка провайдера:", res.status, body.slice(0, 500));
+    console.error(`[AI] Ошибка ${provider}:`, res.status, body.slice(0, 500));
     throw new Error(`AI error ${res.status}`);
   }
-  const json = (await res.json()) as {
-    choices?: Array<{ message?: { content?: string } }>;
-  };
+
+  if (useGemini) {
+    const json = (await res.json()) as {
+      candidates?: Array<{ content?: { parts?: Array<{ text?: string }> } }>;
+    };
+    return json.candidates?.[0]?.content?.parts?.map((p) => p.text ?? "").join("").trim() || "Ответ пуст.";
+  }
+
+  const json = (await res.json()) as { choices?: Array<{ message?: { content?: string } }> };
   return json.choices?.[0]?.message?.content?.trim() ?? "Ответ пуст.";
 }
 
