@@ -114,13 +114,16 @@ async function callLovableAI(system: string, messages: z.infer<typeof MessageSch
     res = await fetch(url, {
       method: "POST",
       headers,
-      body: JSON.stringify({
-        model,
-        ...(useGemini
+      body: JSON.stringify(
+        useGemini
           ? toGeminiContents(system, messages)
-          : { messages: [{ role: "system", content: system }, ...messages] }),
-        temperature: 0.4,
-      }),
+          : {
+              model,
+              messages: [{ role: "system", content: system }, ...messages],
+              temperature: 0.4,
+            },
+      ),
+
     });
   } catch (e) {
     console.error("[AI] Сетевая ошибка при обращении к модели:", e);
