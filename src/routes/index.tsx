@@ -405,8 +405,145 @@ function LandingPage() {
         </div>
       </section>
 
+      {/* COMPARISON */}
+      <section className="border-t border-border/60 py-16 md:py-24">
+        <div className="mx-auto max-w-6xl px-4">
+          <div className="max-w-2xl">
+            <div className="text-[11px] font-bold uppercase tracking-widest text-primary">Сравнение</div>
+            <h2 className="mt-2 text-3xl font-black md:text-4xl">КВАНТ против «типичной сетки»</h2>
+            <p className="mt-3 text-muted-foreground">Мы не изобретали велосипед. Мы просто убрали из работы всё, что бесит партнёров годами.</p>
+          </div>
+          <div className="mt-10 overflow-hidden rounded-2xl border border-border bg-card">
+            <div className="grid grid-cols-3 border-b border-border bg-secondary/40 text-[11px] font-bold uppercase tracking-widest text-muted-foreground">
+              <div className="p-4">Критерий</div>
+              <div className="border-l border-border p-4 text-muted-foreground/70">Типичная сетка</div>
+              <div className="border-l border-border bg-primary/5 p-4 text-primary">КВАНТ</div>
+            </div>
+            {[
+              { c: "Первая выплата", a: "1–2 недели, минималка ₽5 000", b: "От 72 часов, минималка ₽1 000" },
+              { c: "Модерация на входе", a: "Анкета, созвон, ожидание 1–3 дня", b: "Мгновенный доступ к каталогу" },
+              { c: "Правила игры", a: "Меняются задним числом", b: "Публичный регламент, версия в оферте" },
+              { c: "Личный менеджер", a: "Только на VIP-условиях", b: "С уровня «Золото» — 24/7" },
+              { c: "Постбэки и API", a: "Ограниченные, платные", b: "Полный REST + S2S, бесплатно" },
+              { c: "Антифрод-споры", a: "«Блок без объяснений»", b: "Разбор с логами в открытом тикете" },
+              { c: "Комьюнити", a: "Общий чат на 5000 человек", b: "Профильные комнаты, митапы, менторы" },
+            ].map((row, i) => (
+              <div key={row.c} className={`grid grid-cols-3 text-sm ${i % 2 ? "bg-secondary/20" : ""}`}>
+                <div className="p-4 font-bold">{row.c}</div>
+                <div className="flex items-start gap-2 border-l border-border p-4 text-muted-foreground">
+                  <X className="mt-0.5 size-4 shrink-0 text-destructive/70" />
+                  <span>{row.a}</span>
+                </div>
+                <div className="flex items-start gap-2 border-l border-border bg-primary/5 p-4">
+                  <Check className="mt-0.5 size-4 shrink-0 text-primary" />
+                  <span className="font-medium">{row.b}</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* USE CASES */}
+      <section className="border-t border-border/60 bg-secondary/20 py-16 md:py-24">
+        <div className="mx-auto max-w-6xl px-4">
+          <div className="max-w-2xl">
+            <div className="text-[11px] font-bold uppercase tracking-widest text-primary">Профили партнёров</div>
+            <h2 className="mt-2 text-3xl font-black md:text-4xl">Для кого построен КВАНТ</h2>
+            <p className="mt-3 text-muted-foreground">Мы работаем с очень разными людьми. Вот четыре типичных сценария — возможно, узнаете себя.</p>
+          </div>
+          <div className="mt-10 grid gap-4 md:grid-cols-2">
+            {[
+              {
+                Icon: Rocket, tag: "Соло-арбитражник",
+                title: "Один человек — один ноутбук",
+                desc: "Быстрый доступ к офферам, короткий холд и вывод на карту в один клик. Никаких «созвонов с менеджером по средам».",
+                perks: ["Мгновенный доступ", "Выплаты от 72ч", "S2S без бюрократии"],
+              },
+              {
+                Icon: Layers, tag: "Команда 3–15 человек",
+                title: "Стабильный поток без хаоса",
+                desc: "Субаккаунты, роли, единый кабинет для тимлида и аналитика, общий бюджет и разделение выплат.",
+                perks: ["Роли и права", "Единый постбэк", "Отчёты по саб-ID"],
+              },
+              {
+                Icon: Award, tag: "Крупная команда / медиабаер",
+                title: "Эксклюзивы и приоритет",
+                desc: "Персональный менеджер, лимиты по кэпам, свои условия под объём, ранний доступ к новым офферам.",
+                perks: ["Эксклюзивные ставки", "Кастомные лимиты", "Ранний доступ"],
+              },
+              {
+                Icon: Compass, tag: "Инфлюенсер / блогер",
+                title: "Монетизация без биржи",
+                desc: "Ссылки под конкретную аудиторию, промокоды, простая аналитика по постам и сторис — без Excel.",
+                perks: ["Промокоды", "Клики по постам", "Отчёты для рекламодателя"],
+              },
+            ].map((u) => (
+              <div key={u.title} className="group relative overflow-hidden rounded-2xl border border-border bg-card p-6 transition hover:-translate-y-0.5 hover:border-primary/40">
+                <div className="pointer-events-none absolute -right-16 -top-16 size-40 rounded-full bg-primary/10 opacity-0 blur-2xl transition group-hover:opacity-100" />
+                <div className="flex items-start justify-between gap-3">
+                  <div className="grid size-11 place-items-center rounded-xl bg-primary/10 text-primary">
+                    <u.Icon className="size-5" />
+                  </div>
+                  <span className="rounded-full border border-border bg-background px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">{u.tag}</span>
+                </div>
+                <h3 className="mt-4 text-lg font-black">{u.title}</h3>
+                <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{u.desc}</p>
+                <ul className="mt-4 flex flex-wrap gap-1.5 border-t border-border pt-4">
+                  {u.perks.map((p) => (
+                    <li key={p} className="inline-flex items-center gap-1 rounded-md bg-secondary px-2 py-1 text-[11px] font-bold text-foreground/80">
+                      <Check className="size-3 text-primary" />{p}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* INTEGRATIONS */}
+      <section className="border-t border-border/60 py-16 md:py-24">
+        <div className="mx-auto max-w-6xl px-4">
+          <div className="grid gap-10 lg:grid-cols-2 lg:items-center">
+            <div>
+              <div className="text-[11px] font-bold uppercase tracking-widest text-primary">Интеграции</div>
+              <h2 className="mt-2 text-3xl font-black md:text-4xl">Работает с вашим стеком</h2>
+              <p className="mt-3 text-muted-foreground">S2S-постбэки, макросы, вебхуки. Подключается за 10 минут к любому трекеру и BI-инструменту.</p>
+              <div className="mt-6 grid grid-cols-3 gap-2 text-center text-[11px] font-bold uppercase tracking-widest text-muted-foreground">
+                {["Keitaro","Binom","RedTrack","Voluum","BeMob","AdsBridge","Telegram","Google Sheets","Webhooks"].map((n) => (
+                  <div key={n} className="rounded-lg border border-border bg-card px-2 py-3 hover:border-primary/40">{n}</div>
+                ))}
+              </div>
+            </div>
+            <div className="relative rounded-3xl border border-border bg-card p-6 shadow-sm">
+              <div className="mb-3 flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+                <span className="size-2 rounded-full bg-destructive/60" />
+                <span className="size-2 rounded-full bg-warning" />
+                <span className="size-2 rounded-full bg-success" />
+                <span className="ml-2">S2S postback URL</span>
+              </div>
+              <pre className="overflow-x-auto rounded-xl bg-foreground/5 p-4 text-[12px] leading-relaxed">
+{`GET https://kvantm.tech/postback
+  ?click_id={click_id}
+  &status={status}      # ok | pending | rejected
+  &payout={payout}
+  &offer_id={offer_id}
+  &sub1={sub1}&sub2={sub2}`}
+              </pre>
+              <div className="mt-4 grid grid-cols-3 gap-2 text-center text-[11px]">
+                <div className="rounded-lg bg-secondary p-2"><div className="font-black text-primary">REST</div><div className="text-muted-foreground">v3 API</div></div>
+                <div className="rounded-lg bg-secondary p-2"><div className="font-black text-primary">SDK</div><div className="text-muted-foreground">JS / Py</div></div>
+                <div className="rounded-lg bg-secondary p-2"><div className="font-black text-primary">Webhooks</div><div className="text-muted-foreground">HMAC-SHA256</div></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* FAQ */}
       <section id="faq" className="border-t border-border/60 py-16 md:py-24">
+
         <div className="mx-auto max-w-3xl px-4">
           <div className="text-center">
             <div className="text-[11px] font-bold uppercase tracking-widest text-primary">FAQ</div>
