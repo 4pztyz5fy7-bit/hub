@@ -4695,11 +4695,14 @@ function OfferDetailSheet({
         {/* Scrollable body */}
         <div className="flex-1 space-y-5 overflow-y-auto px-4 py-4">
           {offer.image && (
-            <img
-              src={offer.image}
-              alt={offer.name}
-              className="h-40 w-full rounded-xl border border-border object-cover"
-            />
+            <div className="overflow-hidden rounded-xl border border-border bg-secondary">
+              <img
+                src={offer.image}
+                alt={offer.name}
+                loading="lazy"
+                className="aspect-[16/9] w-full object-cover"
+              />
+            </div>
           )}
           {/* Payout hero */}
           <div className="rounded-xl border border-border bg-gradient-to-br from-secondary/60 to-transparent p-4">
