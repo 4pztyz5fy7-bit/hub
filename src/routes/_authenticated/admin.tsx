@@ -154,6 +154,14 @@ type Offer = {
   payout_max: number | null;
   city_payouts: CityPayout[];
   min_level: "start" | "silver" | "gold" | "platinum" | "diamond";
+  income: string | null;
+  target_action: string | null;
+  work_rules: string | null;
+  ad_materials: string | null;
+  feedback: string | null;
+  term_completion: string | null;
+  term_confirmation: string | null;
+  avg_orders_per_courier: number;
   created_at: string;
 };
 
