@@ -123,10 +123,8 @@ export const updateRecruiterOffer = createServerFn({ method: "POST" })
       if (ok !== true) throw new Error("Нет доступа к этому офферу");
     }
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { error } = await supabaseAdmin
-      .from("offers")
-      .update({ ...data.patch, updated_at: new Date().toISOString() })
-      .eq("id", data.id);
+    const patch: Record<string, unknown> = { ...data.patch, updated_at: new Date().toISOString() };
+    const { error } = await supabaseAdmin.from("offers").update(patch as any).eq("id", data.id);
     if (error) throw new Error(error.message);
     return { ok: true as const };
   });
