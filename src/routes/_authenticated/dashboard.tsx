@@ -2558,7 +2558,9 @@ function InfoTab({
           </span>
         </button>
       </section>
+      </div>
     </>
+
   );
 }
 
