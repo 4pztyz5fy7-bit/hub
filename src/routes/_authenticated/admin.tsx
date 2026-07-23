@@ -1679,7 +1679,8 @@ function OfferEditor({
       : await supabase.from("offers").insert(payload);
     setSaving(false);
     if (error) {
-      setErr(translateError(error));
+      console.error("Save offer error:", error, "payload:", payload);
+      setErr(translateError(error) + (error.message ? ` (${error.message})` : ""));
       return;
     }
     onSaved();
