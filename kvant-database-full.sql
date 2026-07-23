@@ -34,6 +34,15 @@ GRANT SELECT ON public.user_roles TO authenticated;
 GRANT ALL ON public.user_roles TO service_role;
 ALTER TABLE public.user_roles ENABLE ROW LEVEL SECURITY;
 
+
+-- Idempotency: drop functions whose signatures/return types may differ from previous versions
+DROP FUNCTION IF EXISTS public.touch_streak() CASCADE;
+DROP FUNCTION IF EXISTS public.award_achievements() CASCADE;
+DROP FUNCTION IF EXISTS public.get_leaderboard(text, int) CASCADE;
+DROP FUNCTION IF EXISTS public.get_competition_leaderboard(uuid, int) CASCADE;
+DROP FUNCTION IF EXISTS public.get_competition_leaderboard(uuid, integer) CASCADE;
+DROP FUNCTION IF EXISTS public.get_landing_stats() CASCADE;
+
 CREATE OR REPLACE FUNCTION public.has_role(_user_id uuid, _role public.app_role)
 RETURNS boolean
 LANGUAGE sql STABLE SECURITY DEFINER SET search_path = public
