@@ -7,7 +7,12 @@
 -- ============================================================
 
 -- ============ Enums ============
-DO $$ BEGIN CREATE TYPE public.app_role AS ENUM ('admin', 'user'); EXCEPTION WHEN duplicate_object THEN NULL; END $$;
+DO $$ BEGIN CREATE TYPE public.app_role AS ENUM ('admin', 'user', 'moderator', 'recruiter'); EXCEPTION WHEN duplicate_object THEN NULL; END $$;
+-- Ensure all enum values exist even if type was created earlier without them
+ALTER TYPE public.app_role ADD VALUE IF NOT EXISTS 'moderator';
+ALTER TYPE public.app_role ADD VALUE IF NOT EXISTS 'recruiter';
+COMMIT;
+BEGIN;
 
 -- ============ profiles ============
 CREATE TABLE IF NOT EXISTS public.profiles (
