@@ -2385,17 +2385,21 @@ function InfoTab({
       </section>
 
       {/* ============ Прогресс достижений ============ */}
-      <AchievementsProgress
-        earned={balance}
-        conversionsCount={conversions.filter((c) => c.status === "ok").length}
-        requestsCount={requests.length}
-      />
+      <div className="xl:col-span-4">
+        <AchievementsProgress
+          earned={balance}
+          conversionsCount={conversions.filter((c) => c.status === "ok").length}
+          requestsCount={requests.length}
+        />
+      </div>
 
       {/* ============ Heatmap активности ============ */}
-      <ActivityHeatmap conversions={conversions} />
+      <div className="xl:col-span-8">
+        <ActivityHeatmap conversions={conversions} />
+      </div>
 
       {/* ============ Активность: табы ============ */}
-      <section className="animate-in-up" style={{ animationDelay: "180ms" }}>
+      <section className="animate-in-up xl:col-span-8" style={{ animationDelay: "180ms" }}>
         <div className="mb-3 flex items-center justify-between">
           <h3 className="text-[10px] font-bold uppercase tracking-[0.14em] text-muted-foreground">
             Активность
