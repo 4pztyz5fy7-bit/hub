@@ -2259,7 +2259,7 @@ function InfoTab({
       </section>
 
       {/* ============ Уровень: прогресс ============ */}
-      <section className="animate-in-up" style={{ animationDelay: "40ms" }}>
+      <section className="animate-in-up xl:col-span-4" style={{ animationDelay: "40ms" }}>
         <button
           onClick={onOpenLevels}
           className="group flex w-full flex-col gap-3 rounded-lg border border-border bg-card p-4 text-left transition-colors hover:border-foreground/20"
