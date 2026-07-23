@@ -66,6 +66,7 @@ import {
   EyeOff,
   Medal,
   type LucideIcon,
+  Briefcase,
 } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
@@ -763,6 +764,7 @@ function DashboardPage() {
   const [offerDetail, setOfferDetail] = useState<Offer | null>(null);
 
   const [isAdmin, setIsAdmin] = useState(false);
+  const [isRecruiter, setIsRecruiter] = useState(false);
   const navigate = useNavigate();
 
   /* --------------------- Load everything from the DB ------------------- */
@@ -775,12 +777,18 @@ function DashboardPage() {
       setUserId(uid);
 
       // Phase 1: critical for first paint — profile, role, offers.
-      const [role, offersRes, profileRes] = await Promise.all([
+      const [role, recRole, offersRes, profileRes] = await Promise.all([
         supabase
           .from("user_roles")
           .select("role")
           .eq("user_id", uid)
           .eq("role", "admin")
+          .maybeSingle(),
+        supabase
+          .from("user_roles")
+          .select("role")
+          .eq("user_id", uid)
+          .eq("role", "recruiter")
           .maybeSingle(),
         supabase
           .from("offers")
@@ -825,6 +833,7 @@ function DashboardPage() {
 
       const isAdminRow = Boolean(role.data);
       setIsAdmin(isAdminRow);
+      setIsRecruiter(Boolean(recRole.data));
 
       // Block gate: sign out and route to /blocked (admins are never blocked out)
       if (!isAdminRow && (profileRes.data as any)?.blocked === true) {
@@ -1487,6 +1496,15 @@ function DashboardPage() {
               {levelInfo.current.name}
             </span>
           </button>
+          {(isRecruiter || isAdmin) && (
+            <Link
+              to="/recruiter"
+              aria-label="Панель рекрутёра"
+              className="hidden size-9 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-accent hover:text-foreground sm:flex"
+            >
+              <Briefcase className="size-4" />
+            </Link>
+          )}
           {isAdmin && (
             <Link
               to="/admin"
