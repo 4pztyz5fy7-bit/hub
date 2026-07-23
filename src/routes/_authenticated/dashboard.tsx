@@ -2491,7 +2491,7 @@ function InfoTab({
       </section>
 
       {/* ============ Инструменты: ссылка + реквизиты ============ */}
-      <section className="animate-in-up space-y-2 xl:col-span-4" style={{ animationDelay: "240ms" }}>
+      <section className="animate-in-up space-y-2" style={{ animationDelay: "240ms" }}>
         <h3 className="mb-1 text-[10px] font-bold uppercase tracking-[0.14em] text-muted-foreground">
           Инструменты
         </h3>
