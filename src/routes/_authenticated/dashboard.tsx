@@ -1600,7 +1600,7 @@ function DashboardPage() {
       <main
         key={active}
         data-dashboard-main
-        className="mx-auto w-full max-w-[430px] space-y-6 p-4 pb-24 lg:max-w-6xl lg:pb-10 lg:pl-24 lg:pr-8 lg:pt-8"
+        className="mx-auto w-full max-w-[430px] space-y-6 p-4 pb-24 lg:max-w-[1400px] lg:pb-10 lg:pl-24 lg:pr-10 lg:pt-8 xl:max-w-[1600px]"
       >
         {active === "info" && (
           <InfoTab
@@ -2177,8 +2177,9 @@ function InfoTab({
       <EmailVerifiedBanner />
       <BannerBoard />
 
+      <div className="space-y-6 xl:grid xl:grid-cols-12 xl:gap-6 xl:space-y-0">
       {/* ============ HERO: баланс + вывод ============ */}
-      <section className="animate-in-up">
+      <section className="animate-in-up xl:col-span-8">
         <div className="relative overflow-hidden rounded-lg border border-border bg-card">
           <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/60 to-transparent" />
           <div className="grid gap-0 md:grid-cols-[1.4fr_1fr]">
@@ -2258,7 +2259,7 @@ function InfoTab({
       </section>
 
       {/* ============ Уровень: прогресс ============ */}
-      <section className="animate-in-up" style={{ animationDelay: "40ms" }}>
+      <section className="animate-in-up xl:col-span-4" style={{ animationDelay: "40ms" }}>
         <button
           onClick={onOpenLevels}
           className="group flex w-full flex-col gap-3 rounded-lg border border-border bg-card p-4 text-left transition-colors hover:border-foreground/20"
@@ -2313,7 +2314,7 @@ function InfoTab({
 
       {/* ============ KPI ============ */}
 
-      <section className="animate-in-up" style={{ animationDelay: "60ms" }}>
+      <section className="animate-in-up xl:col-span-4" style={{ animationDelay: "60ms" }}>
         <h3 className="mb-2 text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
           Показатели дня
         </h3>
@@ -2325,7 +2326,7 @@ function InfoTab({
       </section>
 
       {/* ============ Chart ============ */}
-      <section className="animate-in-up" style={{ animationDelay: "120ms" }}>
+      <section className="animate-in-up xl:col-span-8" style={{ animationDelay: "120ms" }}>
         <div className="rounded-lg border border-border bg-card p-4">
           <div className="mb-4 flex items-end justify-between gap-3">
             <div>
@@ -2384,17 +2385,21 @@ function InfoTab({
       </section>
 
       {/* ============ Прогресс достижений ============ */}
-      <AchievementsProgress
-        earned={balance}
-        conversionsCount={conversions.filter((c) => c.status === "ok").length}
-        requestsCount={requests.length}
-      />
+      <div className="xl:col-span-4">
+        <AchievementsProgress
+          earned={balance}
+          conversionsCount={conversions.filter((c) => c.status === "ok").length}
+          requestsCount={requests.length}
+        />
+      </div>
 
       {/* ============ Heatmap активности ============ */}
-      <ActivityHeatmap conversions={conversions} />
+      <div className="xl:col-span-8">
+        <ActivityHeatmap conversions={conversions} />
+      </div>
 
       {/* ============ Активность: табы ============ */}
-      <section className="animate-in-up" style={{ animationDelay: "180ms" }}>
+      <section className="animate-in-up xl:col-span-8" style={{ animationDelay: "180ms" }}>
         <div className="mb-3 flex items-center justify-between">
           <h3 className="text-[10px] font-bold uppercase tracking-[0.14em] text-muted-foreground">
             Активность
@@ -2486,7 +2491,7 @@ function InfoTab({
       </section>
 
       {/* ============ Инструменты: ссылка + реквизиты ============ */}
-      <section className="animate-in-up space-y-2" style={{ animationDelay: "240ms" }}>
+      <section className="animate-in-up space-y-2 xl:col-span-4" style={{ animationDelay: "240ms" }}>
         <h3 className="mb-1 text-[10px] font-bold uppercase tracking-[0.14em] text-muted-foreground">
           Инструменты
         </h3>
@@ -2553,7 +2558,9 @@ function InfoTab({
           </span>
         </button>
       </section>
+      </div>
     </>
+
   );
 }
 
@@ -2690,7 +2697,7 @@ function OffersTab({
         </div>
       </section>
 
-      <section className="animate-in-up space-y-2" style={{ animationDelay: "80ms" }}>
+      <section className="animate-in-up grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3" style={{ animationDelay: "80ms" }}>
         {filtered.length === 0 && (
           <div className="rounded-lg border border-dashed border-border p-8 text-center text-xs text-muted-foreground">
             Ничего не найдено
