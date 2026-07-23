@@ -619,6 +619,7 @@ function AdminPage() {
             {tab === "email" && canRender("email") && <AdminEmailSettingsTab />}
             {tab === "team" && perms.is_leadership && <TeamTab />}
             {tab === "recruiters" && canRender("recruiters") && <AdminRecruitersTab />}
+            {tab === "promo" && canRender("promo") && <AdminPromoCodesTab />}
           </main>
         </SidebarInset>
       </div>
