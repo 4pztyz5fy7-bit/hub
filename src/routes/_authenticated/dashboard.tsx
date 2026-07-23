@@ -2814,11 +2814,37 @@ const REQ_STATUS_META: Record<LinkRequestStatus, { label: string; tone: string; 
 function RequestsTab({ requests }: { requests: LinkRequest[] }) {
   const [q, setQ] = useState("");
   const [filter, setFilter] = useState<"all" | "active" | "paid">("all");
+  const [period, setPeriod] = useState<"today" | "week" | "month" | "quarter" | "year" | "all">(
+    "all",
+  );
   const [copiedId, setCopiedId] = useState<string | null>(null);
+
+  const cutoff = useMemo(() => {
+    if (period === "all") return null;
+    const d = new Date();
+    d.setHours(0, 0, 0, 0);
+    if (period === "today") return d;
+    if (period === "week") d.setDate(d.getDate() - 6);
+    else if (period === "month") d.setDate(d.getDate() - 29);
+    else if (period === "quarter") d.setDate(d.getDate() - 89);
+    else if (period === "year") d.setDate(d.getDate() - 364);
+    return d;
+  }, [period]);
+
+  const scoped = useMemo(
+    () =>
+      cutoff
+        ? requests.filter((r) => {
+            const d = new Date(r.createdAt);
+            return !isNaN(d.getTime()) && d >= cutoff;
+          })
+        : requests,
+    [requests, cutoff],
+  );
 
   const filtered = useMemo(() => {
     const term = q.trim().toLowerCase();
-    return requests.filter((r) => {
+    return scoped.filter((r) => {
       const s = normalizeStatus(r.status);
       if (filter === "active" && (s === "paid" || s === "finished")) return false;
       if (filter === "paid" && s !== "paid") return false;
@@ -2829,18 +2855,18 @@ function RequestsTab({ requests }: { requests: LinkRequest[] }) {
         (r.note ?? "").toLowerCase().includes(term)
       );
     });
-  }, [requests, q, filter]);
+  }, [scoped, q, filter]);
 
   const stats = useMemo(() => {
-    const total = requests.length;
-    const active = requests.filter((r) => {
+    const total = scoped.length;
+    const active = scoped.filter((r) => {
       const s = normalizeStatus(r.status);
       return s !== "paid" && s !== "finished";
     }).length;
-    const orders = requests.reduce((s, r) => s + (r.ordersCount || 0), 0);
-    const paid = requests.filter((r) => normalizeStatus(r.status) === "paid").length;
+    const orders = scoped.reduce((s, r) => s + (r.ordersCount || 0), 0);
+    const paid = scoped.filter((r) => normalizeStatus(r.status) === "paid").length;
     return { total, active, orders, paid };
-  }, [requests]);
+  }, [scoped]);
 
   const copy = async (r: LinkRequest) => {
     if (!r.link) return;
