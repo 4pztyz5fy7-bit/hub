@@ -172,15 +172,141 @@ export const setRecruiterRequestStatus = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input) => statusSchema.parse(input))
   .handler(async ({ data, context }) => {
-    await assertRecruiterOrAdmin(context);
-    const { data: res, error } = await context.supabase.rpc("admin_set_link_request_status", {
-      _request_id: data.id,
-      _new_status: data.status,
-      _payout_override: data.payout_override ?? undefined,
-    });
-    if (error) throw new Error(error.message);
-    return res;
+    const who = await assertRecruiterOrAdmin(context);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+
+    // Fetch the request row
+    const { data: req, error: reqErr } = await supabaseAdmin
+      .from("link_requests")
+      .select("*")
+      .eq("id", data.id)
+      .maybeSingle();
+    if (reqErr) throw new Error(reqErr.message);
+    if (!req) throw new Error("Заявка не найдена");
+
+    // Recruiters may only act on offers they can recruit for
+    if (!who.admin) {
+      if (!req.offer_id) throw new Error("Нет доступа к этой заявке");
+      const { data: allowed, error: aErr } = await context.supabase.rpc("can_recruit_offer", {
+        _uid: context.userId,
+        _offer_id: req.offer_id,
+      });
+      if (aErr) throw new Error(aErr.message);
+      if (allowed !== true) throw new Error("Нет доступа к этому офферу");
+    }
+
+    // Apply payout override if provided
+    if (data.payout_override != null) {
+      const { error } = await supabaseAdmin
+        .from("link_requests")
+        .update({ payout_override: data.payout_override, updated_at: new Date().toISOString() })
+        .eq("id", data.id);
+      if (error) throw new Error(error.message);
+      (req as any).payout_override = data.payout_override;
+    }
+
+    // Credit-on-paid path replicates admin_set_link_request_status
+    let convId: string | null = null;
+    let base = 0;
+    let bonusPct = 0;
+    let bonusAmt = 0;
+    let credited = 0;
+
+    if (data.status === "paid" && !req.credited_at) {
+      let offer: any = null;
+      if (req.offer_id) {
+        const { data: o } = await supabaseAdmin
+          .from("offers")
+          .select("*")
+          .eq("id", req.offer_id)
+          .maybeSingle();
+        offer = o;
+      }
+      const override = Number(req.payout_override ?? 0);
+      if (override > 0) {
+        base = override;
+      } else if (offer) {
+        if (offer.payout_kind === "exact" && offer.payout_min != null) {
+          base = Number(offer.payout_min);
+        } else {
+          const parsed = Number(String(offer.payout ?? "").replace(/[^0-9.]/g, ""));
+          base = Number.isFinite(parsed) && parsed > 0
+            ? parsed
+            : Number(offer.payout_max ?? offer.payout_min ?? 0);
+        }
+      }
+
+      if (base > 0 && req.user_id) {
+        const { data: earnedRows } = await supabaseAdmin
+          .from("conversions")
+          .select("amount")
+          .eq("user_id", req.user_id)
+          .eq("status", "ok");
+        const earned = (earnedRows ?? []).reduce((s: number, r: any) => s + Number(r.amount ?? 0), 0);
+        const { data: pct } = await supabaseAdmin.rpc("level_bonus_pct", { _earned: earned });
+        bonusPct = Number(pct ?? 0);
+        bonusAmt = Math.round(base * bonusPct) / 100;
+        credited = base + bonusAmt;
+
+        const ins = await supabaseAdmin
+          .from("conversions")
+          .insert({
+            user_id: req.user_id,
+            offer_id: req.offer_id,
+            offer_name: req.offer_name,
+            amount: credited,
+            status: "ok",
+            base_amount: base,
+            bonus_pct: bonusPct,
+            bonus_amount: bonusAmt,
+          })
+          .select("id")
+          .single();
+        if (ins.error) throw new Error(ins.error.message);
+        convId = ins.data.id as string;
+
+        await supabaseAdmin.from("notifications").insert({
+          user_id: req.user_id,
+          kind: "payout",
+          title: "Начисление за оффер",
+          body:
+            `${req.offer_name}: начислено ${credited} ₽` +
+            (bonusPct > 0
+              ? ` (база ${base} ₽ + бонус уровня ${bonusPct}% = ${bonusAmt} ₽)`
+              : ""),
+          amount: String(credited),
+          status: "paid",
+        });
+      }
+
+      const { error: uErr } = await supabaseAdmin
+        .from("link_requests")
+        .update({
+          status: data.status,
+          credited_at: new Date().toISOString(),
+          credit_conversion_id: convId,
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", data.id);
+      if (uErr) throw new Error(uErr.message);
+    } else {
+      const { error: uErr } = await supabaseAdmin
+        .from("link_requests")
+        .update({ status: data.status, updated_at: new Date().toISOString() })
+        .eq("id", data.id);
+      if (uErr) throw new Error(uErr.message);
+    }
+
+    return {
+      ok: true as const,
+      base_amount: base,
+      bonus_pct: bonusPct,
+      bonus_amount: bonusAmt,
+      credited_amount: credited,
+      conversion_id: convId,
+    };
   });
+
 
 export const getRecruiterStats = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
