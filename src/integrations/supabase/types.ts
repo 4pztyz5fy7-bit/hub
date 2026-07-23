@@ -651,6 +651,62 @@ export type Database = {
         }
         Relationships: []
       }
+      recruiter_category_access: {
+        Row: {
+          category: string
+          created_at: string
+          created_by: string | null
+          id: string
+          recruiter_id: string
+        }
+        Insert: {
+          category: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          recruiter_id: string
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          recruiter_id?: string
+        }
+        Relationships: []
+      }
+      recruiter_offer_access: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          id: string
+          offer_id: string
+          recruiter_id: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          offer_id: string
+          recruiter_id: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          offer_id?: string
+          recruiter_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "recruiter_offer_access_offer_id_fkey"
+            columns: ["offer_id"]
+            isOneToOne: false
+            referencedRelation: "offers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       support_messages: {
         Row: {
           author_id: string
@@ -864,6 +920,10 @@ export type Database = {
           unlocked_code: string
           unlocked_name: string
         }[]
+      }
+      can_recruit_offer: {
+        Args: { _offer_id: string; _uid: string }
+        Returns: boolean
       }
       current_team_permissions: { Args: never; Returns: Json }
       get_competition_leaderboard: {
