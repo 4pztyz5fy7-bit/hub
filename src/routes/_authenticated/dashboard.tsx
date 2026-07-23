@@ -2179,50 +2179,78 @@ function InfoTab({
 
       {/* ============ HERO: баланс + вывод ============ */}
       <section className="animate-in-up">
-        <div className="relative overflow-hidden rounded-2xl bg-foreground p-5 text-background shadow-lg shadow-foreground/10">
-          <div className="pointer-events-none absolute -right-8 -top-8 size-40 rounded-full bg-primary/20 blur-2xl" />
-          <div className="relative">
-            <div className="flex items-center justify-between">
-              <span className="text-[10px] font-bold uppercase tracking-[0.14em] opacity-60">
-                Общий баланс
-              </span>
-              <div className="flex items-center gap-1.5">
-                <button
-                  onClick={onToggleBalance}
-                  aria-label={showBalance ? "Скрыть баланс" : "Показать баланс"}
-                  className="grid size-6 place-items-center rounded-full bg-white/10 text-background/80 transition-colors hover:bg-white/20"
-                >
-                  {showBalance ? <Eye className="size-3.5" /> : <EyeOff className="size-3.5" />}
-                </button>
-                <span
-                  className={`rounded-full bg-white/10 px-2 py-0.5 font-mono text-[10px] font-medium ${weekDelta >= 0 ? "text-[color:var(--success)]" : "text-destructive"}`}
-                >
-                  {weekDelta >= 0 ? "+" : ""}
-                  {weekDelta}% • 7дн
+        <div className="relative overflow-hidden rounded-lg border border-border bg-card">
+          <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/60 to-transparent" />
+          <div className="grid gap-0 md:grid-cols-[1.4fr_1fr]">
+            {/* Balance */}
+            <div className="border-b border-border p-5 md:border-b-0 md:border-r">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <span className="size-1.5 rounded-full bg-primary" />
+                  <span className="text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+                    Общий баланс
+                  </span>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <button
+                    onClick={onToggleBalance}
+                    aria-label={showBalance ? "Скрыть баланс" : "Показать баланс"}
+                    className="grid size-6 place-items-center rounded-sm text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
+                  >
+                    {showBalance ? <Eye className="size-3.5" /> : <EyeOff className="size-3.5" />}
+                  </button>
+                  <span
+                    className={`inline-flex items-center gap-1 rounded-sm border px-1.5 py-0.5 font-mono text-[10px] font-medium tabular-nums ${
+                      weekDelta >= 0
+                        ? "border-[color:var(--success)]/30 bg-[color:var(--success)]/5 text-[color:var(--success)]"
+                        : "border-destructive/30 bg-destructive/5 text-destructive"
+                    }`}
+                  >
+                    <TrendingUp className="size-2.5" />
+                    {weekDelta >= 0 ? "+" : ""}
+                    {weekDelta}% · 7д
+                  </span>
+                </div>
+              </div>
+              <div className="mt-3 flex items-baseline gap-2">
+                <span className="font-mono text-[32px] font-semibold leading-none tracking-tight tabular-nums text-foreground">
+                  {showBalance ? fmt(balance) : "•••••"}
+                </span>
+                <span className="text-sm font-medium text-muted-foreground">RUB</span>
+              </div>
+              <div className="mt-3 flex items-center gap-4 text-[10px] uppercase tracking-wider text-muted-foreground">
+                <span>
+                  Заказы:{" "}
+                  <span className="font-mono font-semibold tabular-nums text-foreground">
+                    {fmt(totalOrders)}
+                  </span>
+                </span>
+                <span className="h-3 w-px bg-border" />
+                <span>
+                  Конверсии:{" "}
+                  <span className="font-mono font-semibold tabular-nums text-foreground">
+                    {fmt(conversions.filter((c) => c.status === "ok").length)}
+                  </span>
                 </span>
               </div>
             </div>
-            <div className="mt-2 flex items-baseline gap-1.5">
-              <span className="text-[40px] font-bold leading-none tracking-tighter tabular-nums">
-                {showBalance ? fmt(balance) : "•••••"}
-              </span>
-              <span className="text-xl font-medium opacity-70">₽</span>
-            </div>
 
-            <div className="mt-5 flex items-center justify-between gap-3 rounded-xl bg-white/10 p-3 backdrop-blur">
-              <div className="min-w-0">
-                <p className="text-[9px] font-bold uppercase tracking-widest opacity-70">
+            {/* Withdraw */}
+            <div className="flex flex-col justify-between gap-3 bg-secondary/40 p-5">
+              <div>
+                <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
                   Доступно к выводу
                 </p>
-                <p className="mt-0.5 font-mono text-base font-bold tabular-nums">
+                <p className="mt-2 font-mono text-xl font-semibold tabular-nums">
                   {showBalance ? `${fmt(available)} ₽` : "••••• ₽"}
                 </p>
               </div>
               <button
                 onClick={onRequestPayout}
-                className="shrink-0 rounded-lg bg-primary px-4 py-2.5 text-[11px] font-bold uppercase tracking-wider text-primary-foreground transition-transform active:scale-95"
+                className="inline-flex items-center justify-center gap-2 rounded-sm bg-foreground px-4 py-2.5 text-[11px] font-semibold uppercase tracking-wider text-background transition-colors hover:bg-foreground/90"
               >
-                {bank ? "Вывести" : "Реквизиты"}
+                {bank ? "Запросить выплату" : "Указать реквизиты"}
+                <ArrowUpRight className="size-3.5" />
               </button>
             </div>
           </div>
@@ -2233,22 +2261,22 @@ function InfoTab({
       <section className="animate-in-up" style={{ animationDelay: "40ms" }}>
         <button
           onClick={onOpenLevels}
-          className={`group flex w-full flex-col gap-3 rounded-xl border ${level.current.ring} ${level.current.bg} p-4 text-left transition-colors hover:brightness-105`}
+          className="group flex w-full flex-col gap-3 rounded-lg border border-border bg-card p-4 text-left transition-colors hover:border-foreground/20"
         >
           <div className="flex items-center gap-3">
             <div
-              className={`grid size-10 shrink-0 place-items-center rounded-lg bg-background ${level.current.color} border ${level.current.ring}`}
+              className={`grid size-9 shrink-0 place-items-center rounded-sm border border-border bg-secondary/40 ${level.current.color}`}
             >
-              <level.current.Icon className="size-5" />
+              <level.current.Icon className="size-4" />
             </div>
             <div className="min-w-0 flex-1">
-              <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-muted-foreground">
-                Ваш уровень
+              <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+                Партнёрский уровень
               </p>
-              <p className={`text-sm font-bold ${level.current.color}`}>
+              <p className="text-sm font-semibold text-foreground">
                 {level.current.name}
                 {level.current.bonusPct > 0 && (
-                  <span className="ml-1.5 font-mono text-[10px] opacity-80">
+                  <span className="ml-2 font-mono text-[10px] font-medium text-muted-foreground">
                     +{level.current.bonusPct}% к ставкам
                   </span>
                 )}
@@ -2259,24 +2287,23 @@ function InfoTab({
 
           {level.next ? (
             <>
-              <div className="h-1.5 w-full overflow-hidden rounded-full bg-background/60">
+              <div className="h-1 w-full overflow-hidden rounded-full bg-secondary">
                 <div
-                  className={`h-full rounded-full bg-gradient-to-r from-current to-current ${level.current.color}`}
+                  className="h-full rounded-full bg-foreground"
                   style={{ width: `${Math.round(level.progress * 100)}%` }}
                 />
               </div>
-              <div className="flex items-center justify-between text-[10px]">
-                <span className="font-mono text-muted-foreground">
+              <div className="flex items-center justify-between font-mono text-[10px] tabular-nums">
+                <span className="text-muted-foreground">
                   {fmt(balance)} / {fmt(level.next.minEarned)} ₽
                 </span>
-                <span className={`flex items-center gap-1 font-bold ${level.next.color}`}>
-                  <level.next.Icon className="size-3" />
-                  до «{level.next.name}» {fmt(level.remaining)} ₽
+                <span className="font-semibold text-foreground">
+                  до «{level.next.name}» · {fmt(level.remaining)} ₽
                 </span>
               </div>
             </>
           ) : (
-            <div className="flex items-center gap-1.5 rounded-md bg-background/60 px-3 py-2 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+            <div className="flex items-center gap-2 border-t border-border pt-2 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
               <Crown className={`size-3 ${level.current.color}`} />
               Максимальный уровень достигнут
             </div>
@@ -2287,10 +2314,10 @@ function InfoTab({
       {/* ============ KPI ============ */}
 
       <section className="animate-in-up" style={{ animationDelay: "60ms" }}>
-        <h3 className="mb-2 text-[10px] font-bold uppercase tracking-[0.14em] text-muted-foreground">
+        <h3 className="mb-2 text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
           Показатели дня
         </h3>
-        <div className="grid grid-cols-2 gap-px overflow-hidden rounded-xl border border-border bg-border">
+        <div className="grid grid-cols-2 gap-px overflow-hidden rounded-lg border border-border bg-border sm:grid-cols-4">
           {kpis.map((k) => (
             <KpiCell key={k.label} k={k} />
           ))}
@@ -2299,33 +2326,46 @@ function InfoTab({
 
       {/* ============ Chart ============ */}
       <section className="animate-in-up" style={{ animationDelay: "120ms" }}>
-        <div className="rounded-xl border border-border bg-card p-4">
-          <div className="mb-4 flex items-center justify-between">
+        <div className="rounded-lg border border-border bg-card p-4">
+          <div className="mb-4 flex items-end justify-between gap-3">
             <div>
-              <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-muted-foreground">
+              <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
                 Доход за неделю
               </p>
-              <p className="mt-0.5 font-mono text-sm font-bold tabular-nums">{fmt(week.total)} ₽</p>
+              <p className="mt-1 font-mono text-lg font-semibold tabular-nums">
+                {fmt(week.total)} <span className="text-sm text-muted-foreground">₽</span>
+              </p>
             </div>
             <span
-              className={`flex items-center gap-1 rounded-full px-2 py-1 font-mono text-[10px] font-medium ${weekDelta >= 0 ? "bg-[color:var(--success)]/10 text-[color:var(--success)]" : "bg-destructive/10 text-destructive"}`}
+              className={`inline-flex items-center gap-1 rounded-sm border px-2 py-1 font-mono text-[10px] font-medium tabular-nums ${
+                weekDelta >= 0
+                  ? "border-[color:var(--success)]/30 bg-[color:var(--success)]/5 text-[color:var(--success)]"
+                  : "border-destructive/30 bg-destructive/5 text-destructive"
+              }`}
             >
               <TrendingUp className="size-3" /> {weekDelta >= 0 ? "+" : ""}
               {weekDelta}%
             </span>
           </div>
-          <div className="flex h-20 items-end gap-1.5">
-            {(() => {
-              const max = Math.max(...week.series, 1);
-              const todayIdx = (new Date().getDay() + 6) % 7;
-              return week.series.map((h, i) => (
-                <div
-                  key={i}
-                  className={`flex-1 rounded-t-sm transition-colors ${i === todayIdx ? "bg-primary" : "bg-secondary"}`}
-                  style={{ height: `${Math.max(6, (h / max) * 100)}%` }}
-                />
-              ));
-            })()}
+          <div className="relative h-28">
+            <div className="pointer-events-none absolute inset-0 flex flex-col justify-between">
+              {[0, 1, 2, 3].map((i) => (
+                <div key={i} className="h-px w-full bg-border/60" />
+              ))}
+            </div>
+            <div className="relative flex h-full items-end gap-1.5">
+              {(() => {
+                const max = Math.max(...week.series, 1);
+                const todayIdx = (new Date().getDay() + 6) % 7;
+                return week.series.map((h, i) => (
+                  <div
+                    key={i}
+                    className={`flex-1 rounded-t-[2px] transition-colors ${i === todayIdx ? "bg-foreground" : "bg-secondary"}`}
+                    style={{ height: `${Math.max(4, (h / max) * 100)}%` }}
+                  />
+                ));
+              })()}
+            </div>
           </div>
           <div className="mt-2 flex gap-1.5">
             {weekLabels.map((l, i) => {
@@ -2333,7 +2373,7 @@ function InfoTab({
               return (
                 <span
                   key={l}
-                  className={`flex-1 text-center font-mono text-[9px] uppercase ${i === todayIdx ? "font-bold text-primary" : "text-muted-foreground"}`}
+                  className={`flex-1 text-center font-mono text-[9px] uppercase tracking-wider ${i === todayIdx ? "font-semibold text-foreground" : "text-muted-foreground"}`}
                 >
                   {l}
                 </span>
@@ -2451,25 +2491,28 @@ function InfoTab({
           Инструменты
         </h3>
 
-        <div className="rounded-xl bg-primary p-4 text-primary-foreground shadow-sm shadow-primary/20">
+        <div className="rounded-lg border border-border bg-card p-4">
           <div className="mb-2 flex items-center justify-between">
-            <p className="text-[10px] font-bold uppercase tracking-widest opacity-80">
-              Партнёрская ссылка
-            </p>
-            <span className="rounded-full bg-white/15 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider">
+            <div className="flex items-center gap-2">
+              <span className="size-1.5 rounded-full bg-primary" />
+              <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+                Партнёрская ссылка
+              </p>
+            </div>
+            <span className="rounded-sm border border-border bg-secondary/60 px-2 py-0.5 font-mono text-[9px] font-semibold uppercase tracking-wider text-muted-foreground">
               5% рефералы
             </span>
           </div>
           <div className="flex gap-2">
-            <div className="flex-1 select-all truncate rounded-md bg-white/10 px-3 py-2 font-mono text-xs">
+            <div className="flex-1 select-all truncate rounded-sm border border-border bg-secondary/40 px-3 py-2 font-mono text-xs">
               {refLink}
             </div>
             <button
               onClick={copy}
-              className="flex items-center gap-1 rounded-md bg-white px-3 py-2 text-xs font-bold text-primary transition-transform active:scale-95"
+              className="inline-flex items-center gap-1 rounded-sm bg-foreground px-3 py-2 text-[11px] font-semibold uppercase tracking-wider text-background transition-colors hover:bg-foreground/90"
             >
               {copied ? <Check className="size-3.5" /> : <Copy className="size-3.5" />}
-              {copied ? "OK" : "КОПИ"}
+              {copied ? "OK" : "Копировать"}
             </button>
           </div>
         </div>
@@ -2517,17 +2560,17 @@ function InfoTab({
 function KpiCell({ k }: { k: Kpi }) {
   return (
     <div className="bg-card p-3">
-      <p className="mb-1 text-[10px] font-medium uppercase text-muted-foreground">{k.label}</p>
-      <div className="flex items-baseline justify-between">
-        <p className="font-mono text-sm font-medium">{k.value}</p>
-        <span
-          className={`font-mono text-[10px] ${
-            k.positive ? "text-[color:var(--success)]" : "text-destructive"
-          }`}
-        >
-          {k.delta}
-        </span>
-      </div>
+      <p className="mb-1.5 text-[9px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
+        {k.label}
+      </p>
+      <p className="font-mono text-base font-semibold leading-none tabular-nums">{k.value}</p>
+      <p
+        className={`mt-1.5 font-mono text-[10px] tabular-nums ${
+          k.positive ? "text-[color:var(--success)]" : "text-muted-foreground"
+        }`}
+      >
+        {k.delta}
+      </p>
     </div>
   );
 }
