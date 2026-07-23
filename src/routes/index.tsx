@@ -731,7 +731,7 @@ function LandingPage() {
       </section>
 
       {/* FOOTER */}
-      <footer className="border-t border-border/60 py-8">
+      <footer className="border-t border-border/60 py-8 pb-[calc(2rem+env(safe-area-inset-bottom))]">
         <div className="mx-auto flex max-w-6xl flex-col items-center gap-5 px-4 sm:flex-row sm:justify-between">
           <div className="flex items-center gap-2">
             <div className="grid size-7 place-items-center rounded-md bg-primary text-primary-foreground text-xs font-black">К</div>
