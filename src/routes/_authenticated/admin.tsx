@@ -1602,6 +1602,26 @@ function OfferEditor({
     </label>
   );
 
+  const textarea = (
+    key: keyof typeof form,
+    label: string,
+    placeholder = "",
+    rows = 3,
+  ) => (
+    <label className="block">
+      <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+        {label}
+      </span>
+      <textarea
+        value={String(form[key] ?? "")}
+        placeholder={placeholder}
+        rows={rows}
+        onChange={(e) => setForm((f) => ({ ...f, [key]: e.target.value }))}
+        className="mt-0.5 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/40"
+      />
+    </label>
+  );
+
   return (
     <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/50 md:items-center md:p-4">
       <div className="max-h-[92vh] w-full max-w-md overflow-y-auto rounded-t-2xl bg-card p-5 md:rounded-2xl">
