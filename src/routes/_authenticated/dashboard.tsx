@@ -5,6 +5,7 @@ import { AssistantTab } from "@/components/dashboard/assistant-tab";
 import { ProfileTab } from "@/components/dashboard/profile-tab";
 import { SupportTab } from "@/components/dashboard/support-tab";
 import { RewardsTab } from "@/components/dashboard/rewards-tab";
+import { BonusesTab } from "@/components/dashboard/bonuses-tab";
 import { BannerBoard } from "@/components/dashboard/banner-board";
 import { EmailVerifiedBanner } from "@/components/dashboard/email-verified-banner";
 import { CommandPalette } from "@/components/dashboard/command-palette";
@@ -82,6 +83,7 @@ type Tab =
   | "payouts"
   | "ai"
   | "requests"
+  | "bonuses"
   | "profile"
   | "support"
   | "rewards";
@@ -1641,6 +1643,7 @@ function DashboardPage() {
         {active === "ai" && <AssistantTab />}
         {active === "support" && <SupportTab />}
         {active === "requests" && <RequestsTab requests={requests} />}
+        {active === "bonuses" && <BonusesTab userId={userId} />}
         {active === "rewards" && userId && (
           <RewardsTab
             userId={userId}
@@ -1729,6 +1732,7 @@ function DashboardPage() {
           { id: "info" as const, key: "nav_info" as const, Icon: LayoutGrid, label: "Обзор" },
           { id: "offers" as const, key: "nav_offers" as const, Icon: Package, label: "Офферы" },
           { id: "requests" as const, key: "nav_requests" as const, Icon: Inbox, label: "Заявки" },
+          { id: "bonuses" as const, key: "nav_rewards" as const, Icon: Gift, label: "Бонусы" },
           { id: "stats" as const, key: "nav_stats" as const, Icon: BarChart3, label: "Аналитика" },
           { id: "payouts" as const, key: "nav_payouts" as const, Icon: Wallet, label: "Выплаты" },
           { id: "ai" as const, key: "nav_ai" as const, Icon: Sparkles, label: "Помощник" },
@@ -2810,11 +2814,37 @@ const REQ_STATUS_META: Record<LinkRequestStatus, { label: string; tone: string; 
 function RequestsTab({ requests }: { requests: LinkRequest[] }) {
   const [q, setQ] = useState("");
   const [filter, setFilter] = useState<"all" | "active" | "paid">("all");
+  const [period, setPeriod] = useState<"today" | "week" | "month" | "quarter" | "year" | "all">(
+    "all",
+  );
   const [copiedId, setCopiedId] = useState<string | null>(null);
+
+  const cutoff = useMemo(() => {
+    if (period === "all") return null;
+    const d = new Date();
+    d.setHours(0, 0, 0, 0);
+    if (period === "today") return d;
+    if (period === "week") d.setDate(d.getDate() - 6);
+    else if (period === "month") d.setDate(d.getDate() - 29);
+    else if (period === "quarter") d.setDate(d.getDate() - 89);
+    else if (period === "year") d.setDate(d.getDate() - 364);
+    return d;
+  }, [period]);
+
+  const scoped = useMemo(
+    () =>
+      cutoff
+        ? requests.filter((r) => {
+            const d = new Date(r.createdAt);
+            return !isNaN(d.getTime()) && d >= cutoff;
+          })
+        : requests,
+    [requests, cutoff],
+  );
 
   const filtered = useMemo(() => {
     const term = q.trim().toLowerCase();
-    return requests.filter((r) => {
+    return scoped.filter((r) => {
       const s = normalizeStatus(r.status);
       if (filter === "active" && (s === "paid" || s === "finished")) return false;
       if (filter === "paid" && s !== "paid") return false;
@@ -2825,18 +2855,18 @@ function RequestsTab({ requests }: { requests: LinkRequest[] }) {
         (r.note ?? "").toLowerCase().includes(term)
       );
     });
-  }, [requests, q, filter]);
+  }, [scoped, q, filter]);
 
   const stats = useMemo(() => {
-    const total = requests.length;
-    const active = requests.filter((r) => {
+    const total = scoped.length;
+    const active = scoped.filter((r) => {
       const s = normalizeStatus(r.status);
       return s !== "paid" && s !== "finished";
     }).length;
-    const orders = requests.reduce((s, r) => s + (r.ordersCount || 0), 0);
-    const paid = requests.filter((r) => normalizeStatus(r.status) === "paid").length;
+    const orders = scoped.reduce((s, r) => s + (r.ordersCount || 0), 0);
+    const paid = scoped.filter((r) => normalizeStatus(r.status) === "paid").length;
     return { total, active, orders, paid };
-  }, [requests]);
+  }, [scoped]);
 
   const copy = async (r: LinkRequest) => {
     if (!r.link) return;
@@ -2892,6 +2922,29 @@ function RequestsTab({ requests }: { requests: LinkRequest[] }) {
           placeholder="Поиск по офферу или тегу"
           className="w-full rounded-2xl border border-border bg-secondary/40 py-2.5 pl-9 pr-3 text-sm outline-none focus:border-primary"
         />
+      </div>
+
+      <div className="flex gap-1.5 overflow-x-auto pb-1">
+        {[
+          { id: "all" as const, label: "Всё время" },
+          { id: "today" as const, label: "Сегодня" },
+          { id: "week" as const, label: "Неделя" },
+          { id: "month" as const, label: "Месяц" },
+          { id: "quarter" as const, label: "Квартал" },
+          { id: "year" as const, label: "Год" },
+        ].map((f) => (
+          <button
+            key={f.id}
+            onClick={() => setPeriod(f.id)}
+            className={`whitespace-nowrap rounded-full border px-3 py-1.5 text-[11px] font-bold uppercase tracking-wide transition ${
+              period === f.id
+                ? "border-primary bg-primary/10 text-primary"
+                : "border-border bg-secondary/40 text-muted-foreground hover:border-primary/50"
+            }`}
+          >
+            {f.label}
+          </button>
+        ))}
       </div>
 
       <div className="flex gap-1.5 overflow-x-auto pb-1">

@@ -45,6 +45,7 @@ import {
   Bot,
   Briefcase,
   ChevronDown,
+  Gift,
 } from "lucide-react";
 import {
   Sidebar,
@@ -67,6 +68,7 @@ import { AdminAnalystTab } from "@/components/admin/analyst-tab";
 import { AdminSupportTab } from "@/components/admin/support-tab";
 import { AdminBannersTab } from "@/components/admin/banners-tab";
 import { AdminNewsTab } from "@/components/admin/news-tab";
+import { AdminPromoCodesTab } from "@/components/admin/promo-codes-tab";
 import { AdminCompetitionsTab } from "@/components/admin/admin-competitions-tab";
 import { AdminEmailSettingsTab } from "@/components/admin/email-settings-tab";
 import { AiSettingsTab } from "@/components/admin/ai-settings-tab";
@@ -124,7 +126,8 @@ type TabId =
   | "competitions"
   | "email"
   | "team"
-  | "recruiters";
+  | "recruiters"
+  | "promo";
 
 type TeamPerms = {
   position_code: string | null;
@@ -394,6 +397,7 @@ function AdminPage() {
       { id: "broadcast", label: "Рассылка", Icon: Bell },
       { id: "banners", label: "Баннеры", Icon: Megaphone },
       { id: "news", label: "Новости", Icon: Newspaper },
+      { id: "promo", label: "Промокоды", Icon: Gift },
       { id: "moderation", label: "Модерация", Icon: Shield, badge: moderationUnread },
       { id: "support", label: "Поддержка", Icon: Headphones, badge: supportUnread },
       { id: "competitions", label: "Соревнования", Icon: Trophy },
@@ -459,7 +463,7 @@ function AdminPage() {
   const sections: { label: string; ids: TabId[] }[] = [
     { label: "Обзор", ids: ["overview"] },
     { label: "Операции", ids: ["users", "offers", "requests", "conversions", "payouts"] },
-    { label: "Контент", ids: ["banners", "news", "broadcast", "competitions"] },
+    { label: "Контент", ids: ["banners", "news", "broadcast", "competitions", "promo"] },
     { label: "Модерация", ids: ["moderation", "support"] },
     { label: "Интеллект", ids: ["ai", "ai_settings"] },
     { label: "Система", ids: ["email", "team", "recruiters"] },
@@ -615,6 +619,7 @@ function AdminPage() {
             {tab === "email" && canRender("email") && <AdminEmailSettingsTab />}
             {tab === "team" && perms.is_leadership && <TeamTab />}
             {tab === "recruiters" && canRender("recruiters") && <AdminRecruitersTab />}
+            {tab === "promo" && canRender("promo") && <AdminPromoCodesTab />}
           </main>
         </SidebarInset>
       </div>

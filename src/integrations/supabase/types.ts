@@ -675,6 +675,107 @@ export type Database = {
         }
         Relationships: []
       }
+      promo_activations: {
+        Row: {
+          amount: number
+          conversion_id: string | null
+          created_at: string
+          id: string
+          promo_id: string
+          user_id: string
+        }
+        Insert: {
+          amount?: number
+          conversion_id?: string | null
+          created_at?: string
+          id?: string
+          promo_id: string
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          conversion_id?: string | null
+          created_at?: string
+          id?: string
+          promo_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "promo_activations_conversion_id_fkey"
+            columns: ["conversion_id"]
+            isOneToOne: false
+            referencedRelation: "conversions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "promo_activations_promo_id_fkey"
+            columns: ["promo_id"]
+            isOneToOne: false
+            referencedRelation: "promo_codes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      promo_codes: {
+        Row: {
+          active: boolean
+          bonus_amount: number
+          code: string
+          created_at: string
+          created_by: string | null
+          description: string | null
+          ends_at: string
+          id: string
+          max_activations: number | null
+          starts_at: string
+          title: string
+          trigger_conversions_count: number
+          trigger_offer_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          bonus_amount?: number
+          code: string
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          ends_at: string
+          id?: string
+          max_activations?: number | null
+          starts_at?: string
+          title: string
+          trigger_conversions_count?: number
+          trigger_offer_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          bonus_amount?: number
+          code?: string
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          ends_at?: string
+          id?: string
+          max_activations?: number | null
+          starts_at?: string
+          title?: string
+          trigger_conversions_count?: number
+          trigger_offer_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "promo_codes_trigger_offer_id_fkey"
+            columns: ["trigger_offer_id"]
+            isOneToOne: false
+            referencedRelation: "offers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       recruiter_category_access: {
         Row: {
           category: string
