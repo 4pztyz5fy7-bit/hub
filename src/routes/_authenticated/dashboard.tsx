@@ -2491,25 +2491,28 @@ function InfoTab({
           Инструменты
         </h3>
 
-        <div className="rounded-xl bg-primary p-4 text-primary-foreground shadow-sm shadow-primary/20">
+        <div className="rounded-lg border border-border bg-card p-4">
           <div className="mb-2 flex items-center justify-between">
-            <p className="text-[10px] font-bold uppercase tracking-widest opacity-80">
-              Партнёрская ссылка
-            </p>
-            <span className="rounded-full bg-white/15 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider">
+            <div className="flex items-center gap-2">
+              <span className="size-1.5 rounded-full bg-primary" />
+              <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+                Партнёрская ссылка
+              </p>
+            </div>
+            <span className="rounded-sm border border-border bg-secondary/60 px-2 py-0.5 font-mono text-[9px] font-semibold uppercase tracking-wider text-muted-foreground">
               5% рефералы
             </span>
           </div>
           <div className="flex gap-2">
-            <div className="flex-1 select-all truncate rounded-md bg-white/10 px-3 py-2 font-mono text-xs">
+            <div className="flex-1 select-all truncate rounded-sm border border-border bg-secondary/40 px-3 py-2 font-mono text-xs">
               {refLink}
             </div>
             <button
               onClick={copy}
-              className="flex items-center gap-1 rounded-md bg-white px-3 py-2 text-xs font-bold text-primary transition-transform active:scale-95"
+              className="inline-flex items-center gap-1 rounded-sm bg-foreground px-3 py-2 text-[11px] font-semibold uppercase tracking-wider text-background transition-colors hover:bg-foreground/90"
             >
               {copied ? <Check className="size-3.5" /> : <Copy className="size-3.5" />}
-              {copied ? "OK" : "КОПИ"}
+              {copied ? "OK" : "Копировать"}
             </button>
           </div>
         </div>
