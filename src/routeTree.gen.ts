@@ -18,6 +18,7 @@ import { Route as CookiesRouteImport } from './routes/cookies'
 import { Route as BlockedRouteImport } from './routes/blocked'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AuthenticatedRecruiterRouteImport } from './routes/_authenticated/recruiter'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedCompetitionsRouteImport } from './routes/_authenticated/competitions'
 import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
@@ -68,6 +69,11 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthenticatedRecruiterRoute = AuthenticatedRecruiterRouteImport.update({
+  id: '/recruiter',
+  path: '/recruiter',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
   id: '/dashboard',
   path: '/dashboard',
@@ -107,6 +113,7 @@ export interface FileRoutesByFullPath {
   '/admin': typeof AuthenticatedAdminRoute
   '/competitions': typeof AuthenticatedCompetitionsRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
+  '/recruiter': typeof AuthenticatedRecruiterRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
   '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
 }
@@ -122,6 +129,7 @@ export interface FileRoutesByTo {
   '/admin': typeof AuthenticatedAdminRoute
   '/competitions': typeof AuthenticatedCompetitionsRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
+  '/recruiter': typeof AuthenticatedRecruiterRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
   '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
 }
@@ -139,6 +147,7 @@ export interface FileRoutesById {
   '/_authenticated/admin': typeof AuthenticatedAdminRoute
   '/_authenticated/competitions': typeof AuthenticatedCompetitionsRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
+  '/_authenticated/recruiter': typeof AuthenticatedRecruiterRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
   '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
 }
@@ -156,6 +165,7 @@ export interface FileRouteTypes {
     | '/admin'
     | '/competitions'
     | '/dashboard'
+    | '/recruiter'
     | '/lovable/email/auth/preview'
     | '/lovable/email/auth/webhook'
   fileRoutesByTo: FileRoutesByTo
@@ -171,6 +181,7 @@ export interface FileRouteTypes {
     | '/admin'
     | '/competitions'
     | '/dashboard'
+    | '/recruiter'
     | '/lovable/email/auth/preview'
     | '/lovable/email/auth/webhook'
   id:
@@ -187,6 +198,7 @@ export interface FileRouteTypes {
     | '/_authenticated/admin'
     | '/_authenticated/competitions'
     | '/_authenticated/dashboard'
+    | '/_authenticated/recruiter'
     | '/lovable/email/auth/preview'
     | '/lovable/email/auth/webhook'
   fileRoutesById: FileRoutesById
@@ -270,6 +282,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_authenticated/recruiter': {
+      id: '/_authenticated/recruiter'
+      path: '/recruiter'
+      fullPath: '/recruiter'
+      preLoaderRoute: typeof AuthenticatedRecruiterRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/dashboard': {
       id: '/_authenticated/dashboard'
       path: '/dashboard'
@@ -312,12 +331,14 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedAdminRoute: typeof AuthenticatedAdminRoute
   AuthenticatedCompetitionsRoute: typeof AuthenticatedCompetitionsRoute
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
+  AuthenticatedRecruiterRoute: typeof AuthenticatedRecruiterRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAdminRoute: AuthenticatedAdminRoute,
   AuthenticatedCompetitionsRoute: AuthenticatedCompetitionsRoute,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
+  AuthenticatedRecruiterRoute: AuthenticatedRecruiterRoute,
 }
 
 const AuthenticatedRouteRouteWithChildren =
@@ -339,13 +360,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
