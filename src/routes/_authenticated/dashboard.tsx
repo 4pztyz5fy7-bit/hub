@@ -1602,6 +1602,8 @@ function DashboardPage() {
         data-dashboard-main
         className="mx-auto w-full max-w-[430px] space-y-6 p-4 pb-24 lg:max-w-[1120px] lg:pb-10 lg:pl-24 lg:pr-10 lg:pt-8"
       >
+        <BannerBoard />
+
         {active === "info" && (
           <InfoTab
             balance={balance}
@@ -2175,7 +2177,8 @@ function InfoTab({
   return (
     <>
       <EmailVerifiedBanner />
-      <BannerBoard />
+
+
 
       <div className="space-y-6">
       {/* ============ HERO: баланс + вывод ============ */}
@@ -2697,9 +2700,9 @@ function OffersTab({
         </div>
       </section>
 
-      <section className="animate-in-up grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3" style={{ animationDelay: "80ms" }}>
+      <section className="animate-in-up grid grid-cols-1 gap-4 lg:grid-cols-2" style={{ animationDelay: "80ms" }}>
         {filtered.length === 0 && (
-          <div className="rounded-lg border border-dashed border-border p-8 text-center text-xs text-muted-foreground">
+          <div className="rounded-lg border border-dashed border-border p-8 text-center text-xs text-muted-foreground lg:col-span-2">
             Ничего не найдено
           </div>
         )}
@@ -2720,36 +2723,39 @@ function OffersTab({
           const reqTier = TIER_ORDER.indexOf(o.minLevel);
           const locked = userTier < reqTier;
           return (
-            <div
+            <article
               key={o.id}
-              className="rounded-lg border border-border bg-card p-3 transition-colors hover:border-foreground/20"
+              className="flex flex-col overflow-hidden rounded-lg border border-border bg-card transition-colors hover:border-foreground/20"
             >
+              {/* HEADER: image + title + badges (full width, no right column) */}
               <button
                 type="button"
                 onClick={() => onOpenDetail(o)}
-                className="flex w-full items-start gap-3 text-left"
+                className="flex w-full items-start gap-3 p-4 text-left"
               >
                 {o.image ? (
                   <img
                     src={o.image}
                     alt={o.name}
                     loading="lazy"
-                    className="size-12 shrink-0 rounded-md border border-border bg-secondary object-cover"
+                    className="size-14 shrink-0 rounded-md border border-border bg-secondary object-cover"
                   />
                 ) : (
-                  <OfferTag tag={o.tag} />
+                  <div className="size-14 shrink-0">
+                    <OfferTag tag={o.tag} />
+                  </div>
                 )}
                 <div className="min-w-0 flex-1">
-                  <div className="flex items-center gap-2">
-                    <h4 className="truncate text-xs font-bold leading-none">{o.name}</h4>
+                  <div className="flex flex-wrap items-center gap-1.5">
+                    <h4 className="min-w-0 flex-1 truncate text-sm font-bold leading-tight">{o.name}</h4>
                     {o.isNew && (
-                      <span className="rounded bg-primary/10 px-1.5 py-0.5 font-mono text-[8px] font-bold uppercase text-primary">
+                      <span className="rounded bg-primary/10 px-1.5 py-0.5 font-mono text-[9px] font-bold uppercase text-primary">
                         NEW
                       </span>
                     )}
                     {o.minLevel !== "start" && (
                       <span
-                        className={`inline-flex items-center gap-0.5 rounded px-1.5 py-0.5 font-mono text-[8px] font-bold uppercase ${
+                        className={`inline-flex items-center gap-0.5 rounded px-1.5 py-0.5 font-mono text-[9px] font-bold uppercase ${
                           locked
                             ? "bg-amber-500/15 text-amber-500"
                             : "bg-emerald-500/15 text-emerald-500"
@@ -2759,76 +2765,82 @@ function OffersTab({
                       </span>
                     )}
                   </div>
-                  <p className="mt-1 text-[10px] text-muted-foreground">
+                  <p className="mt-1 text-[11px] text-muted-foreground">
                     {o.category} • {o.advertiser}
                   </p>
-                  <p className="mt-1.5 line-clamp-2 text-[10.5px] leading-snug text-muted-foreground/90">
+                  <p className="mt-2 line-clamp-2 text-[11px] leading-snug text-muted-foreground/90">
                     {o.description}
                   </p>
                 </div>
-                <div className="shrink-0 text-right">
-                  <p className="font-mono text-xs font-bold">{boosted.boostedPayout}</p>
-                  {hasBoost ? (
-                    <p className="font-mono text-[9px] uppercase text-muted-foreground">
+              </button>
+
+              {/* METRICS: full-width strip */}
+              <div className="grid grid-cols-3 gap-px border-t border-border bg-border">
+                <div className="bg-card px-3 py-2">
+                  <p className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground">Ставка</p>
+                  <p className="mt-0.5 font-mono text-xs font-bold tabular-nums">{boosted.boostedPayout}</p>
+                  {hasBoost && (
+                    <p className="mt-0.5 font-mono text-[9px] text-muted-foreground">
                       <span className="line-through opacity-70">{o.payout}</span>{" "}
                       <span className={level.color}>+{level.bonusPct}%</span>
                     </p>
-                  ) : (
-                    <p className="font-mono text-[9px] uppercase text-muted-foreground">
-                      за действие
-                    </p>
                   )}
                 </div>
-              </button>
-              <div className="mt-3 flex items-end justify-between gap-2">
-                <div className="grid grid-cols-2 gap-3">
-                  <Stat label="EPC" value={`${fmt(boosted.boostedEpc)} ₽`} />
-                  <Stat label="CR" value={`${o.cr.toFixed(1)}%`} />
+                <div className="bg-card px-3 py-2">
+                  <p className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground">EPC</p>
+                  <p className="mt-0.5 font-mono text-xs font-bold tabular-nums">{fmt(boosted.boostedEpc)} ₽</p>
                 </div>
-                <div className="flex items-center gap-1.5">
-                  <button
-                    onClick={() => onOpenDetail(o)}
-                    className="flex items-center gap-1 rounded-md border border-border bg-card px-2.5 py-2 text-[11px] font-bold uppercase tracking-wider text-muted-foreground hover:text-foreground active:scale-95"
-                  >
-                    <FileText className="size-3" />
-                  </button>
-                  <button
-                    onClick={() => {
-                      if (!locked) onCopyLink(o);
-                    }}
-                    disabled={locked}
-                    title={locked ? `Доступно с уровня «${TIER_NAME[o.minLevel]}»` : undefined}
-                    className={`flex items-center gap-1 rounded-md px-3 py-2 text-[11px] font-bold uppercase tracking-wider transition-colors active:scale-95 ${
-                      locked
-                        ? "cursor-not-allowed bg-secondary text-muted-foreground"
-                        : isCopied
-                          ? "bg-[color:var(--success)]/15 text-[color:var(--success)]"
-                          : "bg-foreground text-background"
-                    }`}
-                  >
-                    {locked ? (
-                      <>
-                        <Lock className="size-3" /> {TIER_NAME[o.minLevel]}
-                      </>
-                    ) : isCopied ? (
-                      <>
-                        <Check className="size-3" /> Скопировано
-                      </>
-                    ) : (
-                      <>
-                        <Copy className="size-3" /> Ссылка
-                      </>
-                    )}
-                  </button>
+                <div className="bg-card px-3 py-2">
+                  <p className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground">CR</p>
+                  <p className="mt-0.5 font-mono text-xs font-bold tabular-nums">{o.cr.toFixed(1)}%</p>
                 </div>
               </div>
-            </div>
+
+              {/* ACTIONS: full-width bottom bar */}
+              <div className="flex items-stretch gap-px border-t border-border bg-border">
+                <button
+                  onClick={() => onOpenDetail(o)}
+                  className="flex flex-1 items-center justify-center gap-1.5 bg-card px-3 py-2.5 text-[11px] font-bold uppercase tracking-wider text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
+                >
+                  <FileText className="size-3.5" /> Подробнее
+                </button>
+                <button
+                  onClick={() => {
+                    if (!locked) onCopyLink(o);
+                  }}
+                  disabled={locked}
+                  title={locked ? `Доступно с уровня «${TIER_NAME[o.minLevel]}»` : undefined}
+                  className={`flex flex-[1.4] items-center justify-center gap-1.5 px-3 py-2.5 text-[11px] font-bold uppercase tracking-wider transition-colors active:scale-[0.99] ${
+                    locked
+                      ? "cursor-not-allowed bg-secondary text-muted-foreground"
+                      : isCopied
+                        ? "bg-[color:var(--success)]/15 text-[color:var(--success)]"
+                        : "bg-foreground text-background hover:bg-foreground/90"
+                  }`}
+                >
+                  {locked ? (
+                    <>
+                      <Lock className="size-3.5" /> {TIER_NAME[o.minLevel]}
+                    </>
+                  ) : isCopied ? (
+                    <>
+                      <Check className="size-3.5" /> Скопировано
+                    </>
+                  ) : (
+                    <>
+                      <Copy className="size-3.5" /> Скопировать ссылку
+                    </>
+                  )}
+                </button>
+              </div>
+            </article>
           );
         })}
       </section>
     </>
   );
 }
+
 
 function Stat({ label, value }: { label: string; value: string }) {
   return (
