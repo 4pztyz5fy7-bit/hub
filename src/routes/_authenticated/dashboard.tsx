@@ -83,6 +83,7 @@ type Tab =
   | "payouts"
   | "ai"
   | "requests"
+  | "bonuses"
   | "profile"
   | "support"
   | "rewards";
