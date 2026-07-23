@@ -1,2 +1,8 @@
 User-agent: *
 Allow: /
+Disallow: /_authenticated/
+Disallow: /admin
+Disallow: /recruiter
+Disallow: /blocked
+
+Sitemap: https://kvantm.tech/sitemap.xml
