@@ -2177,8 +2177,9 @@ function InfoTab({
       <EmailVerifiedBanner />
       <BannerBoard />
 
+      <div className="space-y-6 xl:grid xl:grid-cols-12 xl:gap-6 xl:space-y-0">
       {/* ============ HERO: баланс + вывод ============ */}
-      <section className="animate-in-up">
+      <section className="animate-in-up xl:col-span-8">
         <div className="relative overflow-hidden rounded-lg border border-border bg-card">
           <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/60 to-transparent" />
           <div className="grid gap-0 md:grid-cols-[1.4fr_1fr]">
