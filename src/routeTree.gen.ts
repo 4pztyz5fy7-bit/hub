@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as TermsRouteImport } from './routes/terms'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
+import { Route as RulesRouteImport } from './routes/rules'
 import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as NewsRouteImport } from './routes/news'
 import { Route as LegalRouteImport } from './routes/legal'
@@ -33,6 +34,11 @@ const TermsRoute = TermsRouteImport.update({
 const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
   id: '/sitemap.xml',
   path: '/sitemap.xml',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RulesRoute = RulesRouteImport.update({
+  id: '/rules',
+  path: '/rules',
   getParentRoute: () => rootRouteImport,
 } as any)
 const PrivacyRoute = PrivacyRouteImport.update({
@@ -108,6 +114,7 @@ export interface FileRoutesByFullPath {
   '/legal': typeof LegalRoute
   '/news': typeof NewsRoute
   '/privacy': typeof PrivacyRoute
+  '/rules': typeof RulesRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/terms': typeof TermsRoute
   '/admin': typeof AuthenticatedAdminRoute
@@ -124,6 +131,7 @@ export interface FileRoutesByTo {
   '/legal': typeof LegalRoute
   '/news': typeof NewsRoute
   '/privacy': typeof PrivacyRoute
+  '/rules': typeof RulesRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/terms': typeof TermsRoute
   '/admin': typeof AuthenticatedAdminRoute
@@ -142,6 +150,7 @@ export interface FileRoutesById {
   '/legal': typeof LegalRoute
   '/news': typeof NewsRoute
   '/privacy': typeof PrivacyRoute
+  '/rules': typeof RulesRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/terms': typeof TermsRoute
   '/_authenticated/admin': typeof AuthenticatedAdminRoute
@@ -160,6 +169,7 @@ export interface FileRouteTypes {
     | '/legal'
     | '/news'
     | '/privacy'
+    | '/rules'
     | '/sitemap.xml'
     | '/terms'
     | '/admin'
@@ -176,6 +186,7 @@ export interface FileRouteTypes {
     | '/legal'
     | '/news'
     | '/privacy'
+    | '/rules'
     | '/sitemap.xml'
     | '/terms'
     | '/admin'
@@ -193,6 +204,7 @@ export interface FileRouteTypes {
     | '/legal'
     | '/news'
     | '/privacy'
+    | '/rules'
     | '/sitemap.xml'
     | '/terms'
     | '/_authenticated/admin'
@@ -211,6 +223,7 @@ export interface RootRouteChildren {
   LegalRoute: typeof LegalRoute
   NewsRoute: typeof NewsRoute
   PrivacyRoute: typeof PrivacyRoute
+  RulesRoute: typeof RulesRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   TermsRoute: typeof TermsRoute
   LovableEmailAuthPreviewRoute: typeof LovableEmailAuthPreviewRoute
@@ -231,6 +244,13 @@ declare module '@tanstack/react-router' {
       path: '/sitemap.xml'
       fullPath: '/sitemap.xml'
       preLoaderRoute: typeof SitemapDotxmlRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/rules': {
+      id: '/rules'
+      path: '/rules'
+      fullPath: '/rules'
+      preLoaderRoute: typeof RulesRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/privacy': {
@@ -352,6 +372,7 @@ const rootRouteChildren: RootRouteChildren = {
   LegalRoute: LegalRoute,
   NewsRoute: NewsRoute,
   PrivacyRoute: PrivacyRoute,
+  RulesRoute: RulesRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
   TermsRoute: TermsRoute,
   LovableEmailAuthPreviewRoute: LovableEmailAuthPreviewRoute,

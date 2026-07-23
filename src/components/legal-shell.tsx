@@ -1,5 +1,5 @@
 import { Link } from "@tanstack/react-router";
-import { ArrowLeft, FileText, ShieldCheck, Cookie, ScrollText } from "lucide-react";
+import { ArrowLeft, FileText, ShieldCheck, Cookie, ScrollText, BookMarked } from "lucide-react";
 import type { ReactNode } from "react";
 
 export const LEGAL_UPDATED = "20 июля 2026";
@@ -9,6 +9,7 @@ export const LEGAL_LINKS = [
   { to: "/terms", label: "Оферта", icon: FileText },
   { to: "/privacy", label: "Политика конфиденциальности", icon: ShieldCheck },
   { to: "/cookies", label: "Cookies", icon: Cookie },
+  { to: "/rules", label: "Правила рекомендаций", icon: BookMarked },
 ] as const;
 
 export function LegalShell({

@@ -1,12 +1,12 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { FileText, ShieldCheck, Cookie, ArrowRight } from "lucide-react";
+import { FileText, ShieldCheck, Cookie, ArrowRight, BookMarked } from "lucide-react";
 import { LegalShell, P } from "@/components/legal-shell";
 
 export const Route = createFileRoute("/legal")({
   head: () => ({
     meta: [
       { title: "Документация — КВАНТ" },
-      { name: "description", content: "Оферта, политика конфиденциальности, политика cookies и другая правовая документация партнёрской платформы КВАНТ." },
+      { name: "description", content: "Оферта, политика конфиденциальности, политика cookies, правила рекомендаций и другая правовая документация партнёрской платформы КВАНТ." },
       { property: "og:title", content: "Документация — КВАНТ" },
       { property: "og:description", content: "Правовые документы платформы КВАНТ." },
     ],
@@ -32,6 +32,12 @@ const DOCS = [
     icon: Cookie,
     title: "Политика в отношении cookies",
     desc: "Какие cookies и локальные хранилища мы используем для работы кабинета и статистики.",
+  },
+  {
+    to: "/rules" as const,
+    icon: BookMarked,
+    title: "Правила размещения рекомендаций",
+    desc: "Разрешённые и запрещённые источники трафика, требования к креативам, ответственность партнёра.",
   },
 ];
 

@@ -104,6 +104,32 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
         href: "https://fonts.googleapis.com/css2?family=Unbounded:wght@500;600;700;800&family=Inter+Tight:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap",
       },
     ],
+    scripts: [
+      {
+        type: "application/ld+json",
+        children: JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "Organization",
+          name: "КВАНТ",
+          alternateName: "KVANT",
+          url: "https://kvantm.tech",
+          logo: "https://kvantm.tech/favicon.png",
+          description:
+            "КВАНТ — партнёрская платформа для профессионалов: финансовые, образовательные и travel-офферы, прозрачная статистика и быстрые выплаты.",
+          sameAs: ["https://kvantm.tech"],
+        }),
+      },
+      {
+        type: "application/ld+json",
+        children: JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "WebSite",
+          name: "КВАНТ",
+          url: "https://kvantm.tech",
+          inLanguage: "ru-RU",
+        }),
+      },
+    ],
   }),
   shellComponent: RootShell,
   component: RootComponent,
