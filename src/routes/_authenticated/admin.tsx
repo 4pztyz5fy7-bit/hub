@@ -67,6 +67,7 @@ import { AdminAnalystTab } from "@/components/admin/analyst-tab";
 import { AdminSupportTab } from "@/components/admin/support-tab";
 import { AdminBannersTab } from "@/components/admin/banners-tab";
 import { AdminNewsTab } from "@/components/admin/news-tab";
+import { AdminPromoCodesTab } from "@/components/admin/promo-codes-tab";
 import { AdminCompetitionsTab } from "@/components/admin/admin-competitions-tab";
 import { AdminEmailSettingsTab } from "@/components/admin/email-settings-tab";
 import { AiSettingsTab } from "@/components/admin/ai-settings-tab";
