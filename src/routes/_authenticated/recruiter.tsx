@@ -45,7 +45,7 @@ type OfferRow = {
   payout: string | null;
   epc: number | null;
   cr: number | null;
-  hold: string | null;
+  avg_orders_per_courier: number | null;
   goal: string | null;
   description: string | null;
   requirements: string | null;
@@ -53,6 +53,13 @@ type OfferRow = {
   denied: string[] | null;
   active: boolean | null;
   landing: string | null;
+  income: string | null;
+  target_action: string | null;
+  work_rules: string | null;
+  ad_materials: string | null;
+  feedback: string | null;
+  term_completion: string | null;
+  term_confirmation: string | null;
 };
 
 type LinkRow = {
@@ -284,9 +291,6 @@ function OfferEditor({
             advertiser: form.advertiser ?? null,
             geo: form.geo ?? null,
             payout: form.payout ?? "",
-            epc: Number(form.epc ?? 0),
-            cr: Number(form.cr ?? 0),
-            hold: form.hold ?? null,
             goal: form.goal ?? null,
             description: form.description ?? null,
             requirements: form.requirements ?? null,
@@ -294,6 +298,13 @@ function OfferEditor({
             denied: (form.denied ?? []).filter((s) => s.trim().length > 0),
             active: !!form.active,
             landing: form.landing ?? null,
+            income: form.income ?? null,
+            target_action: form.target_action ?? null,
+            work_rules: form.work_rules ?? null,
+            ad_materials: form.ad_materials ?? null,
+            feedback: form.feedback ?? null,
+            term_completion: form.term_completion ?? null,
+            term_confirmation: form.term_confirmation ?? null,
           },
         },
       });
@@ -363,35 +374,90 @@ function OfferEditor({
                 className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm"
               />
             </Field>
-            <Field label="Холд">
-              <input
-                value={form.hold ?? ""}
-                onChange={(e) => set("hold", e.target.value)}
+          </div>
+
+          <div className="rounded-xl border border-border bg-secondary/30 p-3">
+            <div className="mb-2 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+              Автоматические показатели (по фактической статистике)
+            </div>
+            <div className="grid grid-cols-3 gap-3 text-center">
+              <div>
+                <div className="text-[10px] uppercase text-muted-foreground">CR</div>
+                <div className="text-sm font-bold">{offer.cr ?? 0}%</div>
+              </div>
+              <div>
+                <div className="text-[10px] uppercase text-muted-foreground">EPC</div>
+                <div className="text-sm font-bold">{offer.epc ?? 0} ₽</div>
+              </div>
+              <div>
+                <div className="text-[10px] uppercase text-muted-foreground">Ср. заказов / курьер</div>
+                <div className="text-sm font-bold">{offer.avg_orders_per_courier ?? 0}</div>
+              </div>
+            </div>
+          </div>
+
+          <Field label="Доход (описание модели дохода)">
+            <textarea
+              rows={2}
+              value={form.income ?? ""}
+              onChange={(e) => set("income", e.target.value)}
+              className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm"
+            />
+          </Field>
+          <Field label="Целевое действие (ЦД)">
+            <textarea
+              rows={2}
+              value={form.target_action ?? ""}
+              onChange={(e) => set("target_action", e.target.value)}
+              className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm"
+            />
+          </Field>
+          <Field label="Цель кампании (для карточки)">
+            <input
+              value={form.goal ?? ""}
+              onChange={(e) => set("goal", e.target.value)}
+              className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm"
+            />
+          </Field>
+          <div className="grid gap-3 sm:grid-cols-2">
+            <Field label="Срок выполнения ЦД">
+              <textarea
+                rows={2}
+                value={form.term_completion ?? ""}
+                onChange={(e) => set("term_completion", e.target.value)}
                 className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm"
               />
             </Field>
-            <Field label="EPC">
-              <input
-                type="number"
-                value={form.epc ?? 0}
-                onChange={(e) => set("epc", Number(e.target.value))}
-                className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm"
-              />
-            </Field>
-            <Field label="CR, %">
-              <input
-                type="number"
-                step="0.01"
-                value={form.cr ?? 0}
-                onChange={(e) => set("cr", Number(e.target.value))}
+            <Field label="Срок подтверждения заявки">
+              <textarea
+                rows={2}
+                value={form.term_confirmation ?? ""}
+                onChange={(e) => set("term_confirmation", e.target.value)}
                 className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm"
               />
             </Field>
           </div>
-          <Field label="Целевое действие">
-            <input
-              value={form.goal ?? ""}
-              onChange={(e) => set("goal", e.target.value)}
+          <Field label="Правила работы">
+            <textarea
+              rows={4}
+              value={form.work_rules ?? ""}
+              onChange={(e) => set("work_rules", e.target.value)}
+              className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm"
+            />
+          </Field>
+          <Field label="Рекламные материалы">
+            <textarea
+              rows={4}
+              value={form.ad_materials ?? ""}
+              onChange={(e) => set("ad_materials", e.target.value)}
+              className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm"
+            />
+          </Field>
+          <Field label="Обратная связь">
+            <textarea
+              rows={2}
+              value={form.feedback ?? ""}
+              onChange={(e) => set("feedback", e.target.value)}
               className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm"
             />
           </Field>

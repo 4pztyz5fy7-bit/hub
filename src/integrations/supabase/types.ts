@@ -462,8 +462,10 @@ export type Database = {
       offers: {
         Row: {
           active: boolean
+          ad_materials: string | null
           advertiser: string | null
           allowed: string[]
+          avg_orders_per_courier: number
           category: string | null
           city_payouts: Json
           cr: number
@@ -471,11 +473,13 @@ export type Database = {
           denied: string[]
           description: string | null
           epc: number
+          feedback: string | null
           geo: string | null
           goal: string | null
           hold: string | null
           id: string
           image_url: string | null
+          income: string | null
           is_new: boolean
           landing: string | null
           min_level: Database["public"]["Enums"]["level_tier"]
@@ -486,12 +490,18 @@ export type Database = {
           payout_min: number | null
           requirements: string | null
           tag: string
+          target_action: string | null
+          term_completion: string | null
+          term_confirmation: string | null
           updated_at: string
+          work_rules: string | null
         }
         Insert: {
           active?: boolean
+          ad_materials?: string | null
           advertiser?: string | null
           allowed?: string[]
+          avg_orders_per_courier?: number
           category?: string | null
           city_payouts?: Json
           cr?: number
@@ -499,11 +509,13 @@ export type Database = {
           denied?: string[]
           description?: string | null
           epc?: number
+          feedback?: string | null
           geo?: string | null
           goal?: string | null
           hold?: string | null
           id: string
           image_url?: string | null
+          income?: string | null
           is_new?: boolean
           landing?: string | null
           min_level?: Database["public"]["Enums"]["level_tier"]
@@ -514,12 +526,18 @@ export type Database = {
           payout_min?: number | null
           requirements?: string | null
           tag: string
+          target_action?: string | null
+          term_completion?: string | null
+          term_confirmation?: string | null
           updated_at?: string
+          work_rules?: string | null
         }
         Update: {
           active?: boolean
+          ad_materials?: string | null
           advertiser?: string | null
           allowed?: string[]
+          avg_orders_per_courier?: number
           category?: string | null
           city_payouts?: Json
           cr?: number
@@ -527,11 +545,13 @@ export type Database = {
           denied?: string[]
           description?: string | null
           epc?: number
+          feedback?: string | null
           geo?: string | null
           goal?: string | null
           hold?: string | null
           id?: string
           image_url?: string | null
+          income?: string | null
           is_new?: boolean
           landing?: string | null
           min_level?: Database["public"]["Enums"]["level_tier"]
@@ -542,7 +562,11 @@ export type Database = {
           payout_min?: number | null
           requirements?: string | null
           tag?: string
+          target_action?: string | null
+          term_completion?: string | null
+          term_confirmation?: string | null
           updated_at?: string
+          work_rules?: string | null
         }
         Relationships: []
       }
@@ -966,6 +990,7 @@ export type Database = {
         Returns: number
       }
       notify_competition_ranks: { Args: never; Returns: number }
+      recompute_offer_stats: { Args: { _offer_id: string }; Returns: undefined }
       settle_competition: { Args: { _id: string }; Returns: Json }
       touch_streak: {
         Args: never

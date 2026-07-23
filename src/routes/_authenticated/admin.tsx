@@ -154,6 +154,14 @@ type Offer = {
   payout_max: number | null;
   city_payouts: CityPayout[];
   min_level: "start" | "silver" | "gold" | "platinum" | "diamond";
+  income: string | null;
+  target_action: string | null;
+  work_rules: string | null;
+  ad_materials: string | null;
+  feedback: string | null;
+  term_completion: string | null;
+  term_confirmation: string | null;
+  avg_orders_per_courier: number;
   created_at: string;
 };
 
@@ -1468,9 +1476,6 @@ function OfferEditor({
     payout_kind: (offer?.payout_kind ?? "exact") as PayoutKind,
     payout_min: offer?.payout_min != null ? String(offer.payout_min) : "",
     payout_max: offer?.payout_max != null ? String(offer.payout_max) : "",
-    epc: String(offer?.epc ?? 0),
-    cr: String(offer?.cr ?? 0),
-    hold: offer?.hold ?? "",
     goal: offer?.goal ?? "",
     landing: offer?.landing ?? "",
     description: offer?.description ?? "",
@@ -1486,6 +1491,13 @@ function OfferEditor({
       | "gold"
       | "platinum"
       | "diamond",
+    income: offer?.income ?? "",
+    target_action: offer?.target_action ?? "",
+    work_rules: offer?.work_rules ?? "",
+    ad_materials: offer?.ad_materials ?? "",
+    feedback: offer?.feedback ?? "",
+    term_completion: offer?.term_completion ?? "",
+    term_confirmation: offer?.term_confirmation ?? "",
   });
   const [cityPayouts, setCityPayouts] = useState<CityPayout[]>(
     Array.isArray(offer?.city_payouts) ? (offer!.city_payouts as CityPayout[]) : [],
@@ -1546,19 +1558,23 @@ function OfferEditor({
       payout_min: form.payout_min ? Number(form.payout_min) : null,
       payout_max: form.payout_max ? Number(form.payout_max) : null,
       city_payouts: cleanCities,
-      epc: Number(form.epc) || 0,
-      cr: Number(form.cr) || 0,
-      hold: form.hold.trim() || null,
-      goal: form.goal.trim() || null,
-      landing: form.landing.trim() || null,
-      description: form.description.trim() || null,
-      requirements: form.requirements.trim() || null,
+      goal: form.goal || null,
+      landing: form.landing || null,
+      description: form.description || null,
+      requirements: form.requirements || null,
       allowed: splitList(form.allowed),
       denied: splitList(form.denied),
       active: form.active,
       is_new: form.is_new,
       image_url: form.image_url ? form.image_url : null,
       min_level: form.min_level,
+      income: form.income || null,
+      target_action: form.target_action || null,
+      work_rules: form.work_rules || null,
+      ad_materials: form.ad_materials || null,
+      feedback: form.feedback || null,
+      term_completion: form.term_completion || null,
+      term_confirmation: form.term_confirmation || null,
     };
     const { error } = offer
       ? await supabase.from("offers").update(payload).eq("id", offer.id)
@@ -1580,6 +1596,26 @@ function OfferEditor({
         type="text"
         value={String(form[key] ?? "")}
         placeholder={placeholder}
+        onChange={(e) => setForm((f) => ({ ...f, [key]: e.target.value }))}
+        className="mt-0.5 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/40"
+      />
+    </label>
+  );
+
+  const textarea = (
+    key: keyof typeof form,
+    label: string,
+    placeholder = "",
+    rows = 3,
+  ) => (
+    <label className="block">
+      <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+        {label}
+      </span>
+      <textarea
+        value={String(form[key] ?? "")}
+        placeholder={placeholder}
+        rows={rows}
         onChange={(e) => setForm((f) => ({ ...f, [key]: e.target.value }))}
         className="mt-0.5 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/40"
       />
@@ -1732,10 +1768,30 @@ function OfferEditor({
               </div>
             )}
           </div>
-          <div className="grid grid-cols-2 gap-3">
-            {field("epc", "EPC")}
-            {field("cr", "CR, %")}
-          </div>
+          {offer && (
+            <div className="rounded-xl border border-border bg-secondary/30 p-3">
+              <div className="mb-2 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+                Автоматические показатели (по фактической статистике)
+              </div>
+              <div className="grid grid-cols-3 gap-3 text-center">
+                <div>
+                  <div className="text-[10px] uppercase text-muted-foreground">CR</div>
+                  <div className="text-sm font-bold">{offer.cr}%</div>
+                </div>
+                <div>
+                  <div className="text-[10px] uppercase text-muted-foreground">EPC</div>
+                  <div className="text-sm font-bold">{offer.epc} ₽</div>
+                </div>
+                <div>
+                  <div className="text-[10px] uppercase text-muted-foreground">Ср. заказов / курьер</div>
+                  <div className="text-sm font-bold">{offer.avg_orders_per_courier ?? 0}</div>
+                </div>
+              </div>
+              <p className="mt-2 text-[10px] text-muted-foreground">
+                Пересчитываются автоматически при поступлении заявок и конверсий.
+              </p>
+            </div>
+          )}
 
           {/* Выплаты по городам */}
           <div className="rounded-xl border border-border bg-secondary/30 p-3 space-y-2">
@@ -1796,10 +1852,32 @@ function OfferEditor({
             ))}
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
-            {field("hold", "Hold", "14 дн.")}
-            {field("goal", "Цель", "Одобренная заявка")}
+          <div className="rounded-xl border border-border bg-secondary/30 p-3 space-y-3">
+            <div className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+              Условия и цели
+            </div>
+            {textarea("income", "Доход (описание модели дохода)", "Например: 3500 ₽ за подтверждённую заявку + бонус 500 ₽ за 5-й заказ", 2)}
+            {textarea("target_action", "Целевое действие (ЦД)", "Например: курьер прошёл собеседование и принял 3 первых заказа", 2)}
+            {textarea("goal", "Цель кампании (для карточки)", "Одобренная заявка", 2)}
           </div>
+
+          <div className="rounded-xl border border-border bg-secondary/30 p-3 space-y-3">
+            <div className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+              Сроки
+            </div>
+            {textarea("term_completion", "Срок выполнения целевых действий", "Например: до 14 календарных дней с даты регистрации", 2)}
+            {textarea("term_confirmation", "Срок подтверждения заявки", "Например: подтверждение статуса рекламодателем в течение 3 дней", 2)}
+          </div>
+
+          <div className="rounded-xl border border-border bg-secondary/30 p-3 space-y-3">
+            <div className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+              Правила и материалы
+            </div>
+            {textarea("work_rules", "Правила работы", "Что можно / что запрещено, как выстроить воронку, работа с саппортом…", 4)}
+            {textarea("ad_materials", "Рекламные материалы", "Ссылки на креативы, тексты, промокоды, гайды по посадочным…", 4)}
+            {textarea("feedback", "Обратная связь", "Контакты менеджера, TG-чат, email, часы поддержки…", 2)}
+          </div>
+
           <label className="block">
             <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
               Партнёрская ссылка (её копирует пользователь)
