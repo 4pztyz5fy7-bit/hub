@@ -1804,23 +1804,26 @@ function DashboardPage() {
 
             {/* Mobile floating pill nav */}
             <nav className="fixed bottom-3 left-1/2 z-30 flex h-14 -translate-x-1/2 items-center gap-0.5 rounded-full border border-border/60 bg-card/90 px-1.5 shadow-2xl shadow-primary/10 ring-1 ring-primary/5 backdrop-blur-xl lg:hidden">
-              {NAV.map(({ id, Icon, label }) => {
-                const isActive = active === id;
+              {NAV.map(({ id, Icon, label, href }) => {
+                const isActive = !href && active === id;
                 return (
                   <button
                     key={id}
-                    onClick={() => setActive(id)}
+                    onClick={() => (href ? navigate({ to: href }) : setActive(id as Tab))}
                     aria-label={label}
                     className={`relative grid size-10 place-items-center rounded-full transition-all ${
                       isActive
                         ? "bg-gradient-to-br from-primary to-primary/70 text-primary-foreground shadow-md shadow-primary/40"
-                        : "text-muted-foreground active:scale-90"
+                        : href
+                          ? "text-primary active:scale-90"
+                          : "text-muted-foreground active:scale-90"
                     }`}
                   >
                     <Icon className="size-[18px]" />
                   </button>
                 );
               })}
+
             </nav>
           </>
         );
