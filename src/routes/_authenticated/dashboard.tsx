@@ -4663,7 +4663,16 @@ function OfferDetailSheet({
         {/* Header */}
         <div className="flex items-start justify-between gap-3 border-b border-border px-4 py-3">
           <div className="flex min-w-0 items-start gap-3">
-            <OfferTag tag={offer.tag} />
+            {offer.image ? (
+              <img
+                src={offer.image}
+                alt={offer.name}
+                loading="lazy"
+                className="size-12 shrink-0 rounded-lg border border-border bg-secondary object-cover"
+              />
+            ) : (
+              <OfferTag tag={offer.tag} />
+            )}
             <div className="min-w-0">
               <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
                 {offer.category}
