@@ -2314,7 +2314,7 @@ function InfoTab({
 
       {/* ============ KPI ============ */}
 
-      <section className="animate-in-up" style={{ animationDelay: "60ms" }}>
+      <section className="animate-in-up xl:col-span-4" style={{ animationDelay: "60ms" }}>
         <h3 className="mb-2 text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
           Показатели дня
         </h3>
