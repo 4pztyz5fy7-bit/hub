@@ -2697,7 +2697,7 @@ function OffersTab({
         </div>
       </section>
 
-      <section className="animate-in-up space-y-2" style={{ animationDelay: "80ms" }}>
+      <section className="animate-in-up grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3" style={{ animationDelay: "80ms" }}>
         {filtered.length === 0 && (
           <div className="rounded-lg border border-dashed border-border p-8 text-center text-xs text-muted-foreground">
             Ничего не найдено
