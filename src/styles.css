@@ -67,7 +67,16 @@
   --ring: hsl(221 83% 53%);
   --success: hsl(142 71% 40%);
   --warning: hsl(38 92% 50%);
+  --sidebar: hsl(0 0% 100%);
+  --sidebar-foreground: hsl(0 0% 15%);
+  --sidebar-primary: hsl(221 83% 53%);
+  --sidebar-primary-foreground: hsl(0 0% 100%);
+  --sidebar-accent: hsl(0 0% 94%);
+  --sidebar-accent-foreground: hsl(0 0% 7%);
+  --sidebar-border: hsl(0 0% 0% / 0.08);
+  --sidebar-ring: hsl(221 83% 53%);
 }
+
 
 .dark {
   --background: hsl(0 0% 7%);
