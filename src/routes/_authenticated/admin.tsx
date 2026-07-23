@@ -396,6 +396,7 @@ function AdminPage() {
       { id: "broadcast", label: "Рассылка", Icon: Bell },
       { id: "banners", label: "Баннеры", Icon: Megaphone },
       { id: "news", label: "Новости", Icon: Newspaper },
+      { id: "promo", label: "Промокоды", Icon: Gift },
       { id: "moderation", label: "Модерация", Icon: Shield, badge: moderationUnread },
       { id: "support", label: "Поддержка", Icon: Headphones, badge: supportUnread },
       { id: "competitions", label: "Соревнования", Icon: Trophy },
