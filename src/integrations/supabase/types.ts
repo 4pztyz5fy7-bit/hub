@@ -918,7 +918,7 @@ export type Database = {
       user_total_earned: { Args: { _uid: string }; Returns: number }
     }
     Enums: {
-      app_role: "admin" | "user"
+      app_role: "admin" | "user" | "recruiter"
       level_tier: "start" | "silver" | "gold" | "platinum" | "diamond"
       link_status:
         | "new"
@@ -1057,7 +1057,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      app_role: ["admin", "user"],
+      app_role: ["admin", "user", "recruiter"],
       level_tier: ["start", "silver", "gold", "platinum", "diamond"],
       link_status: [
         "new",
