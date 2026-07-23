@@ -1728,22 +1728,26 @@ function DashboardPage() {
           Desktop: floating glass rail (icons + hover labels)
           Mobile: pill-shaped floating bottom bar */}
       {(() => {
-        const NAV = [
-          { id: "info" as const, key: "nav_info" as const, Icon: LayoutGrid, label: "Обзор" },
-          { id: "offers" as const, key: "nav_offers" as const, Icon: Package, label: "Офферы" },
-          { id: "requests" as const, key: "nav_requests" as const, Icon: Inbox, label: "Заявки" },
-          { id: "bonuses" as const, key: "nav_rewards" as const, Icon: Gift, label: "Бонусы" },
-          { id: "stats" as const, key: "nav_stats" as const, Icon: BarChart3, label: "Аналитика" },
-          { id: "payouts" as const, key: "nav_payouts" as const, Icon: Wallet, label: "Выплаты" },
-          { id: "ai" as const, key: "nav_ai" as const, Icon: Sparkles, label: "Помощник" },
-          { id: "rewards" as const, key: "nav_rewards" as const, Icon: Trophy, label: "Награды" },
-          {
-            id: "support" as const,
-            key: "nav_support" as const,
-            Icon: Headphones,
-            label: "Поддержка",
-          },
+        const NAV: Array<{
+          id: Tab | `link:${string}`;
+          Icon: typeof LayoutGrid;
+          label: string;
+          href?: string;
+        }> = [
+          { id: "info", Icon: LayoutGrid, label: "Обзор" },
+          { id: "offers", Icon: Package, label: "Офферы" },
+          { id: "requests", Icon: Inbox, label: "Заявки" },
+          { id: "bonuses", Icon: Gift, label: "Бонусы" },
+          { id: "stats", Icon: BarChart3, label: "Аналитика" },
+          { id: "payouts", Icon: Wallet, label: "Выплаты" },
+          { id: "ai", Icon: Sparkles, label: "Помощник" },
+          { id: "rewards", Icon: Trophy, label: "Награды" },
+          { id: "support", Icon: Headphones, label: "Поддержка" },
+          ...((isRecruiter || isAdmin)
+            ? [{ id: "link:recruiter" as const, Icon: Briefcase, label: "Рекрутёр", href: "/recruiter" }]
+            : []),
         ];
+
         return (
           <>
             {/* Desktop floating rail */}
