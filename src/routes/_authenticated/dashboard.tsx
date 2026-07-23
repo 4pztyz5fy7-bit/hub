@@ -2326,7 +2326,7 @@ function InfoTab({
       </section>
 
       {/* ============ Chart ============ */}
-      <section className="animate-in-up xl:col-span-8" style={{ animationDelay: "120ms" }}>
+      <section className="animate-in-up" style={{ animationDelay: "120ms" }}>
         <div className="rounded-lg border border-border bg-card p-4">
           <div className="mb-4 flex items-end justify-between gap-3">
             <div>
