@@ -454,96 +454,171 @@ function AdminPage() {
     );
   }
 
+  const currentTab = tabs.find((t) => t.id === tab);
+
+  const sections: { label: string; ids: TabId[] }[] = [
+    { label: "Обзор", ids: ["overview"] },
+    { label: "Операции", ids: ["users", "offers", "requests", "conversions", "payouts"] },
+    { label: "Контент", ids: ["banners", "news", "broadcast", "competitions"] },
+    { label: "Модерация", ids: ["moderation", "support"] },
+    { label: "Интеллект", ids: ["ai", "ai_settings"] },
+    { label: "Система", ids: ["email", "team", "recruiters"] },
+  ];
+
   return (
-    <div className="min-h-screen bg-background text-foreground">
-      <header className="sticky top-0 z-20 flex h-14 items-center justify-between border-b border-border bg-background/80 px-4 backdrop-blur-md">
-        <div className="flex items-center gap-2.5">
-          <button
-            onClick={() => navigate({ to: "/dashboard" })}
-            aria-label="Назад"
-            className="flex size-8 items-center justify-center rounded-full text-muted-foreground hover:bg-accent hover:text-foreground"
-          >
-            <ArrowLeft className="size-4" />
-          </button>
-          <Shield className="size-4 text-primary" />
-          <span className="text-sm font-bold uppercase tracking-tight">Админ-панель</span>
-          <span className="rounded-full bg-primary/15 px-2 py-0.5 text-[9px] font-bold uppercase text-primary">
-            only admin
-          </span>
-        </div>
-        <div className="flex items-center gap-1">
-          <button
-            onClick={() => setTab("moderation")}
-            aria-label="Уведомления модерации"
-            className="relative flex size-8 items-center justify-center rounded-full text-muted-foreground hover:bg-accent hover:text-foreground"
-          >
-            <Bell className="size-4" />
-            {moderationUnread > 0 && (
-              <span className="absolute -right-0.5 -top-0.5 grid min-w-[16px] h-4 place-items-center rounded-full bg-destructive px-1 text-[9px] font-black text-destructive-foreground">
-                {moderationUnread > 99 ? "99+" : moderationUnread}
+    <SidebarProvider>
+      <div className="flex min-h-screen w-full bg-background text-foreground">
+        <Sidebar collapsible="icon" className="border-r border-border">
+          <SidebarHeader className="border-b border-border/60 px-3 py-3">
+            <div className="flex items-center gap-2.5">
+              <div className="grid size-8 shrink-0 place-items-center rounded-md bg-primary/10 text-primary ring-1 ring-primary/20">
+                <Shield className="size-4" />
+              </div>
+              <div className="flex min-w-0 flex-col leading-tight group-data-[collapsible=icon]:hidden">
+                <span className="truncate text-[11px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
+                  Control&nbsp;Center
+                </span>
+                <span className="truncate text-sm font-semibold tracking-tight text-foreground">
+                  Админ-панель
+                </span>
+              </div>
+            </div>
+          </SidebarHeader>
+
+          <SidebarContent className="px-1 py-2">
+            {sections.map((sec) => {
+              const items = sec.ids
+                .map((id) => tabs.find((t) => t.id === id))
+                .filter((t): t is (typeof tabs)[number] => !!t);
+              if (!items.length) return null;
+              return (
+                <SidebarGroup key={sec.label}>
+                  <SidebarGroupLabel className="px-2 text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground/70">
+                    {sec.label}
+                  </SidebarGroupLabel>
+                  <SidebarGroupContent>
+                    <SidebarMenu>
+                      {items.map((t) => (
+                        <SidebarMenuItem key={t.id}>
+                          <SidebarMenuButton
+                            isActive={tab === t.id}
+                            tooltip={t.label}
+                            onClick={() => setTab(t.id)}
+                            className="h-9 text-[13px] font-medium"
+                          >
+                            <t.Icon className="size-4" />
+                            <span>{t.label}</span>
+                          </SidebarMenuButton>
+                          {t.badge && t.badge > 0 ? (
+                            <SidebarMenuBadge className="bg-destructive text-destructive-foreground">
+                              {t.badge > 99 ? "99+" : t.badge}
+                            </SidebarMenuBadge>
+                          ) : null}
+                        </SidebarMenuItem>
+                      ))}
+                    </SidebarMenu>
+                  </SidebarGroupContent>
+                </SidebarGroup>
+              );
+            })}
+          </SidebarContent>
+
+          <SidebarFooter className="border-t border-border/60 px-2 py-2">
+            <SidebarMenu>
+              <SidebarMenuItem>
+                <SidebarMenuButton
+                  onClick={() => navigate({ to: "/dashboard" })}
+                  tooltip="Личный кабинет"
+                  className="h-9 text-[13px]"
+                >
+                  <ArrowLeft className="size-4" />
+                  <span>Личный кабинет</span>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+              <SidebarMenuItem>
+                <SidebarMenuButton
+                  onClick={signOut}
+                  tooltip="Выйти"
+                  className="h-9 text-[13px] text-muted-foreground hover:text-foreground"
+                >
+                  <LogOut className="size-4" />
+                  <span>Выйти</span>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+            </SidebarMenu>
+          </SidebarFooter>
+          <SidebarSeparator className="hidden" />
+        </Sidebar>
+
+        <SidebarInset className="flex min-w-0 flex-1 flex-col bg-background">
+          <header className="sticky top-0 z-20 flex h-14 items-center gap-3 border-b border-border bg-background/85 px-4 backdrop-blur-md">
+            <SidebarTrigger className="-ml-1" />
+            <div className="hidden h-5 w-px bg-border sm:block" />
+            <div className="flex min-w-0 flex-1 items-center gap-2">
+              {currentTab?.Icon ? (
+                <currentTab.Icon className="size-4 text-muted-foreground" />
+              ) : null}
+              <h1 className="truncate text-sm font-semibold tracking-tight text-foreground">
+                {currentTab?.label ?? "Админ-панель"}
+              </h1>
+              <span className="hidden rounded-md border border-border/70 bg-muted/40 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground sm:inline-block">
+                Admin
               </span>
+            </div>
+            <div className="flex items-center gap-1">
+              <button
+                onClick={() => setTab("moderation")}
+                aria-label="Уведомления модерации"
+                className="relative flex size-9 items-center justify-center rounded-md text-muted-foreground hover:bg-accent hover:text-foreground"
+              >
+                <Bell className="size-4" />
+                {moderationUnread > 0 && (
+                  <span className="absolute right-1 top-1 grid min-w-[16px] h-4 place-items-center rounded-full bg-destructive px-1 text-[9px] font-black text-destructive-foreground">
+                    {moderationUnread > 99 ? "99+" : moderationUnread}
+                  </span>
+                )}
+              </button>
+              <button
+                onClick={signOut}
+                aria-label="Выйти"
+                className="flex size-9 items-center justify-center rounded-md text-muted-foreground hover:bg-accent hover:text-foreground"
+              >
+                <LogOut className="size-4" />
+              </button>
+            </div>
+          </header>
+
+          <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-5 sm:px-6 sm:py-6">
+            {tabs.length === 0 && (
+              <EmptyState
+                text={`Ваша должность: ${perms.position_name ?? "—"}. У вас нет доступных разделов панели.`}
+              />
             )}
-          </button>
-          <button
-            onClick={signOut}
-            aria-label="Выйти"
-            className="flex size-8 items-center justify-center rounded-full text-muted-foreground hover:bg-accent hover:text-foreground"
-          >
-            <LogOut className="size-4" />
-          </button>
-        </div>
-      </header>
-
-      <nav className="sticky top-14 z-10 flex gap-1 overflow-x-auto border-b border-border bg-background/80 px-3 py-2 backdrop-blur-md">
-        {tabs.map((t) => (
-          <button
-            key={t.id}
-            onClick={() => setTab(t.id)}
-            className={`relative inline-flex shrink-0 items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-bold uppercase tracking-wider transition ${
-              tab === t.id
-                ? "bg-primary text-primary-foreground"
-                : "text-muted-foreground hover:bg-accent hover:text-foreground"
-            }`}
-          >
-            <t.Icon className="size-3.5" /> {t.label}
-            {t.badge && t.badge > 0 ? (
-              <span className="ml-1 grid min-w-[16px] h-4 place-items-center rounded-full bg-destructive px-1 text-[9px] font-black text-destructive-foreground">
-                {t.badge > 99 ? "99+" : t.badge}
-              </span>
-            ) : null}
-          </button>
-        ))}
-      </nav>
-
-      <main className="mx-auto max-w-5xl px-4 py-4">
-        {tabs.length === 0 && (
-          <EmptyState
-            text={`Ваша должность: ${perms.position_name ?? "—"}. У вас нет доступных разделов панели.`}
-          />
-        )}
-        {tab === "overview" && canRender("overview") && <OverviewTab />}
-        {tab === "users" && canRender("users") && <UsersTab />}
-        {tab === "offers" && canRender("offers") && <OffersTab />}
-        {tab === "payouts" && canRender("payouts") && <PayoutsTab />}
-        {tab === "requests" && canRender("requests") && <RequestsTab />}
-        {tab === "conversions" && canRender("conversions") && <ConversionsTab />}
-        {tab === "broadcast" && canRender("broadcast") && <BroadcastTab />}
-        {tab === "banners" && canRender("banners") && <AdminBannersTab />}
-        {tab === "news" && canRender("news") && <AdminNewsTab />}
-        {tab === "moderation" && canRender("moderation") && (
-          <ModerationTab meId={meId} onCountChange={setModerationUnread} />
-        )}
-        {tab === "support" && canRender("support") && (
-          <AdminSupportTab meId={meId} onCountChange={setSupportUnread} />
-        )}
-        {tab === "ai" && canRender("ai") && <AdminAnalystTab />}
-        {tab === "ai_settings" && canRender("ai_settings") && <AiSettingsTab />}
-        {tab === "competitions" && canRender("competitions") && <AdminCompetitionsTab />}
-        {tab === "email" && canRender("email") && <AdminEmailSettingsTab />}
-        {tab === "team" && perms.is_leadership && <TeamTab />}
-        {tab === "recruiters" && canRender("recruiters") && <AdminRecruitersTab />}
-      </main>
-    </div>
+            {tab === "overview" && canRender("overview") && <OverviewTab />}
+            {tab === "users" && canRender("users") && <UsersTab />}
+            {tab === "offers" && canRender("offers") && <OffersTab />}
+            {tab === "payouts" && canRender("payouts") && <PayoutsTab />}
+            {tab === "requests" && canRender("requests") && <RequestsTab />}
+            {tab === "conversions" && canRender("conversions") && <ConversionsTab />}
+            {tab === "broadcast" && canRender("broadcast") && <BroadcastTab />}
+            {tab === "banners" && canRender("banners") && <AdminBannersTab />}
+            {tab === "news" && canRender("news") && <AdminNewsTab />}
+            {tab === "moderation" && canRender("moderation") && (
+              <ModerationTab meId={meId} onCountChange={setModerationUnread} />
+            )}
+            {tab === "support" && canRender("support") && (
+              <AdminSupportTab meId={meId} onCountChange={setSupportUnread} />
+            )}
+            {tab === "ai" && canRender("ai") && <AdminAnalystTab />}
+            {tab === "ai_settings" && canRender("ai_settings") && <AiSettingsTab />}
+            {tab === "competitions" && canRender("competitions") && <AdminCompetitionsTab />}
+            {tab === "email" && canRender("email") && <AdminEmailSettingsTab />}
+            {tab === "team" && perms.is_leadership && <TeamTab />}
+            {tab === "recruiters" && canRender("recruiters") && <AdminRecruitersTab />}
+          </main>
+        </SidebarInset>
+      </div>
+    </SidebarProvider>
   );
 }
 
