@@ -1732,6 +1732,7 @@ function DashboardPage() {
           { id: "info" as const, key: "nav_info" as const, Icon: LayoutGrid, label: "Обзор" },
           { id: "offers" as const, key: "nav_offers" as const, Icon: Package, label: "Офферы" },
           { id: "requests" as const, key: "nav_requests" as const, Icon: Inbox, label: "Заявки" },
+          { id: "bonuses" as const, key: "nav_rewards" as const, Icon: Gift, label: "Бонусы" },
           { id: "stats" as const, key: "nav_stats" as const, Icon: BarChart3, label: "Аналитика" },
           { id: "payouts" as const, key: "nav_payouts" as const, Icon: Wallet, label: "Выплаты" },
           { id: "ai" as const, key: "nav_ai" as const, Icon: Sparkles, label: "Помощник" },
