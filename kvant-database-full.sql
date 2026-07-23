@@ -3506,3 +3506,10 @@ CREATE TRIGGER conversions_auto_apply_promos
   AFTER INSERT ON public.conversions
   FOR EACH ROW EXECUTE FUNCTION public.auto_apply_promos();
 
+
+-- =========================================================================
+-- KVANT audit 2026-07-23: чистка дублей политик, ужесточение RLS,
+-- отзыв анонимного EXECUTE у внутренних функций, FORCE RLS, индексы.
+-- Полный текст патча — vps-database-audit.sql.
+-- =========================================================================
+\i vps-database-audit.sql
