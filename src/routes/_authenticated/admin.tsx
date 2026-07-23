@@ -43,6 +43,7 @@ import {
   UserCog,
   Crown,
   Bot,
+  Briefcase,
 } from "lucide-react";
 import { AdminAnalystTab } from "@/components/admin/analyst-tab";
 import { AdminSupportTab } from "@/components/admin/support-tab";
@@ -51,6 +52,7 @@ import { AdminNewsTab } from "@/components/admin/news-tab";
 import { AdminCompetitionsTab } from "@/components/admin/admin-competitions-tab";
 import { AdminEmailSettingsTab } from "@/components/admin/email-settings-tab";
 import { AiSettingsTab } from "@/components/admin/ai-settings-tab";
+import { AdminRecruitersTab } from "@/components/admin/recruiters-tab";
 import {
   assignTeamMember,
   deleteTeamPosition,
@@ -373,6 +375,7 @@ function AdminPage() {
       { id: "ai_settings", label: "Настройки AI", Icon: Bot },
       { id: "email", label: "Почта / SMTP", Icon: Mail },
       { id: "team", label: "Команда", Icon: UserCog },
+      { id: "recruiters", label: "Рекрутёры", Icon: Briefcase },
     ],
     [moderationUnread, supportUnread],
   );
@@ -512,6 +515,7 @@ function AdminPage() {
         {tab === "competitions" && canRender("competitions") && <AdminCompetitionsTab />}
         {tab === "email" && canRender("email") && <AdminEmailSettingsTab />}
         {tab === "team" && perms.is_leadership && <TeamTab />}
+        {tab === "recruiters" && canRender("recruiters") && <AdminRecruitersTab />}
       </main>
     </div>
   );
