@@ -2725,8 +2725,9 @@ function OffersTab({
                 {o.image ? (
                   <img
                     src={o.image}
-                    alt=""
-                    className="size-10 shrink-0 rounded-md border border-border object-cover"
+                    alt={o.name}
+                    loading="lazy"
+                    className="size-12 shrink-0 rounded-md border border-border bg-secondary object-cover"
                   />
                 ) : (
                   <OfferTag tag={o.tag} />
@@ -4663,7 +4664,16 @@ function OfferDetailSheet({
         {/* Header */}
         <div className="flex items-start justify-between gap-3 border-b border-border px-4 py-3">
           <div className="flex min-w-0 items-start gap-3">
-            <OfferTag tag={offer.tag} />
+            {offer.image ? (
+              <img
+                src={offer.image}
+                alt={offer.name}
+                loading="lazy"
+                className="size-12 shrink-0 rounded-lg border border-border bg-secondary object-cover"
+              />
+            ) : (
+              <OfferTag tag={offer.tag} />
+            )}
             <div className="min-w-0">
               <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
                 {offer.category}
@@ -4686,11 +4696,14 @@ function OfferDetailSheet({
         {/* Scrollable body */}
         <div className="flex-1 space-y-5 overflow-y-auto px-4 py-4">
           {offer.image && (
-            <img
-              src={offer.image}
-              alt={offer.name}
-              className="h-40 w-full rounded-xl border border-border object-cover"
-            />
+            <div className="overflow-hidden rounded-xl border border-border bg-secondary">
+              <img
+                src={offer.image}
+                alt={offer.name}
+                loading="lazy"
+                className="aspect-[16/9] w-full object-cover"
+              />
+            </div>
           )}
           {/* Payout hero */}
           <div className="rounded-xl border border-border bg-gradient-to-br from-secondary/60 to-transparent p-4">
