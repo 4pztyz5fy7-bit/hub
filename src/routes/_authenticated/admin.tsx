@@ -45,6 +45,7 @@ import {
   Bot,
   Briefcase,
   ChevronDown,
+  Gift,
 } from "lucide-react";
 import {
   Sidebar,
