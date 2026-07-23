@@ -1748,10 +1748,30 @@ function OfferEditor({
               </div>
             )}
           </div>
-          <div className="grid grid-cols-2 gap-3">
-            {field("epc", "EPC")}
-            {field("cr", "CR, %")}
-          </div>
+          {offer && (
+            <div className="rounded-xl border border-border bg-secondary/30 p-3">
+              <div className="mb-2 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+                Автоматические показатели (по фактической статистике)
+              </div>
+              <div className="grid grid-cols-3 gap-3 text-center">
+                <div>
+                  <div className="text-[10px] uppercase text-muted-foreground">CR</div>
+                  <div className="text-sm font-bold">{offer.cr}%</div>
+                </div>
+                <div>
+                  <div className="text-[10px] uppercase text-muted-foreground">EPC</div>
+                  <div className="text-sm font-bold">{offer.epc} ₽</div>
+                </div>
+                <div>
+                  <div className="text-[10px] uppercase text-muted-foreground">Ср. заказов / курьер</div>
+                  <div className="text-sm font-bold">{offer.avg_orders_per_courier ?? 0}</div>
+                </div>
+              </div>
+              <p className="mt-2 text-[10px] text-muted-foreground">
+                Пересчитываются автоматически при поступлении заявок и конверсий.
+              </p>
+            </div>
+          )}
 
           {/* Выплаты по городам */}
           <div className="rounded-xl border border-border bg-secondary/30 p-3 space-y-2">
@@ -1812,10 +1832,32 @@ function OfferEditor({
             ))}
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
-            {field("hold", "Hold", "14 дн.")}
-            {field("goal", "Цель", "Одобренная заявка")}
+          <div className="rounded-xl border border-border bg-secondary/30 p-3 space-y-3">
+            <div className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+              Условия и цели
+            </div>
+            {textarea("income", "Доход (описание модели дохода)", "Например: 3500 ₽ за подтверждённую заявку + бонус 500 ₽ за 5-й заказ", 2)}
+            {textarea("target_action", "Целевое действие (ЦД)", "Например: курьер прошёл собеседование и принял 3 первых заказа", 2)}
+            {textarea("goal", "Цель кампании (для карточки)", "Одобренная заявка", 2)}
           </div>
+
+          <div className="rounded-xl border border-border bg-secondary/30 p-3 space-y-3">
+            <div className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+              Сроки
+            </div>
+            {textarea("term_completion", "Срок выполнения целевых действий", "Например: до 14 календарных дней с даты регистрации", 2)}
+            {textarea("term_confirmation", "Срок подтверждения заявки", "Например: подтверждение статуса рекламодателем в течение 3 дней", 2)}
+          </div>
+
+          <div className="rounded-xl border border-border bg-secondary/30 p-3 space-y-3">
+            <div className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+              Правила и материалы
+            </div>
+            {textarea("work_rules", "Правила работы", "Что можно / что запрещено, как выстроить воронку, работа с саппортом…", 4)}
+            {textarea("ad_materials", "Рекламные материалы", "Ссылки на креативы, тексты, промокоды, гайды по посадочным…", 4)}
+            {textarea("feedback", "Обратная связь", "Контакты менеджера, TG-чат, email, часы поддержки…", 2)}
+          </div>
+
           <label className="block">
             <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
               Партнёрская ссылка (её копирует пользователь)
