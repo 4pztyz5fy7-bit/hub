@@ -2560,17 +2560,17 @@ function InfoTab({
 function KpiCell({ k }: { k: Kpi }) {
   return (
     <div className="bg-card p-3">
-      <p className="mb-1 text-[10px] font-medium uppercase text-muted-foreground">{k.label}</p>
-      <div className="flex items-baseline justify-between">
-        <p className="font-mono text-sm font-medium">{k.value}</p>
-        <span
-          className={`font-mono text-[10px] ${
-            k.positive ? "text-[color:var(--success)]" : "text-destructive"
-          }`}
-        >
-          {k.delta}
-        </span>
-      </div>
+      <p className="mb-1.5 text-[9px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
+        {k.label}
+      </p>
+      <p className="font-mono text-base font-semibold leading-none tabular-nums">{k.value}</p>
+      <p
+        className={`mt-1.5 font-mono text-[10px] tabular-nums ${
+          k.positive ? "text-[color:var(--success)]" : "text-muted-foreground"
+        }`}
+      >
+        {k.delta}
+      </p>
     </div>
   );
 }
