@@ -1476,9 +1476,6 @@ function OfferEditor({
     payout_kind: (offer?.payout_kind ?? "exact") as PayoutKind,
     payout_min: offer?.payout_min != null ? String(offer.payout_min) : "",
     payout_max: offer?.payout_max != null ? String(offer.payout_max) : "",
-    epc: String(offer?.epc ?? 0),
-    cr: String(offer?.cr ?? 0),
-    hold: offer?.hold ?? "",
     goal: offer?.goal ?? "",
     landing: offer?.landing ?? "",
     description: offer?.description ?? "",
@@ -1494,6 +1491,13 @@ function OfferEditor({
       | "gold"
       | "platinum"
       | "diamond",
+    income: offer?.income ?? "",
+    target_action: offer?.target_action ?? "",
+    work_rules: offer?.work_rules ?? "",
+    ad_materials: offer?.ad_materials ?? "",
+    feedback: offer?.feedback ?? "",
+    term_completion: offer?.term_completion ?? "",
+    term_confirmation: offer?.term_confirmation ?? "",
   });
   const [cityPayouts, setCityPayouts] = useState<CityPayout[]>(
     Array.isArray(offer?.city_payouts) ? (offer!.city_payouts as CityPayout[]) : [],
