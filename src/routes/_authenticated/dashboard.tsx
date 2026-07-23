@@ -1728,38 +1728,48 @@ function DashboardPage() {
           Desktop: floating glass rail (icons + hover labels)
           Mobile: pill-shaped floating bottom bar */}
       {(() => {
-        const NAV = [
-          { id: "info" as const, key: "nav_info" as const, Icon: LayoutGrid, label: "Обзор" },
-          { id: "offers" as const, key: "nav_offers" as const, Icon: Package, label: "Офферы" },
-          { id: "requests" as const, key: "nav_requests" as const, Icon: Inbox, label: "Заявки" },
-          { id: "bonuses" as const, key: "nav_rewards" as const, Icon: Gift, label: "Бонусы" },
-          { id: "stats" as const, key: "nav_stats" as const, Icon: BarChart3, label: "Аналитика" },
-          { id: "payouts" as const, key: "nav_payouts" as const, Icon: Wallet, label: "Выплаты" },
-          { id: "ai" as const, key: "nav_ai" as const, Icon: Sparkles, label: "Помощник" },
-          { id: "rewards" as const, key: "nav_rewards" as const, Icon: Trophy, label: "Награды" },
-          {
-            id: "support" as const,
-            key: "nav_support" as const,
-            Icon: Headphones,
-            label: "Поддержка",
-          },
+        const NAV: Array<{
+          id: Tab | `link:${string}`;
+          Icon: typeof LayoutGrid;
+          label: string;
+          href?: string;
+        }> = [
+          { id: "info", Icon: LayoutGrid, label: "Обзор" },
+          { id: "offers", Icon: Package, label: "Офферы" },
+          { id: "requests", Icon: Inbox, label: "Заявки" },
+          { id: "bonuses", Icon: Gift, label: "Бонусы" },
+          { id: "stats", Icon: BarChart3, label: "Аналитика" },
+          { id: "payouts", Icon: Wallet, label: "Выплаты" },
+          { id: "ai", Icon: Sparkles, label: "Помощник" },
+          { id: "rewards", Icon: Trophy, label: "Награды" },
+          { id: "support", Icon: Headphones, label: "Поддержка" },
+          ...((isRecruiter || isAdmin)
+            ? [{ id: "link:recruiter" as const, Icon: Briefcase, label: "Рекрутёр", href: "/recruiter" }]
+            : []),
         ];
+
         return (
           <>
             {/* Desktop floating rail */}
             <nav className="pointer-events-none fixed left-4 top-1/2 z-30 hidden -translate-y-1/2 lg:block">
               <div className="pointer-events-auto flex flex-col items-center gap-1 rounded-2xl border border-border/60 bg-card/80 p-2 shadow-xl shadow-primary/5 ring-1 ring-primary/5 backdrop-blur-xl">
-                {NAV.map(({ id, Icon, label }) => {
-                  const isActive = active === id;
+                {NAV.map(({ id, Icon, label, href }) => {
+                  const isActive = !href && active === id;
+                  const handleClick = () => {
+                    if (href) navigate({ to: href });
+                    else setActive(id as Tab);
+                  };
                   return (
                     <div key={id} className="group relative">
                       <button
-                        onClick={() => setActive(id)}
+                        onClick={handleClick}
                         aria-label={label}
                         className={`relative grid size-11 place-items-center rounded-xl transition-all ${
                           isActive
                             ? "bg-gradient-to-br from-primary to-primary/70 text-primary-foreground shadow-md shadow-primary/40"
-                            : "text-muted-foreground hover:bg-accent hover:text-foreground"
+                            : href
+                              ? "text-primary hover:bg-primary/10"
+                              : "text-muted-foreground hover:bg-accent hover:text-foreground"
                         }`}
                       >
                         <Icon className="size-5" />
@@ -1774,6 +1784,7 @@ function DashboardPage() {
                     </div>
                   );
                 })}
+
 
                 <div className="my-1 h-px w-8 bg-border/60" />
 
@@ -1793,23 +1804,26 @@ function DashboardPage() {
 
             {/* Mobile floating pill nav */}
             <nav className="fixed bottom-3 left-1/2 z-30 flex h-14 -translate-x-1/2 items-center gap-0.5 rounded-full border border-border/60 bg-card/90 px-1.5 shadow-2xl shadow-primary/10 ring-1 ring-primary/5 backdrop-blur-xl lg:hidden">
-              {NAV.map(({ id, Icon, label }) => {
-                const isActive = active === id;
+              {NAV.map(({ id, Icon, label, href }) => {
+                const isActive = !href && active === id;
                 return (
                   <button
                     key={id}
-                    onClick={() => setActive(id)}
+                    onClick={() => (href ? navigate({ to: href }) : setActive(id as Tab))}
                     aria-label={label}
                     className={`relative grid size-10 place-items-center rounded-full transition-all ${
                       isActive
                         ? "bg-gradient-to-br from-primary to-primary/70 text-primary-foreground shadow-md shadow-primary/40"
-                        : "text-muted-foreground active:scale-90"
+                        : href
+                          ? "text-primary active:scale-90"
+                          : "text-muted-foreground active:scale-90"
                     }`}
                   >
                     <Icon className="size-[18px]" />
                   </button>
                 );
               })}
+
             </nav>
           </>
         );
