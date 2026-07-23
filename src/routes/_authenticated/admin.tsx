@@ -103,7 +103,8 @@ type TabId =
   | "ai_settings"
   | "competitions"
   | "email"
-  | "team";
+  | "team"
+  | "recruiters";
 
 type TeamPerms = {
   position_code: string | null;
