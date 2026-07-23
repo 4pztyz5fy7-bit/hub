@@ -1643,6 +1643,7 @@ function DashboardPage() {
         {active === "ai" && <AssistantTab />}
         {active === "support" && <SupportTab />}
         {active === "requests" && <RequestsTab requests={requests} />}
+        {active === "bonuses" && <BonusesTab userId={userId} />}
         {active === "rewards" && userId && (
           <RewardsTab
             userId={userId}
