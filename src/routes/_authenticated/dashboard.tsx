@@ -2725,8 +2725,9 @@ function OffersTab({
                 {o.image ? (
                   <img
                     src={o.image}
-                    alt=""
-                    className="size-10 shrink-0 rounded-md border border-border object-cover"
+                    alt={o.name}
+                    loading="lazy"
+                    className="size-12 shrink-0 rounded-md border border-border bg-secondary object-cover"
                   />
                 ) : (
                   <OfferTag tag={o.tag} />
