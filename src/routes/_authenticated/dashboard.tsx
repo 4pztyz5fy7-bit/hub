@@ -2926,6 +2926,29 @@ function RequestsTab({ requests }: { requests: LinkRequest[] }) {
 
       <div className="flex gap-1.5 overflow-x-auto pb-1">
         {[
+          { id: "all" as const, label: "Всё время" },
+          { id: "today" as const, label: "Сегодня" },
+          { id: "week" as const, label: "Неделя" },
+          { id: "month" as const, label: "Месяц" },
+          { id: "quarter" as const, label: "Квартал" },
+          { id: "year" as const, label: "Год" },
+        ].map((f) => (
+          <button
+            key={f.id}
+            onClick={() => setPeriod(f.id)}
+            className={`whitespace-nowrap rounded-full border px-3 py-1.5 text-[11px] font-bold uppercase tracking-wide transition ${
+              period === f.id
+                ? "border-primary bg-primary/10 text-primary"
+                : "border-border bg-secondary/40 text-muted-foreground hover:border-primary/50"
+            }`}
+          >
+            {f.label}
+          </button>
+        ))}
+      </div>
+
+      <div className="flex gap-1.5 overflow-x-auto pb-1">
+        {[
           { id: "all" as const, label: "Все" },
           { id: "active" as const, label: "Активные" },
           { id: "paid" as const, label: "Оплачено" },
