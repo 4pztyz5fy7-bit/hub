@@ -2177,7 +2177,8 @@ function InfoTab({
   return (
     <>
       <EmailVerifiedBanner />
-      <BannerBoard />
+
+
 
       <div className="space-y-6">
       {/* ============ HERO: баланс + вывод ============ */}
