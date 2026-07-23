@@ -1753,17 +1753,23 @@ function DashboardPage() {
             {/* Desktop floating rail */}
             <nav className="pointer-events-none fixed left-4 top-1/2 z-30 hidden -translate-y-1/2 lg:block">
               <div className="pointer-events-auto flex flex-col items-center gap-1 rounded-2xl border border-border/60 bg-card/80 p-2 shadow-xl shadow-primary/5 ring-1 ring-primary/5 backdrop-blur-xl">
-                {NAV.map(({ id, Icon, label }) => {
-                  const isActive = active === id;
+                {NAV.map(({ id, Icon, label, href }) => {
+                  const isActive = !href && active === id;
+                  const handleClick = () => {
+                    if (href) navigate({ to: href });
+                    else setActive(id as Tab);
+                  };
                   return (
                     <div key={id} className="group relative">
                       <button
-                        onClick={() => setActive(id)}
+                        onClick={handleClick}
                         aria-label={label}
                         className={`relative grid size-11 place-items-center rounded-xl transition-all ${
                           isActive
                             ? "bg-gradient-to-br from-primary to-primary/70 text-primary-foreground shadow-md shadow-primary/40"
-                            : "text-muted-foreground hover:bg-accent hover:text-foreground"
+                            : href
+                              ? "text-primary hover:bg-primary/10"
+                              : "text-muted-foreground hover:bg-accent hover:text-foreground"
                         }`}
                       >
                         <Icon className="size-5" />
@@ -1778,6 +1784,7 @@ function DashboardPage() {
                     </div>
                   );
                 })}
+
 
                 <div className="my-1 h-px w-8 bg-border/60" />
 
