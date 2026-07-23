@@ -45,7 +45,7 @@ type OfferRow = {
   payout: string | null;
   epc: number | null;
   cr: number | null;
-  hold: string | null;
+  avg_orders_per_courier: number | null;
   goal: string | null;
   description: string | null;
   requirements: string | null;
@@ -53,6 +53,13 @@ type OfferRow = {
   denied: string[] | null;
   active: boolean | null;
   landing: string | null;
+  income: string | null;
+  target_action: string | null;
+  work_rules: string | null;
+  ad_materials: string | null;
+  feedback: string | null;
+  term_completion: string | null;
+  term_confirmation: string | null;
 };
 
 type LinkRow = {
