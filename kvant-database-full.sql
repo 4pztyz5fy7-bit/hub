@@ -10,7 +10,7 @@
 DO $$ BEGIN CREATE TYPE public.app_role AS ENUM ('admin', 'user'); EXCEPTION WHEN duplicate_object THEN NULL; END $$;
 
 -- ============ profiles ============
-CREATE TABLE public.profiles (
+CREATE TABLE IF NOT EXISTS public.profiles (
   id uuid PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
   email text,
   display_name text,
@@ -24,7 +24,7 @@ GRANT ALL ON public.profiles TO service_role;
 ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
 
 -- ============ user_roles ============
-CREATE TABLE public.user_roles (
+CREATE TABLE IF NOT EXISTS public.user_roles (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id uuid NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
   role public.app_role NOT NULL,
@@ -42,18 +42,24 @@ AS $$
 $$;
 
 -- ============ Profile RLS ============
+DROP POLICY IF EXISTS "profiles select own" ON public.profiles;
 CREATE POLICY "profiles select own" ON public.profiles FOR SELECT TO authenticated
   USING (auth.uid() = id);
+DROP POLICY IF EXISTS "profiles select all for admin" ON public.profiles;
 CREATE POLICY "profiles select all for admin" ON public.profiles FOR SELECT TO authenticated
   USING (public.has_role(auth.uid(), 'admin'));
+DROP POLICY IF EXISTS "profiles update own" ON public.profiles;
 CREATE POLICY "profiles update own" ON public.profiles FOR UPDATE TO authenticated
   USING (auth.uid() = id) WITH CHECK (auth.uid() = id);
+DROP POLICY IF EXISTS "profiles update admin" ON public.profiles;
 CREATE POLICY "profiles update admin" ON public.profiles FOR UPDATE TO authenticated
   USING (public.has_role(auth.uid(), 'admin'));
 
 -- ============ user_roles RLS ============
+DROP POLICY IF EXISTS "roles read own" ON public.user_roles;
 CREATE POLICY "roles read own" ON public.user_roles FOR SELECT TO authenticated
   USING (auth.uid() = user_id);
+DROP POLICY IF EXISTS "roles read all admin" ON public.user_roles;
 CREATE POLICY "roles read all admin" ON public.user_roles FOR SELECT TO authenticated
   USING (public.has_role(auth.uid(), 'admin'));
 
@@ -77,6 +83,7 @@ BEGIN
 END;
 $$;
 
+DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
 CREATE TRIGGER on_auth_user_created
 AFTER INSERT ON auth.users
 FOR EACH ROW EXECUTE FUNCTION public.handle_new_user();
@@ -86,12 +93,13 @@ CREATE OR REPLACE FUNCTION public.set_updated_at()
 RETURNS trigger LANGUAGE plpgsql SET search_path = public
 AS $$ BEGIN NEW.updated_at = now(); RETURN NEW; END; $$;
 
+DROP TRIGGER IF EXISTS trg_profiles_updated ON public.profiles;
 CREATE TRIGGER trg_profiles_updated
 BEFORE UPDATE ON public.profiles
 FOR EACH ROW EXECUTE FUNCTION public.set_updated_at();
 
 -- ============ offers (admin-managed catalog) ============
-CREATE TABLE public.offers (
+CREATE TABLE IF NOT EXISTS public.offers (
   id text PRIMARY KEY,
   name text NOT NULL,
   tag text NOT NULL,
@@ -111,21 +119,26 @@ GRANT SELECT ON public.offers TO authenticated;
 GRANT ALL ON public.offers TO service_role;
 ALTER TABLE public.offers ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "offers read all auth" ON public.offers;
 CREATE POLICY "offers read all auth" ON public.offers FOR SELECT TO authenticated USING (true);
+DROP POLICY IF EXISTS "offers admin write" ON public.offers;
 CREATE POLICY "offers admin write" ON public.offers FOR INSERT TO authenticated
   WITH CHECK (public.has_role(auth.uid(), 'admin'));
+DROP POLICY IF EXISTS "offers admin update" ON public.offers;
 CREATE POLICY "offers admin update" ON public.offers FOR UPDATE TO authenticated
   USING (public.has_role(auth.uid(), 'admin'));
+DROP POLICY IF EXISTS "offers admin delete" ON public.offers;
 CREATE POLICY "offers admin delete" ON public.offers FOR DELETE TO authenticated
   USING (public.has_role(auth.uid(), 'admin'));
 
+DROP TRIGGER IF EXISTS trg_offers_updated ON public.offers;
 CREATE TRIGGER trg_offers_updated BEFORE UPDATE ON public.offers
 FOR EACH ROW EXECUTE FUNCTION public.set_updated_at();
 
 -- ============ payout_requests ============
 DO $$ BEGIN CREATE TYPE public.payout_status AS ENUM ('pending', 'processing', 'paid', 'rejected'); EXCEPTION WHEN duplicate_object THEN NULL; END $$;
 
-CREATE TABLE public.payout_requests (
+CREATE TABLE IF NOT EXISTS public.payout_requests (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id uuid NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
   amount numeric NOT NULL CHECK (amount > 0),
@@ -140,22 +153,27 @@ GRANT SELECT, INSERT ON public.payout_requests TO authenticated;
 GRANT ALL ON public.payout_requests TO service_role;
 ALTER TABLE public.payout_requests ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "payouts read own" ON public.payout_requests;
 CREATE POLICY "payouts read own" ON public.payout_requests FOR SELECT TO authenticated
   USING (auth.uid() = user_id);
+DROP POLICY IF EXISTS "payouts read admin" ON public.payout_requests;
 CREATE POLICY "payouts read admin" ON public.payout_requests FOR SELECT TO authenticated
   USING (public.has_role(auth.uid(), 'admin'));
+DROP POLICY IF EXISTS "payouts insert own" ON public.payout_requests;
 CREATE POLICY "payouts insert own" ON public.payout_requests FOR INSERT TO authenticated
   WITH CHECK (auth.uid() = user_id);
+DROP POLICY IF EXISTS "payouts admin update" ON public.payout_requests;
 CREATE POLICY "payouts admin update" ON public.payout_requests FOR UPDATE TO authenticated
   USING (public.has_role(auth.uid(), 'admin'));
 
+DROP TRIGGER IF EXISTS trg_payouts_updated ON public.payout_requests;
 CREATE TRIGGER trg_payouts_updated BEFORE UPDATE ON public.payout_requests
 FOR EACH ROW EXECUTE FUNCTION public.set_updated_at();
 
 -- ============ link_requests ============
 DO $$ BEGIN CREATE TYPE public.link_status AS ENUM ('new', 'review', 'approved', 'rejected'); EXCEPTION WHEN duplicate_object THEN NULL; END $$;
 
-CREATE TABLE public.link_requests (
+CREATE TABLE IF NOT EXISTS public.link_requests (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id uuid NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
   offer_id text REFERENCES public.offers(id) ON DELETE SET NULL,
@@ -173,15 +191,20 @@ GRANT SELECT, INSERT ON public.link_requests TO authenticated;
 GRANT ALL ON public.link_requests TO service_role;
 ALTER TABLE public.link_requests ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "links read own" ON public.link_requests;
 CREATE POLICY "links read own" ON public.link_requests FOR SELECT TO authenticated
   USING (auth.uid() = user_id);
+DROP POLICY IF EXISTS "links read admin" ON public.link_requests;
 CREATE POLICY "links read admin" ON public.link_requests FOR SELECT TO authenticated
   USING (public.has_role(auth.uid(), 'admin'));
+DROP POLICY IF EXISTS "links insert own" ON public.link_requests;
 CREATE POLICY "links insert own" ON public.link_requests FOR INSERT TO authenticated
   WITH CHECK (auth.uid() = user_id);
+DROP POLICY IF EXISTS "links admin update" ON public.link_requests;
 CREATE POLICY "links admin update" ON public.link_requests FOR UPDATE TO authenticated
   USING (public.has_role(auth.uid(), 'admin'));
 
+DROP TRIGGER IF EXISTS trg_links_updated ON public.link_requests;
 CREATE TRIGGER trg_links_updated BEFORE UPDATE ON public.link_requests
 FOR EACH ROW EXECUTE FUNCTION public.set_updated_at();
 
@@ -232,9 +255,13 @@ CREATE TABLE IF NOT EXISTS public.conversions (
 GRANT SELECT, INSERT, UPDATE, DELETE ON public.conversions TO authenticated;
 GRANT ALL ON public.conversions TO service_role;
 ALTER TABLE public.conversions ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "conversions read own" ON public.conversions;
 CREATE POLICY "conversions read own" ON public.conversions FOR SELECT USING (auth.uid() = user_id);
+DROP POLICY IF EXISTS "conversions insert own" ON public.conversions;
 CREATE POLICY "conversions insert own" ON public.conversions FOR INSERT WITH CHECK (auth.uid() = user_id);
+DROP POLICY IF EXISTS "conversions read admin" ON public.conversions;
 CREATE POLICY "conversions read admin" ON public.conversions FOR SELECT USING (public.has_role(auth.uid(), 'admin'));
+DROP POLICY IF EXISTS "conversions write admin" ON public.conversions;
 CREATE POLICY "conversions write admin" ON public.conversions FOR ALL USING (public.has_role(auth.uid(), 'admin')) WITH CHECK (public.has_role(auth.uid(), 'admin'));
 CREATE INDEX IF NOT EXISTS conversions_user_id_created_at_idx ON public.conversions (user_id, created_at DESC);
 
@@ -253,9 +280,13 @@ CREATE TABLE IF NOT EXISTS public.notifications (
 GRANT SELECT, INSERT, UPDATE, DELETE ON public.notifications TO authenticated;
 GRANT ALL ON public.notifications TO service_role;
 ALTER TABLE public.notifications ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "notif read own" ON public.notifications;
 CREATE POLICY "notif read own" ON public.notifications FOR SELECT USING (auth.uid() = user_id);
+DROP POLICY IF EXISTS "notif insert own" ON public.notifications;
 CREATE POLICY "notif insert own" ON public.notifications FOR INSERT WITH CHECK (auth.uid() = user_id);
+DROP POLICY IF EXISTS "notif update own" ON public.notifications;
 CREATE POLICY "notif update own" ON public.notifications FOR UPDATE USING (auth.uid() = user_id) WITH CHECK (auth.uid() = user_id);
+DROP POLICY IF EXISTS "notif admin all" ON public.notifications;
 CREATE POLICY "notif admin all" ON public.notifications FOR ALL USING (public.has_role(auth.uid(), 'admin')) WITH CHECK (public.has_role(auth.uid(), 'admin'));
 CREATE INDEX IF NOT EXISTS notifications_user_id_created_at_idx ON public.notifications (user_id, created_at DESC);
 
@@ -467,7 +498,7 @@ WITH CHECK (public.has_role(auth.uid(), 'admin'));
 -- Migration: 20260720124404_5c754999-5a15-49b7-9250-66158f879eca.sql
 -- ============================================================
 
-CREATE TABLE public.support_tickets (
+CREATE TABLE IF NOT EXISTS public.support_tickets (
   id UUID NOT NULL DEFAULT gen_random_uuid() PRIMARY KEY,
   user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
   subject TEXT NOT NULL,
@@ -481,7 +512,7 @@ CREATE TABLE public.support_tickets (
 );
 ALTER TABLE public.support_tickets FORCE ROW LEVEL SECURITY;
 
-CREATE TABLE public.support_messages (
+CREATE TABLE IF NOT EXISTS public.support_messages (
   id UUID NOT NULL DEFAULT gen_random_uuid() PRIMARY KEY,
   ticket_id UUID NOT NULL REFERENCES public.support_tickets(id) ON DELETE CASCADE,
   author_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
@@ -558,8 +589,8 @@ CREATE TRIGGER support_messages_after_insert
 AFTER INSERT ON public.support_messages
 FOR EACH ROW EXECUTE FUNCTION public.support_on_message();
 
-CREATE INDEX support_tickets_user_idx ON public.support_tickets(user_id, last_message_at DESC);
-CREATE INDEX support_messages_ticket_idx ON public.support_messages(ticket_id, created_at);
+CREATE INDEX IF NOT EXISTS support_tickets_user_idx ON public.support_tickets(user_id, last_message_at DESC);
+CREATE INDEX IF NOT EXISTS support_messages_ticket_idx ON public.support_messages(ticket_id, created_at);
 
 
 -- ============================================================
@@ -964,7 +995,7 @@ $$;
 -- ============================================================
 
 -- BANNERS
-CREATE TABLE public.banners (
+CREATE TABLE IF NOT EXISTS public.banners (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   title text NOT NULL DEFAULT '',
   text text NOT NULL DEFAULT '',
@@ -978,14 +1009,19 @@ GRANT SELECT ON public.banners TO anon;
 GRANT SELECT, INSERT, UPDATE, DELETE ON public.banners TO authenticated;
 GRANT ALL ON public.banners TO service_role;
 ALTER TABLE public.banners ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "banners public read active" ON public.banners;
 CREATE POLICY "banners public read active" ON public.banners FOR SELECT TO anon, authenticated USING (active = true OR public.has_role(auth.uid(),'admin'));
+DROP POLICY IF EXISTS "banners admin insert" ON public.banners;
 CREATE POLICY "banners admin insert" ON public.banners FOR INSERT TO authenticated WITH CHECK (public.has_role(auth.uid(),'admin'));
+DROP POLICY IF EXISTS "banners admin update" ON public.banners;
 CREATE POLICY "banners admin update" ON public.banners FOR UPDATE TO authenticated USING (public.has_role(auth.uid(),'admin')) WITH CHECK (public.has_role(auth.uid(),'admin'));
+DROP POLICY IF EXISTS "banners admin delete" ON public.banners;
 CREATE POLICY "banners admin delete" ON public.banners FOR DELETE TO authenticated USING (public.has_role(auth.uid(),'admin'));
+DROP TRIGGER IF EXISTS banners_set_updated_at ON public.banners;
 CREATE TRIGGER banners_set_updated_at BEFORE UPDATE ON public.banners FOR EACH ROW EXECUTE FUNCTION public.set_updated_at();
 
 -- NEWS
-CREATE TABLE public.news_posts (
+CREATE TABLE IF NOT EXISTS public.news_posts (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   title text NOT NULL,
   content text NOT NULL DEFAULT '',
@@ -997,10 +1033,15 @@ GRANT SELECT ON public.news_posts TO anon;
 GRANT SELECT, INSERT, UPDATE, DELETE ON public.news_posts TO authenticated;
 GRANT ALL ON public.news_posts TO service_role;
 ALTER TABLE public.news_posts ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "news public read published" ON public.news_posts;
 CREATE POLICY "news public read published" ON public.news_posts FOR SELECT TO anon, authenticated USING (published = true OR public.has_role(auth.uid(),'admin'));
+DROP POLICY IF EXISTS "news admin insert" ON public.news_posts;
 CREATE POLICY "news admin insert" ON public.news_posts FOR INSERT TO authenticated WITH CHECK (public.has_role(auth.uid(),'admin'));
+DROP POLICY IF EXISTS "news admin update" ON public.news_posts;
 CREATE POLICY "news admin update" ON public.news_posts FOR UPDATE TO authenticated USING (public.has_role(auth.uid(),'admin')) WITH CHECK (public.has_role(auth.uid(),'admin'));
+DROP POLICY IF EXISTS "news admin delete" ON public.news_posts;
 CREATE POLICY "news admin delete" ON public.news_posts FOR DELETE TO authenticated USING (public.has_role(auth.uid(),'admin'));
+DROP TRIGGER IF EXISTS news_set_updated_at ON public.news_posts;
 CREATE TRIGGER news_set_updated_at BEFORE UPDATE ON public.news_posts FOR EACH ROW EXECUTE FUNCTION public.set_updated_at();
 
 
@@ -1680,6 +1721,7 @@ CREATE POLICY "competitions_admin_delete" ON public.competitions FOR DELETE TO a
   USING (public.has_role(auth.uid(), 'admin'));
 
 DROP TRIGGER IF EXISTS competitions_set_updated_at ON public.competitions;
+DROP TRIGGER IF EXISTS competitions_set_updated_at ON public.competitions;
 CREATE TRIGGER competitions_set_updated_at BEFORE UPDATE ON public.competitions
   FOR EACH ROW EXECUTE FUNCTION public.set_updated_at();
 
@@ -2352,7 +2394,7 @@ $function$;
 -- Migration: 20260721053511_8795ff4e-7a42-4029-b0bf-874956fcdf64.sql
 -- ============================================================
 
-CREATE TABLE public.email_settings (
+CREATE TABLE IF NOT EXISTS public.email_settings (
   id smallint PRIMARY KEY DEFAULT 1,
   enabled boolean NOT NULL DEFAULT false,
   smtp_host text NOT NULL DEFAULT '',
@@ -3234,10 +3276,12 @@ END;
 $$;
 
 DROP TRIGGER IF EXISTS conversions_recompute_offer_stats ON public.conversions;
+DROP TRIGGER IF EXISTS conversions_recompute_offer_stats ON public.conversions;
 CREATE TRIGGER conversions_recompute_offer_stats
 AFTER INSERT OR UPDATE OR DELETE ON public.conversions
 FOR EACH ROW EXECUTE FUNCTION public.trg_recompute_offer_stats();
 
+DROP TRIGGER IF EXISTS link_requests_recompute_offer_stats ON public.link_requests;
 DROP TRIGGER IF EXISTS link_requests_recompute_offer_stats ON public.link_requests;
 CREATE TRIGGER link_requests_recompute_offer_stats
 AFTER INSERT OR UPDATE OR DELETE ON public.link_requests
@@ -3295,6 +3339,7 @@ CREATE POLICY "promo_codes_admin_all" ON public.promo_codes FOR ALL TO authentic
 CREATE POLICY "promo_codes_view_active" ON public.promo_codes FOR SELECT TO authenticated
   USING (active = true);
 
+DROP TRIGGER IF EXISTS promo_codes_set_updated_at ON public.promo_codes;
 CREATE TRIGGER promo_codes_set_updated_at
   BEFORE UPDATE ON public.promo_codes
   FOR EACH ROW EXECUTE FUNCTION public.set_updated_at();
@@ -3394,6 +3439,7 @@ BEGIN
 END;
 $$;
 
+DROP TRIGGER IF EXISTS conversions_auto_apply_promos ON public.conversions;
 DROP TRIGGER IF EXISTS conversions_auto_apply_promos ON public.conversions;
 CREATE TRIGGER conversions_auto_apply_promos
   AFTER INSERT ON public.conversions
