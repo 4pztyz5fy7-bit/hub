@@ -52,7 +52,7 @@ function LandingPage() {
   const openAuth = (m: Mode) => { setInitialMode(m); setAuthOpen(true); setMenuOpen(false); };
 
   return (
-    <div className="relative min-h-screen bg-background text-foreground">
+    <div className="relative min-h-screen bg-background text-foreground pb-[env(safe-area-inset-bottom)]">
       <AmbientBackdrop variant="landing" />
 
       {/* NAV */}
