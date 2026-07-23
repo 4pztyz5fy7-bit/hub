@@ -2399,7 +2399,7 @@ function InfoTab({
       </div>
 
       {/* ============ Активность: табы ============ */}
-      <section className="animate-in-up xl:col-span-8" style={{ animationDelay: "180ms" }}>
+      <section className="animate-in-up" style={{ animationDelay: "180ms" }}>
         <div className="mb-3 flex items-center justify-between">
           <h3 className="text-[10px] font-bold uppercase tracking-[0.14em] text-muted-foreground">
             Активность
