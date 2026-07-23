@@ -7,7 +7,7 @@
 -- ============================================================
 
 -- ============ Enums ============
-CREATE TYPE public.app_role AS ENUM ('admin', 'user');
+DO $$ BEGIN CREATE TYPE public.app_role AS ENUM ('admin', 'user'); EXCEPTION WHEN duplicate_object THEN NULL; END $$;
 
 -- ============ profiles ============
 CREATE TABLE public.profiles (
@@ -123,7 +123,7 @@ CREATE TRIGGER trg_offers_updated BEFORE UPDATE ON public.offers
 FOR EACH ROW EXECUTE FUNCTION public.set_updated_at();
 
 -- ============ payout_requests ============
-CREATE TYPE public.payout_status AS ENUM ('pending', 'processing', 'paid', 'rejected');
+DO $$ BEGIN CREATE TYPE public.payout_status AS ENUM ('pending', 'processing', 'paid', 'rejected'); EXCEPTION WHEN duplicate_object THEN NULL; END $$;
 
 CREATE TABLE public.payout_requests (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -153,7 +153,7 @@ CREATE TRIGGER trg_payouts_updated BEFORE UPDATE ON public.payout_requests
 FOR EACH ROW EXECUTE FUNCTION public.set_updated_at();
 
 -- ============ link_requests ============
-CREATE TYPE public.link_status AS ENUM ('new', 'review', 'approved', 'rejected');
+DO $$ BEGIN CREATE TYPE public.link_status AS ENUM ('new', 'review', 'approved', 'rejected'); EXCEPTION WHEN duplicate_object THEN NULL; END $$;
 
 CREATE TABLE public.link_requests (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -1431,7 +1431,7 @@ GRANT EXECUTE ON FUNCTION public.admin_delete_payout(uuid) TO authenticated;
 
 -- ============ EXCLUSIVE OFFERS ============
 DO $$ BEGIN
-  CREATE TYPE public.level_tier AS ENUM ('start','silver','gold','platinum','diamond');
+  DO $$ BEGIN CREATE TYPE public.level_tier AS ENUM ('start','silver','gold','platinum','diamond'); EXCEPTION WHEN duplicate_object THEN NULL; END $$;
 EXCEPTION WHEN duplicate_object THEN NULL; END $$;
 
 ALTER TABLE public.offers
@@ -1634,7 +1634,7 @@ REVOKE EXECUTE ON FUNCTION public.get_competition_leaderboard(uuid, int) FROM PU
 DROP FUNCTION IF EXISTS public.get_competition_leaderboard(uuid, int);
 
 DO $$ BEGIN
-  CREATE TYPE public.level_tier AS ENUM ('start','silver','gold','platinum','diamond');
+  DO $$ BEGIN CREATE TYPE public.level_tier AS ENUM ('start','silver','gold','platinum','diamond'); EXCEPTION WHEN duplicate_object THEN NULL; END $$;
 EXCEPTION WHEN duplicate_object THEN NULL; END $$;
 
 ALTER TABLE public.offers
