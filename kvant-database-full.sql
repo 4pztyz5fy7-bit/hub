@@ -1431,7 +1431,7 @@ GRANT EXECUTE ON FUNCTION public.admin_delete_payout(uuid) TO authenticated;
 
 -- ============ EXCLUSIVE OFFERS ============
 DO $$ BEGIN
-  DO $$ BEGIN CREATE TYPE public.level_tier AS ENUM ('start','silver','gold','platinum','diamond'); EXCEPTION WHEN duplicate_object THEN NULL; END $$;
+  DO $lvl$ BEGIN CREATE TYPE public.level_tier AS ENUM ('start','silver','gold','platinum','diamond'); EXCEPTION WHEN duplicate_object THEN NULL; END $lvl$;
 EXCEPTION WHEN duplicate_object THEN NULL; END $$;
 
 ALTER TABLE public.offers
@@ -1634,7 +1634,7 @@ REVOKE EXECUTE ON FUNCTION public.get_competition_leaderboard(uuid, int) FROM PU
 DROP FUNCTION IF EXISTS public.get_competition_leaderboard(uuid, int);
 
 DO $$ BEGIN
-  DO $$ BEGIN CREATE TYPE public.level_tier AS ENUM ('start','silver','gold','platinum','diamond'); EXCEPTION WHEN duplicate_object THEN NULL; END $$;
+  DO $lvl$ BEGIN CREATE TYPE public.level_tier AS ENUM ('start','silver','gold','platinum','diamond'); EXCEPTION WHEN duplicate_object THEN NULL; END $lvl$;
 EXCEPTION WHEN duplicate_object THEN NULL; END $$;
 
 ALTER TABLE public.offers
