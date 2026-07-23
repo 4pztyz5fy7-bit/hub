@@ -2385,7 +2385,7 @@ function InfoTab({
       </section>
 
       {/* ============ Прогресс достижений ============ */}
-      <div className="xl:col-span-4">
+      <div>
         <AchievementsProgress
           earned={balance}
           conversionsCount={conversions.filter((c) => c.status === "ok").length}
@@ -2394,7 +2394,7 @@ function InfoTab({
       </div>
 
       {/* ============ Heatmap активности ============ */}
-      <div className="xl:col-span-8">
+      <div>
         <ActivityHeatmap conversions={conversions} />
       </div>
 
