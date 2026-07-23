@@ -463,7 +463,7 @@ function AdminPage() {
   const sections: { label: string; ids: TabId[] }[] = [
     { label: "Обзор", ids: ["overview"] },
     { label: "Операции", ids: ["users", "offers", "requests", "conversions", "payouts"] },
-    { label: "Контент", ids: ["banners", "news", "broadcast", "competitions"] },
+    { label: "Контент", ids: ["banners", "news", "broadcast", "competitions", "promo"] },
     { label: "Модерация", ids: ["moderation", "support"] },
     { label: "Интеллект", ids: ["ai", "ai_settings"] },
     { label: "Система", ids: ["email", "team", "recruiters"] },
