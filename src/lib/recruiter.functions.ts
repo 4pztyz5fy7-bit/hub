@@ -172,7 +172,7 @@ export const setRecruiterRequestStatus = createServerFn({ method: "POST" })
     const { data: res, error } = await context.supabase.rpc("admin_set_link_request_status", {
       _request_id: data.id,
       _new_status: data.status,
-      _payout_override: data.payout_override ?? null,
+      _payout_override: data.payout_override ?? undefined,
     });
     if (error) throw new Error(error.message);
     return res;
