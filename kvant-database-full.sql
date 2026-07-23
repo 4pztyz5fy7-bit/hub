@@ -223,8 +223,10 @@ GRANT EXECUTE ON FUNCTION public.has_role(uuid, public.app_role) TO authenticate
 -- Migration: 20260715191020_e6de9784-9b96-4326-b783-540c13a27479.sql
 -- ============================================================
 
+DROP POLICY IF EXISTS "roles admin insert" ON public.user_roles;
 CREATE POLICY "roles admin insert" ON public.user_roles FOR INSERT TO authenticated
   WITH CHECK (public.has_role(auth.uid(), 'admin'));
+DROP POLICY IF EXISTS "roles admin delete" ON public.user_roles;
 CREATE POLICY "roles admin delete" ON public.user_roles FOR DELETE TO authenticated
   USING (public.has_role(auth.uid(), 'admin'));
 
@@ -531,20 +533,24 @@ ALTER TABLE public.support_tickets ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.support_messages ENABLE ROW LEVEL SECURITY;
 
 -- Tickets
+DROP POLICY IF EXISTS "tickets_select_own_or_admin" ON public.support_tickets;
 CREATE POLICY "tickets_select_own_or_admin" ON public.support_tickets
   FOR SELECT TO authenticated
   USING (auth.uid() = user_id OR public.has_role(auth.uid(), 'admin'));
 
+DROP POLICY IF EXISTS "tickets_insert_own" ON public.support_tickets;
 CREATE POLICY "tickets_insert_own" ON public.support_tickets
   FOR INSERT TO authenticated
   WITH CHECK (auth.uid() = user_id);
 
+DROP POLICY IF EXISTS "tickets_update_own_or_admin" ON public.support_tickets;
 CREATE POLICY "tickets_update_own_or_admin" ON public.support_tickets
   FOR UPDATE TO authenticated
   USING (auth.uid() = user_id OR public.has_role(auth.uid(), 'admin'))
   WITH CHECK (auth.uid() = user_id OR public.has_role(auth.uid(), 'admin'));
 
 -- Messages
+DROP POLICY IF EXISTS "messages_select_ticket_participant" ON public.support_messages;
 CREATE POLICY "messages_select_ticket_participant" ON public.support_messages
   FOR SELECT TO authenticated
   USING (
@@ -552,6 +558,7 @@ CREATE POLICY "messages_select_ticket_participant" ON public.support_messages
     OR EXISTS (SELECT 1 FROM public.support_tickets t WHERE t.id = ticket_id AND t.user_id = auth.uid())
   );
 
+DROP POLICY IF EXISTS "messages_insert_participant" ON public.support_messages;
 CREATE POLICY "messages_insert_participant" ON public.support_messages
   FOR INSERT TO authenticated
   WITH CHECK (
@@ -585,6 +592,7 @@ BEGIN
 END;
 $$;
 
+DROP TRIGGER IF EXISTS support_messages_after_insert ON public.support_messages;
 CREATE TRIGGER support_messages_after_insert
 AFTER INSERT ON public.support_messages
 FOR EACH ROW EXECUTE FUNCTION public.support_on_message();
@@ -815,8 +823,10 @@ CREATE TABLE IF NOT EXISTS public.achievements (
 GRANT SELECT ON public.achievements TO authenticated;
 GRANT ALL    ON public.achievements TO service_role;
 ALTER TABLE public.achievements ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "achievements are public to signed-in users" ON public.achievements;
 CREATE POLICY "achievements are public to signed-in users"
   ON public.achievements FOR SELECT TO authenticated USING (true);
+DROP POLICY IF EXISTS "admins manage achievements" ON public.achievements;
 CREATE POLICY "admins manage achievements"
   ON public.achievements FOR ALL TO authenticated
   USING (public.has_role(auth.uid(),'admin'))
@@ -833,6 +843,7 @@ CREATE TABLE IF NOT EXISTS public.user_achievements (
 GRANT SELECT, INSERT ON public.user_achievements TO authenticated;
 GRANT ALL ON public.user_achievements TO service_role;
 ALTER TABLE public.user_achievements ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "users read their achievements" ON public.user_achievements;
 CREATE POLICY "users read their achievements"
   ON public.user_achievements FOR SELECT TO authenticated
   USING (auth.uid() = user_id OR public.has_role(auth.uid(),'admin'));
@@ -1536,22 +1547,27 @@ GRANT ALL ON public.competitions TO service_role;
 ALTER TABLE public.competitions ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.competitions FORCE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "competitions_read_all_auth" ON public.competitions;
 CREATE POLICY "competitions_read_all_auth"
   ON public.competitions FOR SELECT TO authenticated USING (true);
 
+DROP POLICY IF EXISTS "competitions_admin_insert" ON public.competitions;
 CREATE POLICY "competitions_admin_insert"
   ON public.competitions FOR INSERT TO authenticated
   WITH CHECK (public.has_role(auth.uid(), 'admin'));
 
+DROP POLICY IF EXISTS "competitions_admin_update" ON public.competitions;
 CREATE POLICY "competitions_admin_update"
   ON public.competitions FOR UPDATE TO authenticated
   USING (public.has_role(auth.uid(), 'admin'))
   WITH CHECK (public.has_role(auth.uid(), 'admin'));
 
+DROP POLICY IF EXISTS "competitions_admin_delete" ON public.competitions;
 CREATE POLICY "competitions_admin_delete"
   ON public.competitions FOR DELETE TO authenticated
   USING (public.has_role(auth.uid(), 'admin'));
 
+DROP TRIGGER IF EXISTS competitions_touch_updated_at ON public.competitions;
 CREATE TRIGGER competitions_touch_updated_at
   BEFORE UPDATE ON public.competitions
   FOR EACH ROW EXECUTE FUNCTION public.set_updated_at();
@@ -1813,24 +1829,30 @@ GRANT ALL ON public.competition_participants TO service_role;
 
 ALTER TABLE public.competition_participants ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "read participants" ON public.competition_participants;
 CREATE POLICY "read participants"
   ON public.competition_participants FOR SELECT
   TO authenticated USING (true);
 
+DROP POLICY IF EXISTS "join self" ON public.competition_participants;
 CREATE POLICY "join self"
   ON public.competition_participants FOR INSERT
   TO authenticated WITH CHECK (auth.uid() = user_id);
 
+DROP POLICY IF EXISTS "leave self" ON public.competition_participants;
 CREATE POLICY "leave self"
   ON public.competition_participants FOR DELETE
   TO authenticated USING (auth.uid() = user_id);
 
+DROP POLICY IF EXISTS "admin manages participants" ON public.competition_participants;
 CREATE POLICY "admin manages participants"
   ON public.competition_participants FOR ALL
   TO authenticated USING (public.has_role(auth.uid(), 'admin'))
   WITH CHECK (public.has_role(auth.uid(), 'admin'));
 
-ALTER PUBLICATION supabase_realtime ADD TABLE public.competition_participants;
+DO $$ BEGIN
+  ALTER PUBLICATION supabase_realtime ADD TABLE public.competition_participants;
+EXCEPTION WHEN duplicate_object THEN NULL; END $$;
 
 -- RPC: join with level check
 CREATE OR REPLACE FUNCTION public.join_competition(_competition_id uuid)
@@ -2416,10 +2438,13 @@ GRANT ALL ON public.email_settings TO service_role;
 ALTER TABLE public.email_settings ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.email_settings FORCE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "email_settings_admin_select" ON public.email_settings;
 CREATE POLICY "email_settings_admin_select" ON public.email_settings
   FOR SELECT TO authenticated USING (public.has_role(auth.uid(), 'admin'));
+DROP POLICY IF EXISTS "email_settings_admin_insert" ON public.email_settings;
 CREATE POLICY "email_settings_admin_insert" ON public.email_settings
   FOR INSERT TO authenticated WITH CHECK (public.has_role(auth.uid(), 'admin') AND id = 1);
+DROP POLICY IF EXISTS "email_settings_admin_update" ON public.email_settings;
 CREATE POLICY "email_settings_admin_update" ON public.email_settings
   FOR UPDATE TO authenticated USING (public.has_role(auth.uid(), 'admin')) WITH CHECK (public.has_role(auth.uid(), 'admin'));
 
@@ -2732,6 +2757,7 @@ USING (
   OR public.is_team_member(auth.uid())
 );
 
+DROP POLICY IF EXISTS "team_members manage by leadership" ON public.team_members;
 CREATE POLICY "team_members manage by leadership"
 ON public.team_members
 FOR ALL
@@ -2743,6 +2769,7 @@ WITH CHECK (
   public.is_leadership(auth.uid())
 );
 
+DROP POLICY IF EXISTS "team_positions read for team" ON public.team_positions;
 CREATE POLICY "team_positions read for team"
 ON public.team_positions
 FOR SELECT
@@ -2752,6 +2779,7 @@ USING (
   OR public.is_team_member(auth.uid())
 );
 
+DROP POLICY IF EXISTS "team_positions manage by leadership" ON public.team_positions;
 CREATE POLICY "team_positions manage by leadership"
 ON public.team_positions
 FOR ALL
@@ -2863,6 +2891,7 @@ GRANT ALL ON public.ai_settings TO service_role;
 
 ALTER TABLE public.ai_settings ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "Admins can manage AI settings" ON public.ai_settings;
 CREATE POLICY "Admins can manage AI settings"
   ON public.ai_settings
   FOR ALL
@@ -2870,6 +2899,7 @@ CREATE POLICY "Admins can manage AI settings"
   USING (public.has_role(auth.uid(), 'admin'))
   WITH CHECK (public.has_role(auth.uid(), 'admin'));
 
+DROP POLICY IF EXISTS "Service role can manage AI settings" ON public.ai_settings;
 CREATE POLICY "Service role can manage AI settings"
   ON public.ai_settings
   FOR ALL
@@ -3029,6 +3059,7 @@ CREATE POLICY "roa admin all" ON public.recruiter_offer_access
   FOR ALL TO authenticated
   USING (public.has_role(auth.uid(), 'admin'))
   WITH CHECK (public.has_role(auth.uid(), 'admin'));
+DROP POLICY IF EXISTS "roa read own" ON public.recruiter_offer_access;
 CREATE POLICY "roa read own" ON public.recruiter_offer_access
   FOR SELECT TO authenticated
   USING (auth.uid() = recruiter_id);
@@ -3056,6 +3087,7 @@ CREATE POLICY "rca admin all" ON public.recruiter_category_access
   FOR ALL TO authenticated
   USING (public.has_role(auth.uid(), 'admin'))
   WITH CHECK (public.has_role(auth.uid(), 'admin'));
+DROP POLICY IF EXISTS "rca read own" ON public.recruiter_category_access;
 CREATE POLICY "rca read own" ON public.recruiter_category_access
   FOR SELECT TO authenticated
   USING (auth.uid() = recruiter_id);
@@ -3332,10 +3364,12 @@ GRANT ALL ON public.promo_codes TO service_role;
 
 ALTER TABLE public.promo_codes ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "promo_codes_admin_all" ON public.promo_codes;
 CREATE POLICY "promo_codes_admin_all" ON public.promo_codes FOR ALL TO authenticated
   USING (public.has_role(auth.uid(), 'admin'))
   WITH CHECK (public.has_role(auth.uid(), 'admin'));
 
+DROP POLICY IF EXISTS "promo_codes_view_active" ON public.promo_codes;
 CREATE POLICY "promo_codes_view_active" ON public.promo_codes FOR SELECT TO authenticated
   USING (active = true);
 
@@ -3359,10 +3393,12 @@ GRANT ALL ON public.promo_activations TO service_role;
 
 ALTER TABLE public.promo_activations ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "promo_act_admin_all" ON public.promo_activations;
 CREATE POLICY "promo_act_admin_all" ON public.promo_activations FOR ALL TO authenticated
   USING (public.has_role(auth.uid(), 'admin'))
   WITH CHECK (public.has_role(auth.uid(), 'admin'));
 
+DROP POLICY IF EXISTS "promo_act_own_read" ON public.promo_activations;
 CREATE POLICY "promo_act_own_read" ON public.promo_activations FOR SELECT TO authenticated
   USING (user_id = auth.uid());
 
