@@ -1602,6 +1602,8 @@ function DashboardPage() {
         data-dashboard-main
         className="mx-auto w-full max-w-[430px] space-y-6 p-4 pb-24 lg:max-w-[1120px] lg:pb-10 lg:pl-24 lg:pr-10 lg:pt-8"
       >
+        <BannerBoard />
+
         {active === "info" && (
           <InfoTab
             balance={balance}
