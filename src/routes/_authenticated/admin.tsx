@@ -125,7 +125,8 @@ type TabId =
   | "competitions"
   | "email"
   | "team"
-  | "recruiters";
+  | "recruiters"
+  | "promo";
 
 type TeamPerms = {
   position_code: string | null;
