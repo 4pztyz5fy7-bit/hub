@@ -127,7 +127,27 @@ CREATE TABLE IF NOT EXISTS public.offers (
   requirements text,
   active boolean NOT NULL DEFAULT true,
   created_at timestamptz NOT NULL DEFAULT now(),
-  updated_at timestamptz NOT NULL DEFAULT now()
+  updated_at timestamptz NOT NULL DEFAULT now(),
+  category text,
+  cr numeric NOT NULL DEFAULT 0,
+  is_new boolean NOT NULL DEFAULT false,
+  allowed text[] NOT NULL DEFAULT '{}'::text[],
+  denied text[] NOT NULL DEFAULT '{}'::text[],
+  landing text,
+  image_url text,
+  payout_kind text NOT NULL DEFAULT 'exact'::text,
+  payout_min numeric,
+  payout_max numeric,
+  city_payouts jsonb NOT NULL DEFAULT '[]'::jsonb,
+  min_level public.level_tier NOT NULL DEFAULT 'start'::public.level_tier,
+  income text,
+  target_action text,
+  work_rules text,
+  ad_materials text,
+  feedback text,
+  term_completion text,
+  term_confirmation text,
+  avg_orders_per_courier numeric NOT NULL DEFAULT 0
 );
 GRANT SELECT ON public.offers TO authenticated;
 GRANT ALL ON public.offers TO service_role;

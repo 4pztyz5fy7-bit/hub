@@ -703,6 +703,25 @@ bun run build
 
 30–60 секунд, готово.
 
+### 10.6 Если после обновления оффер не сохраняется с ошибкой `schema cache`
+
+Эта ошибка означает, что база на VPS ещё не получила новые колонки офферов. Выполните на VPS:
+
+```bash
+cd /var/www/hub
+psql "$SUPABASE_DB_URL" -v ON_ERROR_STOP=1 -f vps-fix-offers-schema.sql
+```
+
+Если у вас подключение к базе хранится не в `SUPABASE_DB_URL`, используйте свою строку подключения PostgreSQL вместо `"$SUPABASE_DB_URL"`.
+
+После выполнения SQL перезапустите API базы/контейнеры, если используете локальный Supabase/PostgREST, и затем перезапустите сайт:
+
+```bash
+pm2 restart hub
+```
+
+Для systemd используйте `systemctl restart hub`, для Docker — `docker restart hub`.
+
 ### Алиас на будущее
 
 Чтобы не вводить команды каждый раз, можно сделать одну команду `update`.

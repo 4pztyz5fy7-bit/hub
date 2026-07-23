@@ -160,7 +160,15 @@ CREATE TABLE IF NOT EXISTS public.offers (
   payout_min numeric,
   payout_max numeric,
   city_payouts jsonb NOT NULL DEFAULT '[]'::jsonb,
-  min_level level_tier NOT NULL DEFAULT 'start'::level_tier
+  min_level level_tier NOT NULL DEFAULT 'start'::level_tier,
+  income text,
+  target_action text,
+  work_rules text,
+  ad_materials text,
+  feedback text,
+  term_completion text,
+  term_confirmation text,
+  avg_orders_per_courier numeric NOT NULL DEFAULT 0
 );
 CREATE TABLE IF NOT EXISTS public.payout_requests (
   id uuid NOT NULL DEFAULT gen_random_uuid(),
