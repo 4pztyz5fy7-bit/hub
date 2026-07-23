@@ -3033,16 +3033,7 @@ GRANT ALL ON public.user_roles TO service_role;
 -- Migration: 20260723040431_682bedaf-d63e-43ee-904d-97c961a95c07.sql
 -- ============================================================
 
-DO $$
-BEGIN
-  IF NOT EXISTS (
-    SELECT 1 FROM pg_type t
-    JOIN pg_enum e ON e.enumtypid = t.oid
-    WHERE t.typname = 'app_role' AND e.enumlabel = 'recruiter'
-  ) THEN
-    ALTER TYPE public.app_role ADD VALUE 'recruiter';
-  END IF;
-END$$;
+-- 'recruiter' enum value is added at the top of the dump (see initial CREATE TYPE + COMMIT)
 
 
 -- ============================================================
