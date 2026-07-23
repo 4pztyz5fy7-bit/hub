@@ -1600,7 +1600,7 @@ function DashboardPage() {
       <main
         key={active}
         data-dashboard-main
-        className="mx-auto w-full max-w-[430px] space-y-6 p-4 pb-24 lg:max-w-[1400px] lg:pb-10 lg:pl-24 lg:pr-10 lg:pt-8 xl:max-w-[1600px]"
+        className="mx-auto w-full max-w-[430px] space-y-6 p-4 pb-24 lg:max-w-[1120px] lg:pb-10 lg:pl-24 lg:pr-10 lg:pt-8"
       >
         {active === "info" && (
           <InfoTab
